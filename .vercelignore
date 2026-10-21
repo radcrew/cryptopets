@@ -1,9 +1,10 @@
 # Deploys upload the monorepo root; exclude apps not needed by the frontend/website
 # builds to keep uploads small. Do NOT ignore frontend/ or shared/ — the frontend
 # Vercel project builds frontend (which depends on @shared/core) from this root.
+# Do NOT ignore backend/ either: a Vercel project builds it too (backend/vercel.json),
+# and this file applies to every project deployed from this repository.
 mobile/
 contracts/
-backend/
 **/.next/
 **/dist/
 **/.turbo/

@@ -9,6 +9,7 @@
     },
     "scripts": {
         "build": "pnpm clean && prisma generate && tsc && node scripts/copy-proto.cjs && node scripts/bundle-shared-node.cjs && node scripts/bundle-protocol.cjs",
+        "build:vercel": "pnpm build && node scripts/bundle-vercel.cjs",
         "start": "node dist/src/server.js",
         "dev": "nodemon",
         "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\"",
@@ -41,6 +42,7 @@
         "@shared/core": "workspace:*",
         "@solana/web3.js": "^1.95.0",
         "@switchboard-xyz/on-demand": "^3.10.2",
+        "@vercel/functions": "3.10.2",
         "ai": "^6.0.197",
         "bs58": "^6.0.0",
         "cors": "^2.8.5",

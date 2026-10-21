@@ -130,3 +130,24 @@ describe('a restart must not move the active key validity window forward', () =>
         expect(vi.mocked(prisma.battleSigningKey.upsert)).toHaveBeenCalledTimes(1);
     });
 });
+
+describe('a signer that failed to configure', () => {
+    it('does not retire the key the deployment really signs with', async () => {
+        // configureSigner failed (a KMS hiccup at startup), so nothing is active. Every
+        // stored key would look "inactive", including the real one, and closing its window
+        // would make every receipt it signs after recovery fail verification.
+        vi.mocked(prisma.battleSigningKey.findMany).mockResolvedValue([storedRow()] as never);
+
+        await loadPersistedSigningKeys();
+
+        expect(vi.mocked(prisma.battleSigningKey.updateMany)).not.toHaveBeenCalled();
+    });
+
+    it('still publishes the stored keys, so issued receipts stay verifiable', async () => {
+        vi.mocked(prisma.battleSigningKey.findMany).mockResolvedValue([storedRow()] as never);
+
+        await loadPersistedSigningKeys();
+
+        expect(listSigningKeys().map((k) => k.keyId)).toContain('battle-signer-test');
+    });
+});

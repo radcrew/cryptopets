@@ -36,9 +36,10 @@ export interface SettleKeeperHandle {
     stop(): void;
 }
 
-/** Conservative eth_getLogs range cap for the backfill scan (see its call site) — well under
- *  limits reported by common public RPCs (Base Sepolia's default enforces 2000). */
-const MAX_LOG_RANGE_BLOCKS = 2000n;
+/** eth_getLogs range cap for the backfill scan and the live poll. Base Sepolia's public
+ *  endpoint now rejects a range over 200 blocks ("eth_getLogs is limited to a 200 range").
+ *  A query spans this many blocks plus one, so 199 stays inside the limit. */
+const MAX_LOG_RANGE_BLOCKS = 199n;
 
 const POLL_INTERVAL_MS = 4_000;
 
@@ -92,14 +93,17 @@ function pollContractEvents(
                 return;
             }
             if (latest < fromBlock) return;
+            // Capped so a poll that fell behind catches up over several ticks, instead of
+            // asking for a range the RPC rejects on every tick from then on.
+            const toBlock = latest - fromBlock > MAX_LOG_RANGE_BLOCKS ? fromBlock + MAX_LOG_RANGE_BLOCKS : latest;
             const logs = await publicClient.getContractEvents({
                 address: params.address,
                 abi: params.abi,
                 eventName: params.eventName as never,
                 fromBlock,
-                toBlock: latest,
+                toBlock,
             });
-            fromBlock = latest + 1n;
+            fromBlock = toBlock + 1n;
             if (!stopped && logs.length > 0) onLogs(logs);
         } catch {
             // Transient RPC error — try again next tick.
@@ -151,7 +155,7 @@ export async function startKeeper(config: SettleKeeperConfig): Promise<SettleKee
     const latestBlock = await publicClient.getBlockNumber();
     const fromBlock = latestBlock > config.backfillBlocks ? latestBlock - config.backfillBlocks : 0n;
     // Chunked because many public RPCs (e.g. Base Sepolia's `sepolia.base.org`) reject
-    // eth_getLogs across more than ~2000 blocks in one call, regardless of KEEPER_BACKFILL_BLOCKS.
+    // eth_getLogs across more than 200 blocks in one call, regardless of KEEPER_BACKFILL_BLOCKS.
     const allLogs: DecodedGameLogicLog[] = [];
     for (let start = fromBlock; start <= latestBlock; start += MAX_LOG_RANGE_BLOCKS + 1n) {
         const end = start + MAX_LOG_RANGE_BLOCKS > latestBlock ? latestBlock : start + MAX_LOG_RANGE_BLOCKS;

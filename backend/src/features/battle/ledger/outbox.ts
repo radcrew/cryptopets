@@ -90,21 +90,31 @@ export async function enqueueOutbox(client: OutboxClient, messages: readonly Out
  *
  * Claiming is a two-step read-then-update rather than a single `SELECT ... FOR UPDATE
  * SKIP LOCKED`, because Prisma cannot express the latter without raw SQL. The update is
- * guarded on `lockedAt: null`, so two workers racing for one message means one of them
- * updates zero rows and simply does not get it. That is safe precisely because handlers
- * are idempotent; if they were not, this would need the raw query.
+ * guarded on the `lockedAt` value the read saw, so two workers racing for one message
+ * means one of them updates zero rows and simply does not get it. That is safe precisely
+ * because handlers are idempotent; if they were not, this would need the raw query.
+ *
+ * A lock older than `STALE_LOCK_MS` is taken over. Its worker died mid-message, which a
+ * serverless host does routinely when a function hits its time limit, and nothing else
+ * ever clears a lock: without this, that battle would never move again. No handler holds
+ * a lock for long, since waiting on a beacon reschedules the message rather than blocking.
+ * A takeover counts as an attempt, so a message that keeps killing its worker still ends
+ * in the dead-letter path.
  */
+export const STALE_LOCK_MS = 5 * 60 * 1000;
+
 export async function claimOutbox(
     topics: readonly OutboxTopic[],
     workerId: string,
     limit: number,
     now: Date,
 ): Promise<ClaimedMessage[]> {
+    const staleBefore = new Date(now.getTime() - STALE_LOCK_MS);
     const candidates = await prisma.battleOutbox.findMany({
         where: {
             processedAt: null,
             deadLetteredAt: null,
-            lockedAt: null,
+            OR: [{ lockedAt: null }, { lockedAt: { lt: staleBefore } }],
             availableAt: { lte: now },
             topic: { in: [...topics] },
         },
@@ -115,7 +125,7 @@ export async function claimOutbox(
     const claimed: ClaimedMessage[] = [];
     for (const candidate of candidates) {
         const { count } = await prisma.battleOutbox.updateMany({
-            where: { id: candidate.id, lockedAt: null, processedAt: null },
+            where: { id: candidate.id, lockedAt: candidate.lockedAt ?? null, processedAt: null },
             data: { lockedAt: now, lockedBy: workerId, attempts: { increment: 1 } },
         });
         if (count === 1) {
@@ -129,6 +139,20 @@ export async function claimOutbox(
         }
     }
     return claimed;
+}
+
+/**
+ * When the next unlocked message for these topics becomes due, or null if none is waiting.
+ * Lets a worker that runs per request wait out a short gap, such as a drand round a few
+ * seconds away, instead of stopping and leaving the battle for a later request.
+ */
+export async function nextOutboxDueAt(topics: readonly OutboxTopic[]): Promise<Date | null> {
+    const next = await prisma.battleOutbox.findFirst({
+        where: { processedAt: null, deadLetteredAt: null, lockedAt: null, topic: { in: [...topics] } },
+        orderBy: { availableAt: 'asc' },
+        select: { availableAt: true },
+    });
+    return next?.availableAt ?? null;
 }
 
 /** Marks a message done. */

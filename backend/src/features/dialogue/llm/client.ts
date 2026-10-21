@@ -32,7 +32,7 @@ async function generate(system: string, user: string): Promise<DialogueTurn[]> {
     const { object } = await generateObject({
         model: hfModel(),
         output: 'no-schema',
-        maxOutputTokens: 1024,
+        maxOutputTokens: env.hf.maxOutputTokens,
         temperature: 0.8,
         maxRetries: 1,
         system,
@@ -101,7 +101,7 @@ export async function* streamTaunts(
     const result = streamObject({
         model: hfModel(),
         output: 'no-schema',
-        maxOutputTokens: 1024,
+        maxOutputTokens: env.hf.maxOutputTokens,
         temperature: 0.8,
         maxRetries: 1,
         system: `${TAUNT_SYSTEM_PROMPT}\n\n${TAUNT_JSON_FORMAT_INSTRUCTION}`,

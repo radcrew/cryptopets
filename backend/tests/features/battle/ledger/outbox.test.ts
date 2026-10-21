@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 vi.mock('@config/prisma', () => ({
     prisma: {
         battleOutbox: {
+            findFirst: vi.fn(),
             findMany: vi.fn(),
             updateMany: vi.fn(),
             update: vi.fn(),
@@ -20,9 +21,11 @@ import {
     failOutbox,
     listDeadLetters,
     MAX_OUTBOX_ATTEMPTS,
+    nextOutboxDueAt,
     OUTBOX_TOPICS,
     retryDelaySeconds,
 } from '@features/battle/ledger';
+import { STALE_LOCK_MS } from '@features/battle/ledger/outbox';
 
 const NOW = new Date('2026-07-26T09:00:00.000Z');
 
@@ -84,10 +87,31 @@ describe('claimOutbox', () => {
             where: {
                 processedAt: null,
                 deadLetteredAt: null,
-                lockedAt: null,
+                OR: [{ lockedAt: null }, { lockedAt: { lt: new Date(NOW.getTime() - STALE_LOCK_MS) } }],
                 availableAt: { lte: NOW },
                 topic: { in: ['compute'] },
             },
+        });
+        expect(vi.mocked(prisma.battleOutbox.updateMany).mock.calls[0]![0]).toMatchObject({
+            where: { id: 'msg_1', lockedAt: null, processedAt: null },
+        });
+    });
+
+    it('takes over a stale lock, guarded on the exact lock it saw', async () => {
+        // A worker that died mid-message leaves its lock behind, and nothing else clears it.
+        const lockedAt = new Date(NOW.getTime() - STALE_LOCK_MS - 1);
+        vi.mocked(prisma.battleOutbox.findMany).mockResolvedValue([{ ...candidate, lockedAt, attempts: 1 }] as never);
+        vi.mocked(prisma.battleOutbox.updateMany).mockResolvedValue({ count: 1 } as never);
+
+        const claimed = await claimOutbox([OUTBOX_TOPICS.compute], 'worker-b', 10, NOW);
+
+        expect(claimed).toHaveLength(1);
+        // The takeover counts as an attempt, so a message that keeps killing its worker
+        // still reaches the dead-letter path.
+        expect(claimed[0]!.attempts).toBe(2);
+        expect(vi.mocked(prisma.battleOutbox.updateMany).mock.calls[0]![0]).toMatchObject({
+            where: { id: 'msg_1', lockedAt, processedAt: null },
+            data: { lockedAt: NOW, lockedBy: 'worker-b' },
         });
     });
 
@@ -107,6 +131,24 @@ describe('claimOutbox', () => {
             orderBy: { availableAt: 'asc' },
             take: 5,
         });
+    });
+});
+
+describe('nextOutboxDueAt', () => {
+    it('returns when the earliest unlocked message becomes due', async () => {
+        const availableAt = new Date(NOW.getTime() + 4_000);
+        vi.mocked(prisma.battleOutbox.findFirst).mockResolvedValue({ availableAt } as never);
+
+        expect(await nextOutboxDueAt([OUTBOX_TOPICS.awaitBeacon])).toBe(availableAt);
+        expect(vi.mocked(prisma.battleOutbox.findFirst).mock.calls[0]![0]).toMatchObject({
+            where: { processedAt: null, deadLetteredAt: null, lockedAt: null, topic: { in: [OUTBOX_TOPICS.awaitBeacon] } },
+            orderBy: { availableAt: 'asc' },
+        });
+    });
+
+    it('returns null when nothing is waiting', async () => {
+        vi.mocked(prisma.battleOutbox.findFirst).mockResolvedValue(null);
+        expect(await nextOutboxDueAt([OUTBOX_TOPICS.compute])).toBeNull();
     });
 });
 

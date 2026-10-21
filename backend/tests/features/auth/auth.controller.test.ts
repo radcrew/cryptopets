@@ -33,9 +33,9 @@ beforeEach(() => {
 });
 
 describe('getNonce', () => {
-    it('stores and returns a new nonce', () => {
+    it('stores and returns a new nonce', async () => {
         const res = makeRes();
-        getNonce({} as Request, res);
+        await getNonce({} as Request, res);
         expect(storeNonce).toHaveBeenCalledWith('test-nonce');
         expect(res.json).toHaveBeenCalledWith({ nonce: 'test-nonce' });
     });

@@ -8,9 +8,9 @@ import {
 import { consumeNonce, storeNonce } from './nonce.store';
 import type { AuthErrorResponse, AuthVerifyRequest, NonceResponse, VerifyResponse } from './auth.types';
 
-export function getNonce(_req: Request, res: Response<NonceResponse>): void {
+export async function getNonce(_req: Request, res: Response<NonceResponse>): Promise<void> {
     const nonce = createNonce();
-    storeNonce(nonce);
+    await storeNonce(nonce);
     res.json({ nonce });
 }
 
@@ -28,7 +28,7 @@ export async function verify(
 
         // Single-use challenge: the nonce must have been issued by GET /nonce and
         // is burned on this attempt, so a captured signature cannot be replayed.
-        if (!consumeNonce(nonce)) {
+        if (!(await consumeNonce(nonce))) {
             res.status(401).json({ error: 'Invalid or expired nonce' });
             return;
         }

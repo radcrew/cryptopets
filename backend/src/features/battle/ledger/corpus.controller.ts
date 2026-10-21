@@ -34,8 +34,14 @@ interface SequenceQuery {
 
 export async function getReceiptsBySequence(req: Request, res: Response): Promise<void> {
     const { signingKeyId, after, limit } = req.query as SequenceQuery;
-    if (!signingKeyId) {
+    // A repeated query parameter arrives as an array, which Prisma rejects at query time.
+    if (typeof signingKeyId !== 'string' || signingKeyId === '') {
         res.status(422).json({ error: 'signingKeyId is required' });
+        return;
+    }
+    // `after` becomes a BigInt, which throws on anything but an integer string.
+    if (after !== undefined && (typeof after !== 'string' || !/^\d+$/.test(after))) {
+        res.status(422).json({ error: 'after must be a non-negative integer' });
         return;
     }
     const page = await listReceiptsBySequence(signingKeyId, after, limit ? Number(limit) : undefined);

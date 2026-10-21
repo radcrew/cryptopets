@@ -23,7 +23,10 @@ export interface ChatMessage {
 
 export interface UseChatMessagesOptions {
     threadId: string | null;
-    /** `/ws/chat` endpoint. Undefined leaves the thread poll-free but not live. */
+    /**
+     * `/ws/chat` endpoint. While it is not connected, including when it is undefined or the
+     * host cannot hold WebSockets (a serverless backend), the thread polls instead.
+     */
     socketUrl?: string;
 }
 
@@ -38,6 +41,13 @@ interface ChatPage {
  * a short page is how this knows it has reached the start of the thread.
  */
 const PAGE_SIZE = 50;
+
+/**
+ * How often a thread re-reads while the socket is down. Well inside the chat read limit
+ * (120 a minute per wallet) even with several pages loaded, and fast enough that a
+ * conversation still reads as live.
+ */
+const CHAT_POLL_INTERVAL_MS = 5_000;
 
 export interface UseChatMessagesResult {
     messages: ChatMessage[];
@@ -102,41 +112,6 @@ export const useChatMessages = ({
     const baseURL = apiClient.defaults.baseURL ?? '';
     const queryKey = chatMessagesQueryKey(baseURL, threadId);
 
-    /**
-     * Paged backwards from the newest message, a page at a time.
-     *
-     * `pages[0]` is the newest page and each one after it is older, which is the reverse
-     * of reading order — the transcript flattens them back the other way below.
-     *
-     * An infinite query rather than a page held in component state: a notification has to
-     * refresh *every* page on screen, not just the newest. A reaction or a read receipt
-     * can land on a message loaded ten pages ago, and history frozen in state would show
-     * it stale until reload. The cost is that a re-read fetches each loaded page; a thread
-     * here is one pair of players, so that is a handful of small requests.
-     */
-    const query = useInfiniteQuery({
-        queryKey,
-        enabled: isAuthenticated && threadId != null,
-        initialPageParam: undefined as number | undefined,
-        queryFn: async ({ pageParam }): Promise<ChatPage> => {
-            const { data } = await apiClient.get<Partial<ChatPage>>(
-                `/api/chat/threads/${threadId}/messages`,
-                { params: { limit: PAGE_SIZE, ...(pageParam ? { before: pageParam } : {}) } },
-            );
-            return { messages: data.messages ?? [], readUpTo: data.readUpTo ?? 0 };
-        },
-        // The oldest id held, to page back from. A page shorter than asked for is the
-        // start of the thread, and returning undefined is what stops the loop.
-        getNextPageParam: (lastPage) =>
-            lastPage.messages.length < PAGE_SIZE ? undefined : lastPage.messages[0]?.id,
-    });
-
-    /** Oldest first across every loaded page, which is the order the transcript reads in. */
-    const messages = useMemo(
-        () => [...(query.data?.pages ?? [])].reverse().flatMap((page) => page.messages),
-        [query.data],
-    );
-
     // Rebuilds the key inside rather than closing over the outer array, whose identity
     // changes every render — that is what previously needed an exhaustive-deps
     // suppression, and a suppression here would be permanent: this callback is wired to
@@ -167,12 +142,51 @@ export const useChatMessages = ({
         [queryClient, baseURL, threadId, refresh],
     );
 
+    // Above the query, because whether it is connected decides whether the query polls.
     const { connected, online } = useChatThreadSocket({
         url: socketUrl,
         threadId,
         onNotification,
         onReconnect: refresh,
     });
+
+    /**
+     * Paged backwards from the newest message, a page at a time.
+     *
+     * `pages[0]` is the newest page and each one after it is older, which is the reverse
+     * of reading order — the transcript flattens them back the other way below.
+     *
+     * An infinite query rather than a page held in component state: a notification has to
+     * refresh *every* page on screen, not just the newest. A reaction or a read receipt
+     * can land on a message loaded ten pages ago, and history frozen in state would show
+     * it stale until reload. The cost is that a re-read fetches each loaded page; a thread
+     * here is one pair of players, so that is a handful of small requests.
+     */
+    const query = useInfiniteQuery({
+        queryKey,
+        enabled: isAuthenticated && threadId != null,
+        initialPageParam: undefined as number | undefined,
+        queryFn: async ({ pageParam }): Promise<ChatPage> => {
+            const { data } = await apiClient.get<Partial<ChatPage>>(
+                `/api/chat/threads/${threadId}/messages`,
+                { params: { limit: PAGE_SIZE, ...(pageParam ? { before: pageParam } : {}) } },
+            );
+            return { messages: data.messages ?? [], readUpTo: data.readUpTo ?? 0 };
+        },
+        // The oldest id held, to page back from. A page shorter than asked for is the
+        // start of the thread, and returning undefined is what stops the loop.
+        getNextPageParam: (lastPage) =>
+            lastPage.messages.length < PAGE_SIZE ? undefined : lastPage.messages[0]?.id,
+        // The socket only says "something changed"; without it, nothing would. Polling
+        // stops the moment it connects, and React Query pauses it in a background tab.
+        refetchInterval: connected ? false : CHAT_POLL_INTERVAL_MS,
+    });
+
+    /** Oldest first across every loaded page, which is the order the transcript reads in. */
+    const messages = useMemo(
+        () => [...(query.data?.pages ?? [])].reverse().flatMap((page) => page.messages),
+        [query.data],
+    );
 
     const mutation = useMutation({
         mutationFn: async (text: string) => {

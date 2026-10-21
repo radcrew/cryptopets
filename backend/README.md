@@ -141,6 +141,78 @@ curl https://YOUR-SERVICE.onrender.com/api/health
 | Lockfile errors | Ensure `pnpm-lock.yaml` is committed at the repo root. |
 | Wrong root | **Root Directory** must be empty (repo root), not `backend`. |
 
+## Deploy to Vercel
+
+The backend can also run as one Vercel function. [`vercel.json`](./vercel.json) holds the
+build settings. The code a serverless host needs is in `src/serverless/`, and
+`scripts/bundle-vercel.cjs` bundles it with the Express app into one file.
+
+### Project settings
+
+| Setting | Value |
+|--------|--------|
+| Root Directory | `backend` |
+| Framework Preset | Other (`vercel.json` sets `"framework": null`) |
+| Include files outside the root directory in the Build Step | On (the install runs from the monorepo root) |
+
+Build and install commands come from `vercel.json`. Leave them empty in the dashboard.
+
+### Environment variables
+
+Copy the variables Render uses, then set these:
+
+| Variable | Value |
+|--------|--------|
+| `DATABASE_URL` | The Supabase **pooler** URL on port 6543, ending in `?pgbouncer=true&connection_limit=1`. Every function instance opens its own connection. |
+| `CRON_SECRET` | A long random string. Vercel sends it to the scheduled jobs; without it, they refuse every call. |
+| `KEEPER_ENABLED` | `false`. The settle keeper needs a long-running process. Players are asked to finish a breed or mint themselves after about 45 seconds. |
+| `REDIS_URL` | Optional: a hosted Redis, such as Upstash. Keeps the dialogue cache across instances. |
+
+Before the first deploy, create the `auth_nonce` table:
+
+```bash
+pnpm --filter backend prisma:migrate
+```
+
+Without it, `GET /api/auth/nonce` fails, so nobody can log in. This applies to Render too.
+
+### How the long-running parts work here
+
+| Part | On Render | On Vercel |
+|--------|--------|--------|
+| Login nonces | `auth_nonce` table | The same table, so any instance can check a nonce another one issued. |
+| Battle signer | Set up at server start | Set up on the first request of each instance (`src/serverless/runtime.ts`). |
+| Battle worker | Timer, every 2 seconds | Runs after a battle accept and after each battle state read, which the client polls while it waits (`src/serverless/handler.ts`). It waits for a step due within 8 seconds, such as the drand round. A daily job at `/api/cron/battle-worker` is a backup. |
+| Batch anchor | Timer | Daily job at `/api/cron/battle-anchor`. On a paid plan, run it more often by changing the schedule in `vercel.json`. |
+| Settle keeper | Timer, if `KEEPER_ENABLED` | Off. See `KEEPER_ENABLED` above. |
+| WebSockets | Battle room and chat | Not available on Vercel functions. Battles and chat fall back to polling every 5 seconds. |
+| Rate limits | One count per server | One count per instance, so they are weaker. |
+
+### Running on Render and Vercel together
+
+If both use the same database, run the batch anchor and the settle keeper on only one of
+them. Both send blockchain transactions, and two copies would send duplicates. Two battle
+workers are safe, since the queue lock gives each message to one worker.
+
+### Verify
+
+```bash
+curl https://YOUR-PROJECT.vercel.app/api/health
+curl -H "Authorization: Bearer $CRON_SECRET" https://YOUR-PROJECT.vercel.app/api/cron/battle-worker
+```
+
+The second call answers `{"processed":0}` when no battle is waiting.
+
+### Troubleshooting
+
+| Symptom | Fix |
+|--------|-----|
+| `Cannot read properties of undefined (reading 'fsPath')` | The root `.vercelignore` is removing `backend/`. Do not list `backend/` there. |
+| `GET /api/auth/nonce` answers `500`, so nobody can log in | The `auth_nonce` table is missing. Run the migration above. |
+| Battles stay at `accepted` | Check the function logs for `[battle-signer]` and `[battle-worker]` lines. |
+| Battles stop at `computed`, then forfeit | `INDEXER_GRPC_ADDR` is not set, so the independent verifier cannot run. |
+| Scheduled jobs answer `401` | `CRON_SECRET` is not set in the Vercel project. |
+
 ## How It Works
 
 1. Frontend requests a nonce from `/api/auth/nonce`

@@ -1,3 +1,5 @@
+import { prisma } from '@config/prisma';
+
 /**
  * Single-use nonce store for wallet auth challenges.
  *
@@ -5,36 +7,30 @@
  * accepted once and only within its TTL, so a captured signature cannot be
  * replayed — the message it signs embeds a nonce that no longer exists.
  *
- * In-memory: correct for a single process; nonces are short-lived (5 min) so
- * losing them on restart is harmless. Move to Redis for multi-instance.
+ * In the database, not in memory: on a serverless host the two requests rarely
+ * reach the same process, so a nonce held by one instance would be unknown to
+ * the instance that verifies it.
  */
 
 const NONCE_TTL_MS = 5 * 60 * 1000;
 
-const issued = new Map<string, number>(); // nonce → expiry epoch ms
-
 /** Record a freshly issued nonce so `consumeNonce` can accept it later. */
-export function storeNonce(nonce: string): void {
-    purgeExpired();
-    issued.set(nonce, Date.now() + NONCE_TTL_MS);
+export async function storeNonce(nonce: string): Promise<void> {
+    const now = Date.now();
+    // Lazy eviction on each issue so abandoned nonces don't accumulate.
+    await prisma.authNonce.deleteMany({ where: { expiresAt: { lte: new Date(now) } } });
+    await prisma.authNonce.create({ data: { nonce, expiresAt: new Date(now + NONCE_TTL_MS) } });
 }
 
 /**
  * Single-use take: true only if the nonce was issued by us and is still fresh.
- * The nonce is deleted on the attempt (success or not), so it can never be
- * presented twice.
+ * The delete is the claim: of two concurrent attempts, only one deletes the row,
+ * so a nonce can never be presented twice. An expired row is left for the sweep
+ * in `storeNonce`; it can no longer be used either way.
  */
-export function consumeNonce(nonce: string): boolean {
-    const expiresAt = issued.get(nonce);
-    if (expiresAt === undefined) return false;
-    issued.delete(nonce);
-    return expiresAt > Date.now();
-}
-
-/** Lazy eviction on each issue so abandoned nonces don't accumulate. */
-function purgeExpired(): void {
-    const now = Date.now();
-    for (const [nonce, expiresAt] of issued) {
-        if (expiresAt <= now) issued.delete(nonce);
-    }
+export async function consumeNonce(nonce: string): Promise<boolean> {
+    const { count } = await prisma.authNonce.deleteMany({
+        where: { nonce, expiresAt: { gt: new Date() } },
+    });
+    return count === 1;
 }
