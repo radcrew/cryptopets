@@ -3,7 +3,10 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import { waitUntil } from '@vercel/functions';
 
 import { env } from '@config/env';
+import { prisma } from '@config/prisma';
+import { isTerminal } from '@features/battle/ledger';
 import { drainBattleWorker } from '@features/battle/worker';
+import { BattleState } from '@generated/prisma/enums';
 
 import app from '../app';
 import { isAuthorizedCron, runCronJob } from './cron';
@@ -13,8 +16,8 @@ import { ensureBattleRuntime } from './runtime';
  * The Vercel function: the Express app, plus the background work `server.ts` would start.
  *
  * A serverless instance has no timers, so battle work is driven by requests instead. After
- * a battle is accepted, and after each read of a battle's state (which a client polls
- * while it waits), the worker drains the queue. A battle's next step is seconds away, so
+ * a battle is accepted, and after each read of an unfinished battle's state (which a
+ * client polls while it waits), the worker drains the queue. A battle's next step is seconds away, so
  * this moves a battle forward as fast as the long-running worker does, and faster than
  * its two-second timer.
  *
@@ -54,6 +57,34 @@ function afterResponse(res: ServerResponse): Promise<void> {
     });
 }
 
+/**
+ * Whether the request that just finished can have left work for the worker.
+ *
+ * The state read needs no login, so without this anyone could make the backend query the
+ * queue, and keep a function running while it waits, by requesting made-up battle ids. A
+ * failed request costs nothing more. A successful state read costs one primary-key lookup,
+ * and drains only for a battle the worker still has steps for: from `published` on, the
+ * batch anchor takes over, and a terminal battle has nothing left at all.
+ */
+export async function hasWorkerSteps(
+    method: string | undefined,
+    path: string,
+    statusCode: number,
+): Promise<boolean> {
+    if (statusCode < 200 || statusCode >= 300) return false;
+    // A successful accept has just queued the battle's first step.
+    if (method === 'POST') return true;
+
+    let battleId: string;
+    try {
+        battleId = decodeURIComponent(path.slice('/api/battle/'.length));
+    } catch {
+        return false;
+    }
+    const battle = await prisma.battleLedger.findUnique({ where: { battleId }, select: { state: true } });
+    return battle !== null && !isTerminal(battle.state) && battle.state !== BattleState.published;
+}
+
 export default async function handler(req: IncomingMessage, res: ServerResponse): Promise<void> {
     await ensureBattleRuntime();
     const path = (req.url ?? '/').split('?')[0] ?? '/';
@@ -70,7 +101,12 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
     }
 
     if (shouldDrainAfter(req.method, path)) {
-        waitUntil(afterResponse(res).then(drainOnce));
+        waitUntil(
+            afterResponse(res)
+                .then(() => hasWorkerSteps(req.method, path, res.statusCode))
+                .then((pending) => (pending ? drainOnce() : undefined))
+                .catch((error: Error) => console.error(`[battle-worker] drain check failed: ${error.message}`)),
+        );
     }
     app(req, res);
 }
