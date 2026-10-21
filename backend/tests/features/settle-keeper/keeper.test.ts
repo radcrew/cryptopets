@@ -262,6 +262,34 @@ describe('startKeeper', () => {
         handle.stop();
     });
 
+    it('keeps every eth_getLogs call inside a 200-block range', async () => {
+        // Base Sepolia's public RPC rejects a wider range, and a backfill or a live poll that
+        // fell behind would otherwise ask for one.
+        publicClient.getBlockNumber.mockResolvedValueOnce(1_000n).mockResolvedValue(1_500n);
+
+        const handle = await startKeeper({ ...baseConfig, backfillBlocks: 500n });
+        await flush();
+        await vi.advanceTimersByTimeAsync(8_000);
+
+        const gameLogicCalls = publicClient.getContractEvents.mock.calls
+            .map(([params]) => params)
+            .filter((p) => p.eventName === undefined);
+        for (const { fromBlock, toBlock } of gameLogicCalls) {
+            expect(toBlock - fromBlock + 1n).toBeLessThanOrEqual(200n);
+        }
+        // The backfill covers 500..1000 in chunks, and the live poll resumes right after it,
+        // one capped range per tick.
+        expect(gameLogicCalls.map((p) => [p.fromBlock, p.toBlock])).toEqual([
+            [500n, 699n],
+            [700n, 899n],
+            [900n, 1_000n],
+            [1_001n, 1_200n],
+            [1_201n, 1_400n],
+            [1_401n, 1_500n],
+        ]);
+        handle.stop();
+    });
+
     it('warns when the keeper wallet balance is below the minimum threshold', async () => {
         publicClient.getBalance.mockResolvedValue(1n); // effectively empty
         const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
