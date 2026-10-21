@@ -203,7 +203,14 @@ export async function loadPersistedSigningKeys(): Promise<void> {
     // that never mentions it again — so a boot with a new key configured is exactly when
     // the old one's validity should end. Left to itself it would stay published as "valid
     // indefinitely" and keep vouching for receipts dated long after it was retired.
-    await retireInactiveKeys(activeIds);
+    //
+    // Skipped when nothing is active, which means `configureSigner` failed rather than that
+    // every key was rotated out. Every stored key would then look inactive, including the
+    // one this deployment really signs with, and closing its window would make every
+    // receipt it signs after the signer recovers fail verification.
+    if (activeIds.size > 0) {
+        await retireInactiveKeys(activeIds);
+    }
 
     const stored = await loadSigningKeys(activeIds);
     rotatedKeys.length = 0;
