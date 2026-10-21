@@ -6,7 +6,7 @@ import { getNonce, verify } from '@features/auth';
 const router: Router = express.Router();
 
 router.use(authRateLimit);
-router.get('/nonce', getNonce);
+router.get('/nonce', asyncRoute(getNonce));
 router.post('/verify', asyncRoute(verify));
 
 export default router;

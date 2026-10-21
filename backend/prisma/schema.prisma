@@ -24,6 +24,17 @@ model User {
   @@map("users")
 }
 
+/// A login challenge issued by GET /api/auth/nonce and burned by POST /api/auth/verify.
+/// In the database rather than in memory so any instance can check a nonce another one
+/// issued: on a serverless host the two requests rarely reach the same process.
+model AuthNonce {
+  nonce     String   @id
+  expiresAt DateTime @map("expires_at")
+
+  @@index([expiresAt])
+  @@map("auth_nonce")
+}
+
 /// One row per on-chain pet, across every owner and chain.
 /// Populated by the indexer (see PVP_BATTLE.md §2) so the frontend can
 /// discover opponents it does not own.
