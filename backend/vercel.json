@@ -10,5 +10,9 @@
       "maxDuration": 60
     }
   },
-  "rewrites": [{ "source": "/(.*)", "destination": "/api" }]
+  "rewrites": [{ "source": "/(.*)", "destination": "/api" }],
+  "crons": [
+    { "path": "/api/cron/battle-worker", "schedule": "0 4 * * *" },
+    { "path": "/api/cron/battle-anchor", "schedule": "30 4 * * *" }
+  ]
 }

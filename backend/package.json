@@ -42,6 +42,7 @@
         "@shared/core": "workspace:*",
         "@solana/web3.js": "^1.95.0",
         "@switchboard-xyz/on-demand": "^3.10.2",
+        "@vercel/functions": "3.10.2",
         "ai": "^6.0.197",
         "bs58": "^6.0.0",
         "cors": "^2.8.5",

@@ -1,6 +1,6 @@
 // Vercel function entry. vercel.json rewrites every path here, and Express routes on the
-// original URL, which Vercel keeps in req.url. The app is the esbuild bundle that
-// `pnpm build:vercel` writes (see scripts/bundle-vercel.cjs).
+// original URL, which Vercel keeps in req.url. The handler is the esbuild bundle that
+// `pnpm build:vercel` writes from src/serverless/handler.ts (see scripts/bundle-vercel.cjs).
 //
 // Loaded through `eval('require')` so Vercel's file tracer does not analyze it. The
 // bundle already contains its dependencies, and tracing it follows every path a library

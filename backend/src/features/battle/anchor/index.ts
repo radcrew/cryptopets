@@ -29,16 +29,30 @@ export interface BatchAnchorHandle {
 let handle: BatchAnchorHandle | undefined;
 
 export function startBatchAnchor(): void {
+    const context = createAnchorContext();
+    if (!context) return;
+
+    const timer = setInterval(() => void runOnce(context), env.battle.anchorIntervalMs);
+    timer.unref();
+    handle = { stop: () => clearInterval(timer) };
+    console.log(`[battle-anchor] batching and anchoring every ${env.battle.anchorIntervalMs}ms to ${context.registryAddress}`);
+}
+
+/**
+ * The clients and scope one anchoring pass needs, or null when anchoring is off. Shared by
+ * the timer above and by the scheduled job a serverless deployment runs instead.
+ */
+export function createAnchorContext(): AnchorContext | null {
     if (!env.battle.enabled) {
-        return;
+        return null;
     }
-    const { anchorRpcUrl, anchorPrivateKey, anchorRegistryAddress, anchorChainId, anchorIntervalMs } = env.battle;
+    const { anchorRpcUrl, anchorPrivateKey, anchorRegistryAddress, anchorChainId } = env.battle;
     if (!anchorRpcUrl || !anchorPrivateKey || !anchorRegistryAddress || !anchorChainId) {
         console.log(
             '[battle-anchor] BATTLE_ANCHOR_* not fully set; batches will still be built but never anchored ' +
                 '(receipts stay signed and public either way)',
         );
-        return;
+        return null;
     }
 
     const chain = { id: anchorChainId, name: `chain-${anchorChainId}`, nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 }, rpcUrls: { default: { http: [anchorRpcUrl] } } } as const satisfies Chain;
@@ -49,7 +63,7 @@ export function startBatchAnchor(): void {
         transport: http(anchorRpcUrl),
     });
 
-    const context: AnchorContext = {
+    return {
         publicClient,
         walletClient,
         registryAddress: anchorRegistryAddress as Address,
@@ -58,11 +72,6 @@ export function startBatchAnchor(): void {
         chainId: env.battle.chainIds[0] ?? '',
         deploymentId: env.battle.deploymentId,
     };
-
-    const timer = setInterval(() => void runOnce(context), anchorIntervalMs);
-    timer.unref();
-    handle = { stop: () => clearInterval(timer) };
-    console.log(`[battle-anchor] batching and anchoring every ${anchorIntervalMs}ms to ${anchorRegistryAddress}`);
 }
 
 export function stopBatchAnchor(): void {

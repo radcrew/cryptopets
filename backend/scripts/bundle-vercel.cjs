@@ -1,5 +1,7 @@
 /**
- * Bundle the Express app into one CJS file for the Vercel function in `api/index.js`.
+ * Bundle the Vercel handler into one CJS file for the function in `api/index.js`. The
+ * handler is the Express app plus the background work a serverless host needs (see
+ * src/serverless/handler.ts).
  *
  * The tsc output cannot be deployed as it is: it resolves `@config/*`, `@features/*` and
  * the workspace packages through `module-alias` at runtime, which Vercel's file tracing
@@ -13,7 +15,7 @@
 const path = require('node:path');
 const esbuild = require('esbuild');
 
-const entry = path.resolve(__dirname, '../src/app.ts');
+const entry = path.resolve(__dirname, '../src/serverless/handler.ts');
 const outfile = path.resolve(__dirname, '../dist/functions/api/app.cjs');
 
 esbuild
