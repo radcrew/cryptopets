@@ -47,6 +47,12 @@ export const env = {
         model: process.env.HF_MODEL?.trim() || 'meta-llama/Llama-3.1-8B-Instruct',
         /** Base URL for the OpenAI-compatible inference endpoint (no /chat/completions suffix). */
         baseUrl: process.env.HF_API_URL?.trim().replace(/\/chat\/completions$/, '') || 'https://router.huggingface.co/v1',
+        /**
+         * Output token cap for each request. Some providers count this cap, not the tokens
+         * actually produced, against a per-minute limit, and reject a request whose cap is
+         * over it: Groq's free tier allows 1000 output tokens a minute for some models.
+         */
+        maxOutputTokens: Number(process.env.HF_MAX_OUTPUT_TOKENS?.trim()) || 1024,
     },
 
     /**
