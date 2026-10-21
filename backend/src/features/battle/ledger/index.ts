@@ -99,6 +99,7 @@ export {
     enqueueOutbox,
     failOutbox,
     listDeadLetters,
+    nextOutboxDueAt,
     requeueDeadLetter,
     MAX_OUTBOX_ATTEMPTS,
     OUTBOX_TOPICS,

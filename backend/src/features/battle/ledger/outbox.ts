@@ -141,6 +141,20 @@ export async function claimOutbox(
     return claimed;
 }
 
+/**
+ * When the next unlocked message for these topics becomes due, or null if none is waiting.
+ * Lets a worker that runs per request wait out a short gap, such as a drand round a few
+ * seconds away, instead of stopping and leaving the battle for a later request.
+ */
+export async function nextOutboxDueAt(topics: readonly OutboxTopic[]): Promise<Date | null> {
+    const next = await prisma.battleOutbox.findFirst({
+        where: { processedAt: null, deadLetteredAt: null, lockedAt: null, topic: { in: [...topics] } },
+        orderBy: { availableAt: 'asc' },
+        select: { availableAt: true },
+    });
+    return next?.availableAt ?? null;
+}
+
 /** Marks a message done. */
 export async function completeOutbox(id: string, now: Date): Promise<void> {
     await prisma.battleOutbox.update({

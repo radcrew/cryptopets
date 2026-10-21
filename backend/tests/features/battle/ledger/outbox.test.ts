@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 vi.mock('@config/prisma', () => ({
     prisma: {
         battleOutbox: {
+            findFirst: vi.fn(),
             findMany: vi.fn(),
             updateMany: vi.fn(),
             update: vi.fn(),
@@ -20,6 +21,7 @@ import {
     failOutbox,
     listDeadLetters,
     MAX_OUTBOX_ATTEMPTS,
+    nextOutboxDueAt,
     OUTBOX_TOPICS,
     retryDelaySeconds,
 } from '@features/battle/ledger';
@@ -129,6 +131,24 @@ describe('claimOutbox', () => {
             orderBy: { availableAt: 'asc' },
             take: 5,
         });
+    });
+});
+
+describe('nextOutboxDueAt', () => {
+    it('returns when the earliest unlocked message becomes due', async () => {
+        const availableAt = new Date(NOW.getTime() + 4_000);
+        vi.mocked(prisma.battleOutbox.findFirst).mockResolvedValue({ availableAt } as never);
+
+        expect(await nextOutboxDueAt([OUTBOX_TOPICS.awaitBeacon])).toBe(availableAt);
+        expect(vi.mocked(prisma.battleOutbox.findFirst).mock.calls[0]![0]).toMatchObject({
+            where: { processedAt: null, deadLetteredAt: null, lockedAt: null, topic: { in: [OUTBOX_TOPICS.awaitBeacon] } },
+            orderBy: { availableAt: 'asc' },
+        });
+    });
+
+    it('returns null when nothing is waiting', async () => {
+        vi.mocked(prisma.battleOutbox.findFirst).mockResolvedValue(null);
+        expect(await nextOutboxDueAt([OUTBOX_TOPICS.compute])).toBeNull();
     });
 });
 

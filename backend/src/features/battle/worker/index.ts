@@ -5,6 +5,8 @@ export { processSignMessage } from './sign.worker';
 export { processVerifyMessage } from './verify.worker';
 export {
     type BattleWorkerHandle,
+    type DrainOptions,
+    drainBattleWorker,
     runBattleWorkerOnce,
     startBattleWorker,
 } from './runner';
