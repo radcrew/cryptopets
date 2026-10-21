@@ -64,14 +64,14 @@ router.delete('/sessions', verifyToken, asyncRoute(deleteSessionDelegations));
 // this design exists to let them do.
 // Declared before `/:battleId`, or that route would happily match "config" as a battle id.
 // Same reason the other fixed paths below sit above it.
-router.get('/config', getBattleConfigHandler);
+router.get('/config', asyncRoute(getBattleConfigHandler));
 router.get('/signing-keys', getSigningKeys);
-router.get('/rulesets', getRulesets);
-router.get('/rulesets/:rulesetHash', getRulesetByHash);
-router.post('/verify-receipt', postVerifyReceipt);
-router.get('/:battleId', getBattleStateHandler);
-router.get('/:battleId/commitment', getBattleCommitment);
-router.get('/:battleId/receipt', getBattleReceipt);
-router.get('/:battleId/combat-log', getBattleCombatLog);
+router.get('/rulesets', asyncRoute(getRulesets));
+router.get('/rulesets/:rulesetHash', asyncRoute(getRulesetByHash));
+router.post('/verify-receipt', asyncRoute(postVerifyReceipt));
+router.get('/:battleId', asyncRoute(getBattleStateHandler));
+router.get('/:battleId/commitment', asyncRoute(getBattleCommitment));
+router.get('/:battleId/receipt', asyncRoute(getBattleReceipt));
+router.get('/:battleId/combat-log', asyncRoute(getBattleCombatLog));
 
 export default router;

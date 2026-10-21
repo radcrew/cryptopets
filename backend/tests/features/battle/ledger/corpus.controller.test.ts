@@ -64,6 +64,20 @@ describe('getReceiptsBySequence', () => {
         expect(listReceiptsBySequence).not.toHaveBeenCalled();
     });
 
+    it('rejects a repeated signingKeyId, which arrives as an array', async () => {
+        const res = mockRes();
+        await getReceiptsBySequence({ query: { signingKeyId: ['a', 'b'] } } as never, res as never);
+        expect(res.status).toHaveBeenCalledWith(422);
+        expect(listReceiptsBySequence).not.toHaveBeenCalled();
+    });
+
+    it.each(['abc', '-1', '1.5', ''])('rejects after=%j instead of throwing in BigInt', async (after) => {
+        const res = mockRes();
+        await getReceiptsBySequence({ query: { signingKeyId: 'battle-signer-2026-07', after } } as never, res as never);
+        expect(res.status).toHaveBeenCalledWith(422);
+        expect(listReceiptsBySequence).not.toHaveBeenCalled();
+    });
+
     it('forwards signingKeyId, after, and limit', async () => {
         vi.mocked(listReceiptsBySequence).mockResolvedValue({ receipts: [], nextAfter: null });
         const res = mockRes();

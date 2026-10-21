@@ -1,6 +1,7 @@
 import express, { Router } from 'express';
 
 import { getSeason, getSeasonClaim } from '@features/battle/rewards';
+import { asyncRoute } from '@middleware/asyncRoute';
 
 /**
  * Reward seasons and claim proofs (§I).
@@ -16,7 +17,7 @@ import { getSeason, getSeasonClaim } from '@features/battle/rewards';
  */
 const router: Router = express.Router();
 
-router.get('/seasons/:seasonId', getSeason);
-router.get('/seasons/:seasonId/claim/:wallet', getSeasonClaim);
+router.get('/seasons/:seasonId', asyncRoute(getSeason));
+router.get('/seasons/:seasonId/claim/:wallet', asyncRoute(getSeasonClaim));
 
 export default router;

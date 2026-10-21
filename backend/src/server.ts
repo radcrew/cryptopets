@@ -130,3 +130,13 @@ async function shutdown(signal: NodeJS.Signals): Promise<void> {
 
 process.on('SIGTERM', (signal) => void shutdown(signal));
 process.on('SIGINT', (signal) => void shutdown(signal));
+
+/**
+ * Last safety net for a rejection nothing caught. Without a listener, Node 24 exits the
+ * process, so one missed `await` takes the server down for every player. Route handlers
+ * are covered by `asyncRoute`; this catches whatever slips past it, and logs it so the
+ * missing handler can be found and fixed.
+ */
+process.on('unhandledRejection', (reason) => {
+    console.error('[server] unhandled promise rejection:', reason);
+});

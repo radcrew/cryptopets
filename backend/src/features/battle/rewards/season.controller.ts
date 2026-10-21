@@ -34,6 +34,10 @@ export async function getSeasonClaim(req: Request, res: Response): Promise<void>
 /** Season metadata, so a client can see the range and rates a season was computed from. */
 export async function getSeason(req: Request, res: Response): Promise<void> {
     const seasonId = Number(req.params.seasonId);
+    if (!Number.isSafeInteger(seasonId) || seasonId < 0) {
+        res.status(422).json({ error: 'invalid-season-id' });
+        return;
+    }
     const season = await prisma.rewardSeason.findUnique({
         where: { seasonId },
         select: {
