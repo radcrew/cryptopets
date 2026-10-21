@@ -10,8 +10,9 @@ export default tseslint.config(
     ...tseslint.configs.recommended,
     {
         // .cjs too: the build scripts are CommonJS and would otherwise be linted
-        // without node globals, flagging require and __dirname as undefined.
-        files: ['**/*.ts', '**/*.cjs'],
+        // without node globals, flagging require and __dirname as undefined. The same
+        // goes for the Vercel function entry in api/.
+        files: ['**/*.ts', '**/*.cjs', 'api/**/*.js'],
         languageOptions: {
             ecmaVersion: 'latest',
             sourceType: 'module',
@@ -33,8 +34,9 @@ export default tseslint.config(
     {
         // The build scripts are CommonJS on purpose: they run as plain node before
         // and after tsc, outside the compiled ESM output, so require() is correct
-        // here rather than a lapse.
-        files: ['**/*.cjs'],
+        // here rather than a lapse. The Vercel function entry in api/ is CommonJS for
+        // the same reason: it loads the bundle the build writes.
+        files: ['**/*.cjs', 'api/**/*.js'],
         rules: {
             '@typescript-eslint/no-require-imports': 'off',
         },

@@ -9,6 +9,7 @@
     },
     "scripts": {
         "build": "pnpm clean && prisma generate && tsc && node scripts/copy-proto.cjs && node scripts/bundle-shared-node.cjs && node scripts/bundle-protocol.cjs",
+        "build:vercel": "pnpm build && node scripts/bundle-vercel.cjs",
         "start": "node dist/src/server.js",
         "dev": "nodemon",
         "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\"",
