@@ -55,7 +55,10 @@ vi.mock('../../../../src/features/battle/signer', () => ({
     },
 }));
 
-vi.mock('../../../../src/features/battle/ledger/transitions', () => ({
+vi.mock('../../../../src/features/battle/ledger/transitions', async (importOriginal) => ({
+    // The real refusal names, so the mocked results below and accept's switch agree.
+    OPEN_BATTLE_REFUSALS: (await importOriginal<typeof import('../../../../src/features/battle/ledger/transitions')>())
+        .OPEN_BATTLE_REFUSALS,
     openBattle: vi.fn(),
     applyTransition: vi.fn(),
 }));

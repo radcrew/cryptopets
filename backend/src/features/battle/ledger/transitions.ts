@@ -140,11 +140,21 @@ export interface ExpectedProgress {
     readyAt: bigint;
 }
 
+/** Why `openBattle` refused. Accept maps each one onto its own refusal reason. */
+export const OPEN_BATTLE_REFUSALS = {
+    /** A pet already has an open battle. */
+    petLocked: 'pet-locked',
+    /** A pet's progress changed after its snapshot was taken. */
+    petProgressChanged: 'pet-progress-changed',
+    /** The originating intent already produced a battle. */
+    intentAlreadyConsumed: 'intent-already-consumed',
+} as const;
+
 export type OpenBattleResult =
     | { ok: true; battleId: string }
-    | { ok: false; reason: 'pet-locked'; petId: string }
-    | { ok: false; reason: 'pet-progress-changed'; petId: string }
-    | { ok: false; reason: 'intent-already-consumed' };
+    | { ok: false; reason: typeof OPEN_BATTLE_REFUSALS.petLocked; petId: string }
+    | { ok: false; reason: typeof OPEN_BATTLE_REFUSALS.petProgressChanged; petId: string }
+    | { ok: false; reason: typeof OPEN_BATTLE_REFUSALS.intentAlreadyConsumed };
 
 /**
  * Signals a clean, expected abort of the `openBattle` transaction.
@@ -206,7 +216,7 @@ async function openBattleOnce(request: OpenBattleRequest): Promise<OpenBattleRes
                         data: { consumedAt: new Date() },
                     });
                     if (count === 0) {
-                        throw new OpenBattleAbort({ ok: false, reason: 'intent-already-consumed' });
+                        throw new OpenBattleAbort({ ok: false, reason: OPEN_BATTLE_REFUSALS.intentAlreadyConsumed });
                     }
                 }
 
@@ -220,7 +230,7 @@ async function openBattleOnce(request: OpenBattleRequest): Promise<OpenBattleRes
                         });
                     } catch (error) {
                         if ((error as { code?: string }).code === 'P2002') {
-                            throw new OpenBattleAbort({ ok: false, reason: 'pet-locked', petId });
+                            throw new OpenBattleAbort({ ok: false, reason: OPEN_BATTLE_REFUSALS.petLocked, petId });
                         }
                         throw error;
                     }
@@ -277,7 +287,7 @@ async function assertProgressUnchanged(
             data: { level: pet.level },
         });
         if (count === 0) {
-            throw new OpenBattleAbort({ ok: false, reason: 'pet-progress-changed', petId });
+            throw new OpenBattleAbort({ ok: false, reason: OPEN_BATTLE_REFUSALS.petProgressChanged, petId });
         }
     }
 }

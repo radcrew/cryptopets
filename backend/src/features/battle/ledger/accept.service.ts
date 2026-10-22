@@ -29,7 +29,7 @@ import { servedDeploymentId } from './domain';
 import { OUTBOX_TOPICS } from './outbox';
 import { buildPetSnapshot } from './snapshot.builder';
 import { servedRuleset, servedRulesetHash } from './ruleset.builder';
-import { applyTransition, type ExpectedProgress, openBattle } from './transitions';
+import { applyTransition, type ExpectedProgress, OPEN_BATTLE_REFUSALS, openBattle } from './transitions';
 
 /**
  * The accept flow (§E, §J).
@@ -592,13 +592,13 @@ async function openAcceptedBattle(args: {
         return proceed(null);
     }
     switch (opened.reason) {
-        case 'pet-locked':
+        case OPEN_BATTLE_REFUSALS.petLocked:
             return refuse('pet-locked', `pet ${opened.petId} already has an open battle`);
-        case 'pet-progress-changed':
+        case OPEN_BATTLE_REFUSALS.petProgressChanged:
             // Reported as pet-locked: to the caller it is the same event, a battle for this
             // pet that was still open when the snapshot was taken. A retry builds a fresh one.
             return refuse('pet-locked', `pet ${opened.petId} finished another battle during this accept; try again`);
-        case 'intent-already-consumed':
+        case OPEN_BATTLE_REFUSALS.intentAlreadyConsumed:
             return refuse('intent-already-consumed', 'this intent already produced a battle');
     }
 }
