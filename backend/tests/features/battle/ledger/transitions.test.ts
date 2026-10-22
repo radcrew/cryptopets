@@ -12,6 +12,7 @@ const tx = {
     battleOutbox: { createMany: vi.fn() },
     petBattleLock: { create: vi.fn(), deleteMany: vi.fn() },
     battleIntent: { updateMany: vi.fn() },
+    petBattleProgress: { findMany: vi.fn() },
 };
 
 vi.mock('@config/prisma', () => ({
@@ -218,6 +219,57 @@ describe('openBattle', () => {
         await expect(
             openBattle({ ledger: { chainId: 'eip155:84532' } as never, petIds: ['9', '10'] }),
         ).rejects.toThrow(/connection reset/);
+    });
+
+    describe('with the progress the snapshots froze', () => {
+        const PROGRESS_9 = { petId: '9', level: 5, xp: 40, streak: 1, lastOpponentId: '10', readyAt: 1_000n };
+        const PROGRESS_10 = { petId: '10', level: 7, xp: 90, streak: 0, lastOpponentId: '0', readyAt: 900n };
+        const request = () => ({
+            ledger: { chainId: 'eip155:84532' } as never,
+            petIds: ['9', '10'],
+            expectedProgress: [PROGRESS_9, PROGRESS_10],
+        });
+
+        beforeEach(() => {
+            tx.battleLedger.create.mockResolvedValue({
+                battleId: 'btl_1',
+                chainId: 'eip155:84532',
+                deploymentId: 'base-sepolia-v2',
+            });
+        });
+
+        it('opens the battle when neither pet changed', async () => {
+            tx.petBattleProgress.findMany.mockResolvedValue([PROGRESS_10, PROGRESS_9]);
+            expect(await openBattle(request())).toEqual({ ok: true, battleId: 'btl_1' });
+            expect(tx.petBattleProgress.findMany).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    where: { chainId: 'eip155:84532', deploymentId: 'base-sepolia-v2', petId: { in: ['9', '10'] } },
+                }),
+            );
+        });
+
+        it('rechecks after taking the locks, so a finished battle is visible', async () => {
+            tx.petBattleProgress.findMany.mockResolvedValue([PROGRESS_9, PROGRESS_10]);
+            await openBattle(request());
+            const lastLock = Math.max(...tx.petBattleLock.create.mock.invocationCallOrder);
+            expect(tx.petBattleProgress.findMany.mock.invocationCallOrder[0]!).toBeGreaterThan(lastLock);
+        });
+
+        it('aborts when another battle moved a pet on after its snapshot was taken', async () => {
+            // The other battle signed and released its lock in between: same pet, a later
+            // cooldown and more XP than the snapshot holds.
+            tx.petBattleProgress.findMany.mockResolvedValue([
+                PROGRESS_9,
+                { ...PROGRESS_10, xp: 130, readyAt: 1_600n },
+            ]);
+            expect(await openBattle(request())).toEqual({ ok: false, reason: 'pet-progress-changed', petId: '10' });
+            expect(tx.battleOutbox.createMany).not.toHaveBeenCalled();
+        });
+
+        it('aborts when a pet has no progress row at all', async () => {
+            tx.petBattleProgress.findMany.mockResolvedValue([PROGRESS_10]);
+            expect(await openBattle(request())).toEqual({ ok: false, reason: 'pet-progress-changed', petId: '9' });
+        });
     });
 });
 

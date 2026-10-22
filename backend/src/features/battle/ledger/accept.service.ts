@@ -29,7 +29,7 @@ import { servedDeploymentId } from './domain';
 import { OUTBOX_TOPICS } from './outbox';
 import { buildPetSnapshot } from './snapshot.builder';
 import { servedRuleset, servedRulesetHash } from './ruleset.builder';
-import { applyTransition, openBattle } from './transitions';
+import { applyTransition, type ExpectedProgress, openBattle } from './transitions';
 
 /**
  * The accept flow (§E, §J).
@@ -563,6 +563,7 @@ async function openAcceptedBattle(args: {
     const opened = await openBattle({
         consumeIntentHash: args.intentHash,
         petIds: [attacker.petId.toString(), defender.petId.toString()],
+        expectedProgress: [progressOf(attacker), progressOf(defender)],
         ledger: {
             battleId: args.battleId,
             chainId: args.domain.chainId,
@@ -590,7 +591,26 @@ async function openAcceptedBattle(args: {
     if (opened.ok) {
         return proceed(null);
     }
-    return opened.reason === 'pet-locked'
-        ? refuse('pet-locked', `pet ${opened.petId} already has an open battle`)
-        : refuse('intent-already-consumed', 'this intent already produced a battle');
+    switch (opened.reason) {
+        case 'pet-locked':
+            return refuse('pet-locked', `pet ${opened.petId} already has an open battle`);
+        case 'pet-progress-changed':
+            // Reported as pet-locked: to the caller it is the same event, a battle for this
+            // pet that was still open when the snapshot was taken. A retry builds a fresh one.
+            return refuse('pet-locked', `pet ${opened.petId} finished another battle during this accept; try again`);
+        case 'intent-already-consumed':
+            return refuse('intent-already-consumed', 'this intent already produced a battle');
+    }
+}
+
+/** The progress fields a snapshot froze, in the shape `pet_battle_progress` stores them. */
+function progressOf(pet: BattleSnapshot['attacker']): ExpectedProgress {
+    return {
+        petId: pet.petId.toString(),
+        level: pet.level,
+        xp: pet.xp,
+        streak: pet.streak,
+        lastOpponentId: pet.lastOpponentId.toString(),
+        readyAt: BigInt(pet.readyAt),
+    };
 }

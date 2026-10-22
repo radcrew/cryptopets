@@ -119,11 +119,32 @@ export interface OpenBattleRequest {
      * whichever loses this guard gets `intentAlreadyConsumed`, never a second ledger row.
      */
     consumeIntentHash?: string;
+    /**
+     * The progress each pet's snapshot was built from, rechecked after the locks are taken.
+     *
+     * The snapshot is read before this transaction, so a pet still finishing another battle
+     * can be photographed mid-way: its lock is released when that battle signs, this
+     * transaction then takes the lock, and the snapshot holds progress from before that
+     * battle. Fighting on it would skip that battle's cooldown, and signing it would write
+     * progression computed from the old values over that battle's result. Read here, the
+     * other battle's write is either visible (and differs) or its lock is still held.
+     */
+    expectedProgress?: readonly ExpectedProgress[];
+}
+
+export interface ExpectedProgress {
+    petId: string;
+    level: number;
+    xp: number;
+    streak: number;
+    lastOpponentId: string;
+    readyAt: bigint;
 }
 
 export type OpenBattleResult =
     | { ok: true; battleId: string }
     | { ok: false; reason: 'pet-locked'; petId: string }
+    | { ok: false; reason: 'pet-progress-changed'; petId: string }
     | { ok: false; reason: 'intent-already-consumed' };
 
 /**
@@ -181,6 +202,9 @@ export async function openBattle(request: OpenBattleRequest): Promise<OpenBattle
                         throw error;
                     }
                 }
+                if (request.expectedProgress) {
+                    await assertProgressUnchanged(tx, ledger.chainId, ledger.deploymentId, request.expectedProgress);
+                }
                 if (request.outbox && request.outbox.length > 0) {
                     await enqueueOutbox(tx, request.outbox);
                 }
@@ -193,6 +217,31 @@ export async function openBattle(request: OpenBattleRequest): Promise<OpenBattle
             return error.result;
         }
         throw error;
+    }
+}
+
+async function assertProgressUnchanged(
+    tx: Prisma.TransactionClient,
+    chainId: string,
+    deploymentId: string,
+    expected: readonly ExpectedProgress[],
+): Promise<void> {
+    const rows = await tx.petBattleProgress.findMany({
+        where: { chainId, deploymentId, petId: { in: expected.map((pet) => pet.petId) } },
+        select: { petId: true, level: true, xp: true, streak: true, lastOpponentId: true, readyAt: true },
+    });
+    for (const pet of expected) {
+        const row = rows.find((candidate) => candidate.petId === pet.petId);
+        const unchanged =
+            row !== undefined &&
+            row.level === pet.level &&
+            row.xp === pet.xp &&
+            row.streak === pet.streak &&
+            row.lastOpponentId === pet.lastOpponentId &&
+            row.readyAt === pet.readyAt;
+        if (!unchanged) {
+            throw new OpenBattleAbort({ ok: false, reason: 'pet-progress-changed', petId: pet.petId });
+        }
     }
 }
 
