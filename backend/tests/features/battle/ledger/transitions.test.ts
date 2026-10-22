@@ -12,7 +12,7 @@ const tx = {
     battleOutbox: { createMany: vi.fn() },
     petBattleLock: { create: vi.fn(), deleteMany: vi.fn() },
     battleIntent: { updateMany: vi.fn() },
-    petBattleProgress: { findMany: vi.fn() },
+    petBattleProgress: { updateMany: vi.fn() },
 };
 
 vi.mock('@config/prisma', () => ({
@@ -238,37 +238,45 @@ describe('openBattle', () => {
             });
         });
 
-        it('opens the battle when neither pet changed', async () => {
-            tx.petBattleProgress.findMany.mockResolvedValue([PROGRESS_10, PROGRESS_9]);
-            expect(await openBattle(request())).toEqual({ ok: true, battleId: 'btl_1' });
-            expect(tx.petBattleProgress.findMany).toHaveBeenCalledWith(
-                expect.objectContaining({
-                    where: { chainId: 'eip155:84532', deploymentId: 'base-sepolia-v2', petId: { in: ['9', '10'] } },
-                }),
-            );
+        beforeEach(() => {
+            tx.petBattleProgress.updateMany.mockResolvedValue({ count: 1 });
         });
 
-        it('rechecks after taking the locks, so a finished battle is visible', async () => {
-            tx.petBattleProgress.findMany.mockResolvedValue([PROGRESS_9, PROGRESS_10]);
+        it('opens the battle when neither pet changed', async () => {
+            expect(await openBattle(request())).toEqual({ ok: true, battleId: 'btl_1' });
+        });
+
+        it('guards each row on every frozen value, so any change matches nothing', async () => {
             await openBattle(request());
+            expect(tx.petBattleProgress.updateMany).toHaveBeenCalledWith({
+                where: {
+                    chainId: 'eip155:84532',
+                    deploymentId: 'base-sepolia-v2',
+                    petId: '9',
+                    level: 5,
+                    xp: 40,
+                    streak: 1,
+                    lastOpponentId: '10',
+                    readyAt: 1_000n,
+                },
+                data: { level: 5 },
+            });
+        });
+
+        it('rechecks after taking the locks, in the same numeric order', async () => {
+            await openBattle({ ...request(), expectedProgress: [PROGRESS_10, PROGRESS_9] });
             const lastLock = Math.max(...tx.petBattleLock.create.mock.invocationCallOrder);
-            expect(tx.petBattleProgress.findMany.mock.invocationCallOrder[0]!).toBeGreaterThan(lastLock);
+            expect(tx.petBattleProgress.updateMany.mock.invocationCallOrder[0]!).toBeGreaterThan(lastLock);
+            const order = tx.petBattleProgress.updateMany.mock.calls.map((call) => call[0].where.petId);
+            expect(order).toEqual(['9', '10']);
         });
 
         it('aborts when another battle moved a pet on after its snapshot was taken', async () => {
-            // The other battle signed and released its lock in between: same pet, a later
-            // cooldown and more XP than the snapshot holds.
-            tx.petBattleProgress.findMany.mockResolvedValue([
-                PROGRESS_9,
-                { ...PROGRESS_10, xp: 130, readyAt: 1_600n },
-            ]);
+            // The other battle signed and released its lock in between, so pet 10's row no
+            // longer holds the values its snapshot froze.
+            tx.petBattleProgress.updateMany.mockResolvedValueOnce({ count: 1 }).mockResolvedValueOnce({ count: 0 });
             expect(await openBattle(request())).toEqual({ ok: false, reason: 'pet-progress-changed', petId: '10' });
             expect(tx.battleOutbox.createMany).not.toHaveBeenCalled();
-        });
-
-        it('aborts when a pet has no progress row at all', async () => {
-            tx.petBattleProgress.findMany.mockResolvedValue([PROGRESS_10]);
-            expect(await openBattle(request())).toEqual({ ok: false, reason: 'pet-progress-changed', petId: '9' });
         });
     });
 });

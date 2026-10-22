@@ -126,8 +126,7 @@ export interface OpenBattleRequest {
      * can be photographed mid-way: its lock is released when that battle signs, this
      * transaction then takes the lock, and the snapshot holds progress from before that
      * battle. Fighting on it would skip that battle's cooldown, and signing it would write
-     * progression computed from the old values over that battle's result. Read here, the
-     * other battle's write is either visible (and differs) or its lock is still held.
+     * progression computed from the old values over that battle's result.
      */
     expectedProgress?: readonly ExpectedProgress[];
 }
@@ -220,27 +219,41 @@ export async function openBattle(request: OpenBattleRequest): Promise<OpenBattle
     }
 }
 
+/**
+ * A guarded write, not a read. A read here returns this transaction's snapshot, taken at its
+ * first statement, so a battle that signed and released its lock while this one waited on
+ * that lock would still look unchanged; only Postgres's serializable conflict tracking would
+ * stand between it and a commit, and that tracking can miss it once the lock table's index
+ * spans many pages. An UPDATE of a row changed after the snapshot is always refused
+ * (`could not serialize access due to concurrent update`). Taken in lock order, so two
+ * transactions over the same rows queue instead of deadlocking.
+ */
 async function assertProgressUnchanged(
     tx: Prisma.TransactionClient,
     chainId: string,
     deploymentId: string,
     expected: readonly ExpectedProgress[],
 ): Promise<void> {
-    const rows = await tx.petBattleProgress.findMany({
-        where: { chainId, deploymentId, petId: { in: expected.map((pet) => pet.petId) } },
-        select: { petId: true, level: true, xp: true, streak: true, lastOpponentId: true, readyAt: true },
-    });
-    for (const pet of expected) {
-        const row = rows.find((candidate) => candidate.petId === pet.petId);
-        const unchanged =
-            row !== undefined &&
-            row.level === pet.level &&
-            row.xp === pet.xp &&
-            row.streak === pet.streak &&
-            row.lastOpponentId === pet.lastOpponentId &&
-            row.readyAt === pet.readyAt;
-        if (!unchanged) {
-            throw new OpenBattleAbort({ ok: false, reason: 'pet-progress-changed', petId: pet.petId });
+    const byPetId = new Map(expected.map((pet) => [pet.petId, pet]));
+    for (const petId of sortPetIds([...byPetId.keys()])) {
+        const pet = byPetId.get(petId)!;
+        const { count } = await tx.petBattleProgress.updateMany({
+            where: {
+                chainId,
+                deploymentId,
+                petId,
+                level: pet.level,
+                xp: pet.xp,
+                streak: pet.streak,
+                lastOpponentId: pet.lastOpponentId,
+                readyAt: pet.readyAt,
+            },
+            // Writes back the value it matched on: the point is the row lock and the
+            // conflict check, not a change.
+            data: { level: pet.level },
+        });
+        if (count === 0) {
+            throw new OpenBattleAbort({ ok: false, reason: 'pet-progress-changed', petId });
         }
     }
 }
