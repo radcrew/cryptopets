@@ -180,15 +180,18 @@ const OPEN_BATTLE_ATTEMPTS = 3;
  * refusal (`pet-progress-changed`, `pet-locked`, `intent-already-consumed`) instead of a 500.
  */
 export async function openBattle(request: OpenBattleRequest): Promise<OpenBattleResult> {
-    for (let attempt = 1; ; attempt++) {
+    let lastConflict: unknown;
+    for (let attempt = 1; attempt <= OPEN_BATTLE_ATTEMPTS; attempt++) {
         try {
             return await openBattleOnce(request);
         } catch (error) {
-            if ((error as { code?: string }).code !== 'P2034' || attempt >= OPEN_BATTLE_ATTEMPTS) {
+            if ((error as { code?: string }).code !== 'P2034') {
                 throw error;
             }
+            lastConflict = error;
         }
     }
+    throw lastConflict;
 }
 
 async function openBattleOnce(request: OpenBattleRequest): Promise<OpenBattleResult> {
