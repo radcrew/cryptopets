@@ -170,7 +170,7 @@ describe('openBattle', () => {
         expect(tx.battleLedger.create).toHaveBeenCalledTimes(1);
         expect(tx.petBattleLock.create).toHaveBeenCalledTimes(2);
         expect(tx.battleOutbox.createMany).toHaveBeenCalledTimes(1);
-        expect(vi.mocked(prisma.$transaction).mock.calls[0]![1]).toEqual({ isolationLevel: 'Serializable' });
+        expect(vi.mocked(prisma.$transaction).mock.calls[0]![1]).toEqual({ isolationLevel: 'ReadCommitted' });
     });
 
     it('takes locks in ascending numeric pet-id order', async () => {
@@ -221,40 +221,12 @@ describe('openBattle', () => {
         ).rejects.toThrow(/connection reset/);
     });
 
-    describe('on a serialization failure', () => {
-        const conflict = () => Object.assign(new Error('write conflict'), { code: 'P2034' });
-
-        it('retries on a fresh transaction and returns that attempt\'s refusal', async () => {
-            // First attempt: Postgres refuses the commit. Second attempt sees the other
-            // transaction's write, here as an intent the other accept already consumed.
-            vi.mocked(prisma.$transaction).mockRejectedValueOnce(conflict());
-            tx.battleIntent.updateMany.mockResolvedValue({ count: 0 });
-
-            const result = await openBattle({
-                ledger: { chainId: 'eip155:84532' } as never,
-                petIds: ['9', '10'],
-                consumeIntentHash: '0xabc',
-            });
-
-            expect(result).toEqual({ ok: false, reason: 'intent-already-consumed' });
-            expect(prisma.$transaction).toHaveBeenCalledTimes(2);
-        });
-
-        it('gives up after three attempts and rethrows', async () => {
-            vi.mocked(prisma.$transaction).mockRejectedValue(conflict());
-            await expect(
-                openBattle({ ledger: { chainId: 'eip155:84532' } as never, petIds: ['9', '10'] }),
-            ).rejects.toMatchObject({ code: 'P2034' });
-            expect(prisma.$transaction).toHaveBeenCalledTimes(3);
-        });
-
-        it('does not retry any other error', async () => {
-            vi.mocked(prisma.$transaction).mockRejectedValueOnce(new Error('connection reset'));
-            await expect(
-                openBattle({ ledger: { chainId: 'eip155:84532' } as never, petIds: ['9', '10'] }),
-            ).rejects.toThrow(/connection reset/);
-            expect(prisma.$transaction).toHaveBeenCalledTimes(1);
-        });
+    it('runs once and rethrows a failed transaction rather than retrying it', async () => {
+        vi.mocked(prisma.$transaction).mockRejectedValueOnce(new Error('connection reset'));
+        await expect(
+            openBattle({ ledger: { chainId: 'eip155:84532' } as never, petIds: ['9', '10'] }),
+        ).rejects.toThrow(/connection reset/);
+        expect(prisma.$transaction).toHaveBeenCalledTimes(1);
     });
 
     describe('with the progress the snapshots froze', () => {

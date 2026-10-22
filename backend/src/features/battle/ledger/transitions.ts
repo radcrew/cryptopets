@@ -161,9 +161,6 @@ class OpenBattleAbort extends Error {
     }
 }
 
-/** One conflict is expected and resolved by the second attempt; the third is headroom. */
-const OPEN_BATTLE_ATTEMPTS = 3;
-
 /**
  * Creates a ledger row, locks both pets, consumes the originating intent, and enqueues the
  * first message, all atomically.
@@ -174,28 +171,13 @@ const OPEN_BATTLE_ATTEMPTS = 3;
  * (threat T11). Numeric rather than lexicographic, because pet ids are decimal strings and
  * `"10" < "9"` as text.
  *
- * A serialization failure (`P2034`) is retried. Under Serializable, Postgres refuses this
- * transaction when another one changed a row it touched after its snapshot was taken: a
- * battle that signed while this one waited on its lock, or a second accept of the same
- * intent. The retry runs on a fresh snapshot, sees that write, and ends in the matching
- * refusal (`pet-progress-changed`, `pet-locked`, `intent-already-consumed`) instead of a 500.
+ * Read Committed, not Serializable. Every check here is a write that Postgres resolves
+ * against the latest committed row: the intent and progress guards are guarded updates, which
+ * re-evaluate their `where` once a concurrent writer commits, and the pet locks are inserts
+ * against a primary key. So a concurrent accept or a battle that signed meanwhile ends in its
+ * matching refusal rather than a serialization failure that would need a retry.
  */
 export async function openBattle(request: OpenBattleRequest): Promise<OpenBattleResult> {
-    let lastConflict: unknown;
-    for (let attempt = 1; attempt <= OPEN_BATTLE_ATTEMPTS; attempt++) {
-        try {
-            return await openBattleOnce(request);
-        } catch (error) {
-            if ((error as { code?: string }).code !== 'P2034') {
-                throw error;
-            }
-            lastConflict = error;
-        }
-    }
-    throw lastConflict;
-}
-
-async function openBattleOnce(request: OpenBattleRequest): Promise<OpenBattleResult> {
     const petIds = sortPetIds(request.petIds);
 
     try {
@@ -234,7 +216,7 @@ async function openBattleOnce(request: OpenBattleRequest): Promise<OpenBattleRes
                 }
                 return { ok: true, battleId: ledger.battleId };
             },
-            { isolationLevel: 'Serializable' },
+            { isolationLevel: 'ReadCommitted' },
         );
     } catch (error) {
         if (error instanceof OpenBattleAbort) {
@@ -245,13 +227,12 @@ async function openBattleOnce(request: OpenBattleRequest): Promise<OpenBattleRes
 }
 
 /**
- * A guarded write, not a read. A read here returns this transaction's snapshot, taken at its
- * first statement, so a battle that signed and released its lock while this one waited on
- * that lock would still look unchanged; only Postgres's serializable conflict tracking would
- * stand between it and a commit, and that tracking can miss it once the lock table's index
- * spans many pages. An UPDATE of a row changed after the snapshot is always refused
- * (`could not serialize access due to concurrent update`). Taken in lock order, so two
- * transactions over the same rows queue instead of deadlocking.
+ * A guarded write, not a read. It runs after the pet locks, so a battle that signed and
+ * released its lock while this transaction waited on that lock has already committed its
+ * progress: the update matches no row and the accept is refused. One still writing the row
+ * holds its row lock, so this update waits for it and then re-checks the `where` against what
+ * it wrote. Taken in lock order, so two transactions over the same rows queue instead of
+ * deadlocking.
  */
 async function assertProgressUnchanged(
     tx: Prisma.TransactionClient,
