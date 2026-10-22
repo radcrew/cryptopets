@@ -160,6 +160,9 @@ class OpenBattleAbort extends Error {
     }
 }
 
+/** One conflict is expected and resolved by the second attempt; the third is headroom. */
+const OPEN_BATTLE_ATTEMPTS = 3;
+
 /**
  * Creates a ledger row, locks both pets, consumes the originating intent, and enqueues the
  * first message, all atomically.
@@ -169,8 +172,26 @@ class OpenBattleAbort extends Error {
  * them fails cleanly on the primary key instead of the two deadlocking against each other
  * (threat T11). Numeric rather than lexicographic, because pet ids are decimal strings and
  * `"10" < "9"` as text.
+ *
+ * A serialization failure (`P2034`) is retried. Under Serializable, Postgres refuses this
+ * transaction when another one changed a row it touched after its snapshot was taken: a
+ * battle that signed while this one waited on its lock, or a second accept of the same
+ * intent. The retry runs on a fresh snapshot, sees that write, and ends in the matching
+ * refusal (`pet-progress-changed`, `pet-locked`, `intent-already-consumed`) instead of a 500.
  */
 export async function openBattle(request: OpenBattleRequest): Promise<OpenBattleResult> {
+    for (let attempt = 1; ; attempt++) {
+        try {
+            return await openBattleOnce(request);
+        } catch (error) {
+            if ((error as { code?: string }).code !== 'P2034' || attempt >= OPEN_BATTLE_ATTEMPTS) {
+                throw error;
+            }
+        }
+    }
+}
+
+async function openBattleOnce(request: OpenBattleRequest): Promise<OpenBattleResult> {
     const petIds = sortPetIds(request.petIds);
 
     try {
