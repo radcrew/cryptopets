@@ -3,6 +3,7 @@ import type { Prisma } from '@generated/prisma/client';
 
 import { prisma } from '@config/prisma';
 
+import { OPEN_BATTLE_REFUSALS } from './constants';
 import { enqueueOutbox, type OutboxMessage } from './outbox';
 import {
     canForfeitFrom,
@@ -139,16 +140,6 @@ export interface ExpectedProgress {
     lastOpponentId: string;
     readyAt: bigint;
 }
-
-/** Why `openBattle` refused. Accept maps each one onto its own refusal reason. */
-export const OPEN_BATTLE_REFUSALS = {
-    /** A pet already has an open battle. */
-    petLocked: 'pet-locked',
-    /** A pet's progress changed after its snapshot was taken. */
-    petProgressChanged: 'pet-progress-changed',
-    /** The originating intent already produced a battle. */
-    intentAlreadyConsumed: 'intent-already-consumed',
-} as const;
 
 export type OpenBattleResult =
     | { ok: true; battleId: string }

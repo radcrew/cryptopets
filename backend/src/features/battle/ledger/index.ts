@@ -67,6 +67,7 @@ export {
     toProtocolAuthorization,
     verifyAuthorizationSignature,
 } from './consent.service';
+export { MAX_OUTBOX_ATTEMPTS, OPEN_BATTLE_REFUSALS, OUTBOX_TOPICS, STALE_LOCK_MS } from './constants';
 export { assertServedDomain, servedChainIds, servedDeploymentId, servedDomain } from './domain';
 export { deleteSessionDelegations, postSessionDelegation } from './session.controller';
 export {
@@ -101,8 +102,6 @@ export {
     listDeadLetters,
     nextOutboxDueAt,
     requeueDeadLetter,
-    MAX_OUTBOX_ATTEMPTS,
-    OUTBOX_TOPICS,
     type OutboxMessage,
     type OutboxTopic,
     rescheduleOutbox,

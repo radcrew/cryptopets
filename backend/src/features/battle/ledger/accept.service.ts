@@ -26,10 +26,10 @@ import { chooseCommitmentRound, roundPublishTime } from '../randomness';
 
 import { type ConsentFailure, consumeDailyBudget, findCoveringAuthorization } from './consent.service';
 import { servedDeploymentId } from './domain';
-import { OUTBOX_TOPICS } from './outbox';
+import { OPEN_BATTLE_REFUSALS, OUTBOX_TOPICS } from './constants';
 import { buildPetSnapshot } from './snapshot.builder';
 import { servedRuleset, servedRulesetHash } from './ruleset.builder';
-import { applyTransition, type ExpectedProgress, OPEN_BATTLE_REFUSALS, openBattle } from './transitions';
+import { applyTransition, type ExpectedProgress, openBattle } from './transitions';
 
 /**
  * The accept flow (§E, §J).
