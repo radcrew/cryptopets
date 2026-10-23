@@ -26,7 +26,7 @@ import { chooseCommitmentRound, roundPublishTime } from '../randomness';
 
 import { type ConsentFailure, consumeDailyBudget, findCoveringAuthorization } from './consent.service';
 import { servedDeploymentId } from './domain';
-import { OPEN_BATTLE_REFUSALS, OUTBOX_TOPICS } from './constants';
+import { BATTLE_REFUSALS, CONSENT_REFUSALS, OPEN_BATTLE_REFUSALS, OUTBOX_TOPICS } from './constants';
 import { buildPetSnapshot } from './snapshot.builder';
 import { servedRuleset, servedRulesetHash } from './ruleset.builder';
 import { applyTransition, type ExpectedProgress, openBattle } from './transitions';
@@ -68,37 +68,7 @@ export interface AcceptBattleRequest {
     roomId?: string;
 }
 
-export type AcceptRejection =
-    | 'intent-not-found'
-    | 'intent-already-consumed'
-    | 'intent-expired'
-    | 'attacker-pet-missing'
-    | 'defender-pet-missing'
-    | 'attacker-not-ready'
-    | 'defender-not-ready'
-    | ConsentFailure
-    | 'pet-locked'
-    | 'drand-unavailable'
-    | 'signer-unavailable'
-    /**
-     * The item catalog cannot price something this battle needs priced: a pet wears an
-     * item with no catalog row, or an equipment row's modifier will not parse (roadmap §4).
-     *
-     * Its own reason rather than a 500, because it is an operational fault with an obvious
-     * remedy (run the seeder) and no fault of the player's. Refusing is the conservative
-     * end: the alternative is a fight under rules this deployment cannot state, recorded in
-     * a signed receipt that contradicts chain state.
-     */
-    | 'item-catalog-stale'
-    /**
-     * The frozen gear disagrees with what the ruleset this battle names prices it at
-     * (roadmap §4, threat T13). Reachable when the catalog changes between resolving the
-     * snapshot and building the ruleset, and otherwise a bug.
-     *
-     * Refused rather than fought, because the verifier makes the same comparison on the
-     * finished receipt: accepting would produce a battle guaranteed to fail verification.
-     */
-    | 'equipment-catalog-mismatch';
+export type AcceptRejection = (typeof BATTLE_REFUSALS)[keyof typeof BATTLE_REFUSALS] | ConsentFailure;
 
 export interface AcceptedBattle {
     battleId: string;
@@ -149,7 +119,7 @@ export async function acceptBattle(request: AcceptBattleRequest): Promise<Accept
     // an intent never consumed) over a round choice that then turns out to be unobtainable.
     const roundChoice = await chooseCommitmentRound(request.nowSeconds);
     if (!roundChoice.ok) {
-        return reject('drand-unavailable', roundChoice.detail);
+        return reject(BATTLE_REFUSALS.DRAND_UNAVAILABLE, roundChoice.detail);
     }
 
     // Consumes one use of the defender's daily budget before the ledger row exists, so any
@@ -161,7 +131,7 @@ export async function acceptBattle(request: AcceptBattleRequest): Promise<Accept
     // run inside the `openBattle` transaction.
     const budget = await consumeDailyBudget(coverage.authorizationHash, coverage.maxBattlesPerDay, request.nowSeconds);
     if (!budget.ok) {
-        return reject('daily-cap-reached', 'defender daily battle cap reached');
+        return reject(CONSENT_REFUSALS.DAILY_CAP_REACHED, 'defender daily battle cap reached');
     }
 
     const battleId = `btl_${randomUUID()}`;
@@ -220,7 +190,7 @@ export async function acceptBattle(request: AcceptBattleRequest): Promise<Accept
             state: BattleState.rejected,
         });
         if (error instanceof SignerRefusedError) {
-            return reject('signer-unavailable', error.message);
+            return reject(BATTLE_REFUSALS.SIGNER_UNAVAILABLE, error.message);
         }
         throw error;
     }
@@ -422,7 +392,7 @@ function reject(reason: AcceptRejection, detail: string): AcceptBattleResult {
  */
 function catalogRejection(error: unknown): AcceptBattleResult {
     if (error instanceof ItemCatalogError) {
-        return reject('item-catalog-stale', error.message);
+        return reject(BATTLE_REFUSALS.ITEM_CATALOG_STALE, error.message);
     }
     throw error;
 }
@@ -450,13 +420,13 @@ type BattleIntentRow = NonNullable<Awaited<ReturnType<typeof prisma.battleIntent
 async function loadAcceptableIntent(request: AcceptBattleRequest): Promise<Step<BattleIntentRow>> {
     const intent = await prisma.battleIntent.findUnique({ where: { intentHash: request.intentHash } });
     if (!intent) {
-        return refuse('intent-not-found', `no intent ${request.intentHash}`);
+        return refuse(BATTLE_REFUSALS.INTENT_NOT_FOUND, `no intent ${request.intentHash}`);
     }
     if (intent.consumedAt) {
-        return refuse('intent-already-consumed', 'this intent already produced a battle');
+        return refuse(BATTLE_REFUSALS.INTENT_ALREADY_CONSUMED, 'this intent already produced a battle');
     }
     if (BigInt(request.nowSeconds) >= intent.expiresAt) {
-        return refuse('intent-expired', `intent expired at ${intent.expiresAt}`);
+        return refuse(BATTLE_REFUSALS.INTENT_EXPIRED, `intent expired at ${intent.expiresAt}`);
     }
     return proceed(intent);
 }
@@ -484,18 +454,18 @@ async function freezeFighters(
     }
 
     if (!attacker) {
-        return refuse('attacker-pet-missing', `pet ${intent.attackerPetId} is not in the roster`);
+        return refuse(BATTLE_REFUSALS.ATTACKER_PET_MISSING, `pet ${intent.attackerPetId} is not in the roster`);
     }
     if (!defender) {
-        return refuse('defender-pet-missing', `pet ${intent.defenderPetId} is not in the roster`);
+        return refuse(BATTLE_REFUSALS.DEFENDER_PET_MISSING, `pet ${intent.defenderPetId} is not in the roster`);
     }
     // Both pets must be off cooldown, mirroring GameLogic.sol's requirement that neither side
     // of an on-chain battle is mid-recovery.
     if (!isBattleReady(attacker, nowSeconds)) {
-        return refuse('attacker-not-ready', `attacker ready at ${attacker.readyAt}`);
+        return refuse(BATTLE_REFUSALS.ATTACKER_NOT_READY, `attacker ready at ${attacker.readyAt}`);
     }
     if (!isBattleReady(defender, nowSeconds)) {
-        return refuse('defender-not-ready', `defender ready at ${defender.readyAt}`);
+        return refuse(BATTLE_REFUSALS.DEFENDER_NOT_READY, `defender ready at ${defender.readyAt}`);
     }
     return proceed({ attacker, defender });
 }
@@ -535,7 +505,7 @@ async function priceUnderServedRuleset(
         ruleset,
     );
     if (mismatches.length > 0) {
-        return refuse('equipment-catalog-mismatch', mismatches.join('; '));
+        return refuse(BATTLE_REFUSALS.EQUIPMENT_CATALOG_MISMATCH, mismatches.join('; '));
     }
 
     const rulesetHash = await servedRulesetHash();
@@ -593,15 +563,15 @@ async function openAcceptedBattle(args: {
         return proceed(null);
     }
     switch (opened.reason) {
-        case OPEN_BATTLE_REFUSALS.petLocked:
-            return refuse('pet-locked', `pet ${opened.petId} already has an open battle`);
-        case OPEN_BATTLE_REFUSALS.petProgressChanged:
+        case OPEN_BATTLE_REFUSALS.PET_LOCKED:
+            return refuse(BATTLE_REFUSALS.PET_LOCKED, `pet ${opened.petId} already has an open battle`);
+        case OPEN_BATTLE_REFUSALS.PET_PROGRESS_CHANGED:
             // Reported as pet-locked, so the API keeps one code for "this pet is busy". The detail
             // stays neutral: a signing battle is the usual cause, but an item can change progress
             // too, and a battle that signed has also started a cooldown, so retrying at once fails.
-            return refuse('pet-locked', `pet ${opened.petId}'s progress changed during this accept`);
-        case OPEN_BATTLE_REFUSALS.intentAlreadyConsumed:
-            return refuse('intent-already-consumed', 'this intent already produced a battle');
+            return refuse(BATTLE_REFUSALS.PET_LOCKED, `pet ${opened.petId}'s progress changed during this accept`);
+        case OPEN_BATTLE_REFUSALS.INTENT_ALREADY_CONSUMED:
+            return refuse(BATTLE_REFUSALS.INTENT_ALREADY_CONSUMED, 'this intent already produced a battle');
     }
 }
 

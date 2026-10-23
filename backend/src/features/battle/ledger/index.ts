@@ -67,7 +67,14 @@ export {
     toProtocolAuthorization,
     verifyAuthorizationSignature,
 } from './consent.service';
-export { MAX_OUTBOX_ATTEMPTS, OPEN_BATTLE_REFUSALS, OUTBOX_TOPICS, STALE_LOCK_MS } from './constants';
+export {
+    BATTLE_REFUSALS,
+    CONSENT_REFUSALS,
+    MAX_OUTBOX_ATTEMPTS,
+    OPEN_BATTLE_REFUSALS,
+    OUTBOX_TOPICS,
+    STALE_LOCK_MS,
+} from './constants';
 export { assertServedDomain, servedChainIds, servedDeploymentId, servedDomain } from './domain';
 export { deleteSessionDelegations, postSessionDelegation } from './session.controller';
 export {

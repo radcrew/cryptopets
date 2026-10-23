@@ -3,6 +3,7 @@ import type { Response } from 'express';
 import type { AuthenticatedRequest } from '@middleware/auth';
 
 import { acceptBattle, type AcceptRejection } from './accept.service';
+import { BATTLE_REFUSALS, CONSENT_REFUSALS } from './constants';
 
 /**
  * 409 for "someone already acted on this", 404/403/422 for the client's own fault, and 503 for
@@ -15,27 +16,29 @@ import { acceptBattle, type AcceptRejection } from './accept.service';
  * and a client that backs off and retries is behaving correctly either way.
  */
 export const STATUS_BY_REASON: Record<AcceptRejection, number> = {
-    'intent-not-found': 404,
-    'intent-already-consumed': 409,
-    'intent-expired': 422,
-    'attacker-pet-missing': 404,
-    'defender-pet-missing': 404,
-    'attacker-not-ready': 409,
-    'defender-not-ready': 409,
+    [BATTLE_REFUSALS.INTENT_NOT_FOUND]: 404,
+    [BATTLE_REFUSALS.INTENT_ALREADY_CONSUMED]: 409,
+    [BATTLE_REFUSALS.INTENT_EXPIRED]: 422,
+    [BATTLE_REFUSALS.ATTACKER_PET_MISSING]: 404,
+    [BATTLE_REFUSALS.DEFENDER_PET_MISSING]: 404,
+    [BATTLE_REFUSALS.ATTACKER_NOT_READY]: 409,
+    [BATTLE_REFUSALS.DEFENDER_NOT_READY]: 409,
+    // Coverage failures. `@cryptopets/protocol` owns these as its `CoverageFailure` type, and
+    // it exports no constants for them, so they are spelled here as the protocol spells them.
     'not-yet-valid': 409,
     expired: 409,
     'pet-not-covered': 403,
     'attacker-level-below-band': 403,
     'attacker-level-above-band': 403,
     'ruleset-mismatch': 403,
-    'no-authorization': 403,
-    revoked: 403,
-    'daily-cap-reached': 429,
-    'pet-locked': 409,
-    'drand-unavailable': 503,
-    'signer-unavailable': 503,
-    'item-catalog-stale': 503,
-    'equipment-catalog-mismatch': 503,
+    [CONSENT_REFUSALS.NO_AUTHORIZATION]: 403,
+    [CONSENT_REFUSALS.REVOKED]: 403,
+    [CONSENT_REFUSALS.DAILY_CAP_REACHED]: 429,
+    [BATTLE_REFUSALS.PET_LOCKED]: 409,
+    [BATTLE_REFUSALS.DRAND_UNAVAILABLE]: 503,
+    [BATTLE_REFUSALS.SIGNER_UNAVAILABLE]: 503,
+    [BATTLE_REFUSALS.ITEM_CATALOG_STALE]: 503,
+    [BATTLE_REFUSALS.EQUIPMENT_CATALOG_MISMATCH]: 503,
 };
 
 interface AcceptBody {
