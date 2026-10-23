@@ -38,8 +38,8 @@ import {
 
 beforeEach(() => {
     vi.clearAllMocks();
-    // Run the callback inline with the fake client, and record the isolation level so the
-    // serializable requirement is testable.
+    // Run the callback inline with the fake client, and record the isolation level so each
+    // transaction's level is testable.
     vi.mocked(prisma.$transaction).mockImplementation(((callback: (client: typeof tx) => unknown) =>
         Promise.resolve(callback(tx))) as never);
     tx.battleLedger.updateMany.mockResolvedValue({ count: 1 });
@@ -219,13 +219,7 @@ describe('openBattle', () => {
         await expect(
             openBattle({ ledger: { chainId: 'eip155:84532' } as never, petIds: ['9', '10'] }),
         ).rejects.toThrow(/connection reset/);
-    });
-
-    it('runs once and rethrows a failed transaction rather than retrying it', async () => {
-        vi.mocked(prisma.$transaction).mockRejectedValueOnce(new Error('connection reset'));
-        await expect(
-            openBattle({ ledger: { chainId: 'eip155:84532' } as never, petIds: ['9', '10'] }),
-        ).rejects.toThrow(/connection reset/);
+        // Once: a failed transaction is rethrown, not retried.
         expect(prisma.$transaction).toHaveBeenCalledTimes(1);
     });
 
@@ -244,9 +238,6 @@ describe('openBattle', () => {
                 chainId: 'eip155:84532',
                 deploymentId: 'base-sepolia-v2',
             });
-        });
-
-        beforeEach(() => {
             tx.petBattleProgress.updateMany.mockResolvedValue({ count: 1 });
         });
 

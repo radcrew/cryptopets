@@ -596,9 +596,10 @@ async function openAcceptedBattle(args: {
         case OPEN_BATTLE_REFUSALS.petLocked:
             return refuse('pet-locked', `pet ${opened.petId} already has an open battle`);
         case OPEN_BATTLE_REFUSALS.petProgressChanged:
-            // Reported as pet-locked: to the caller it is the same event, a battle for this
-            // pet that was still open when the snapshot was taken. A retry builds a fresh one.
-            return refuse('pet-locked', `pet ${opened.petId} finished another battle during this accept; try again`);
+            // Reported as pet-locked, so the API keeps one code for "this pet is busy". The detail
+            // stays neutral: a signing battle is the usual cause, but an item can change progress
+            // too, and a battle that signed has also started a cooldown, so retrying at once fails.
+            return refuse('pet-locked', `pet ${opened.petId}'s progress changed during this accept`);
         case OPEN_BATTLE_REFUSALS.intentAlreadyConsumed:
             return refuse('intent-already-consumed', 'this intent already produced a battle');
     }

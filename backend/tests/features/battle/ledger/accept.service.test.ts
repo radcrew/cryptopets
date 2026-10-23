@@ -380,11 +380,12 @@ describe('opening the ledger', () => {
         ]);
     });
 
-    it('refuses as pet-locked when a pet finished another battle while this one was being accepted', async () => {
+    it('refuses as pet-locked when a pet\'s progress changed while this one was being accepted', async () => {
         vi.mocked(openBattle).mockResolvedValue({ ok: false, reason: 'pet-progress-changed', petId: '1' });
         expect(await acceptBattle({ intentHash: INTENT.intentHash, nowSeconds: NOW })).toMatchObject({
             ok: false,
             reason: 'pet-locked',
+            detail: "pet 1's progress changed during this accept",
         });
         expect(sign).not.toHaveBeenCalled();
     });
