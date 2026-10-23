@@ -15,6 +15,7 @@ import { ethers } from 'ethers';
 import { prisma } from '@config/prisma';
 import { verifySolanaSignature } from '@features/auth/solana';
 
+import { CONSENT_REFUSALS } from './constants';
 import { assertServedDomain, servedDeploymentId } from './domain';
 import type { SignatureFormat } from './intent.service';
 
@@ -264,7 +265,7 @@ export interface CoverageRequest {
     nowSeconds: number;
 }
 
-export type ConsentFailure = CoverageFailure | 'no-authorization' | 'daily-cap-reached' | 'revoked';
+export type ConsentFailure = CoverageFailure | (typeof CONSENT_REFUSALS)[keyof typeof CONSENT_REFUSALS];
 
 export type ConsentResult =
     | { ok: true; authorizationHash: string; maxBattlesPerDay: number }
@@ -294,7 +295,7 @@ export async function findCoveringAuthorization(request: CoverageRequest): Promi
     });
 
     if (candidates.length === 0) {
-        return { ok: false, reason: 'no-authorization', detail: 'this defender has no live authorization' };
+        return { ok: false, reason: CONSENT_REFUSALS.NO_AUTHORIZATION, detail: 'this defender has no live authorization' };
     }
 
     let lastFailure: CoverageFailure = 'pet-not-covered';
@@ -339,7 +340,7 @@ export async function consumeDailyBudget(
     authorizationHash: string,
     maxBattlesPerDay: number,
     nowSeconds: number,
-): Promise<{ ok: true; used: number } | { ok: false; reason: 'daily-cap-reached' }> {
+): Promise<{ ok: true; used: number } | { ok: false; reason: typeof CONSENT_REFUSALS.DAILY_CAP_REACHED }> {
     const dayBucket = epochDay(nowSeconds);
 
     const bump = async () =>
@@ -362,7 +363,7 @@ export async function consumeDailyBudget(
         }
     }
     if (result.count === 0) {
-        return { ok: false, reason: 'daily-cap-reached' };
+        return { ok: false, reason: CONSENT_REFUSALS.DAILY_CAP_REACHED };
     }
     const row = await prisma.defenseUsage.findUnique({
         where: { authorizationHash_dayBucket: { authorizationHash, dayBucket } },

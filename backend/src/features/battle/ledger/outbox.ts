@@ -2,6 +2,8 @@ import type { Prisma } from '@generated/prisma/client';
 
 import { prisma } from '@config/prisma';
 
+import { MAX_OUTBOX_ATTEMPTS, OUTBOX_TOPICS, STALE_LOCK_MS } from './constants';
+
 /**
  * Transactional outbox for the battle workflow (§J).
  *
@@ -14,34 +16,8 @@ import { prisma } from '@config/prisma';
  * which is what `classifyTransition`'s `noop` case is for.
  */
 
-/** What the message tells a worker to do next. */
-export const OUTBOX_TOPICS = {
-    /** Wait for the committed drand round, then verify it and derive the seed. */
-    awaitBeacon: 'await-beacon',
-    /** Run the fight through the canonical engine. */
-    compute: 'compute',
-    /** Ask the independent Go verifier to recompute the result. */
-    verify: 'verify',
-    /** Sign the receipt with the KMS key. */
-    sign: 'sign',
-    /** Publish the receipt to the public corpus. */
-    publish: 'publish',
-} as const;
-
-/**
- * Publishing is the last per-battle step. Batching and anchoring (§I) deliberately have no
- * topic here: they aggregate across every publishable receipt on their own timer
- * (`startBatchAnchor`), so there is no per-battle message to send. A `batch` topic was
- * declared here for a while and never enqueued or handled, which was worse than absent —
- * `claimOutbox` only claims topics `HANDLERS` lists, so anyone who took the declaration at
- * face value would have enqueued a message no worker could ever claim, stranding the battle
- * in a non-terminal state with both pets locked and nothing to dead-letter it.
- */
-
 export type OutboxTopic = (typeof OUTBOX_TOPICS)[keyof typeof OUTBOX_TOPICS];
 
-/** Retries before a message is dead-lettered. */
-export const MAX_OUTBOX_ATTEMPTS = 8;
 /** First retry delay; doubles each attempt up to the cap. */
 const BASE_RETRY_SECONDS = 2;
 const MAX_RETRY_SECONDS = 300;
@@ -101,8 +77,6 @@ export async function enqueueOutbox(client: OutboxClient, messages: readonly Out
  * A takeover counts as an attempt, so a message that keeps killing its worker still ends
  * in the dead-letter path.
  */
-export const STALE_LOCK_MS = 5 * 60 * 1000;
-
 export async function claimOutbox(
     topics: readonly OutboxTopic[],
     workerId: string,

@@ -3,6 +3,7 @@ import type { Prisma } from '@generated/prisma/client';
 
 import { prisma } from '@config/prisma';
 
+import { OPEN_BATTLE_REFUSALS } from './constants';
 import { enqueueOutbox, type OutboxMessage } from './outbox';
 import {
     canForfeitFrom,
@@ -119,12 +120,32 @@ export interface OpenBattleRequest {
      * whichever loses this guard gets `intentAlreadyConsumed`, never a second ledger row.
      */
     consumeIntentHash?: string;
+    /**
+     * The progress each pet's snapshot was built from, rechecked after the locks are taken.
+     *
+     * The snapshot is read before this transaction, so a pet still finishing another battle
+     * can be photographed mid-way: its lock is released when that battle signs, this
+     * transaction then takes the lock, and the snapshot holds progress from before that
+     * battle. Fighting on it would skip that battle's cooldown, and signing it would write
+     * progression computed from the old values over that battle's result.
+     */
+    expectedProgress?: readonly ExpectedProgress[];
+}
+
+export interface ExpectedProgress {
+    petId: string;
+    level: number;
+    xp: number;
+    streak: number;
+    lastOpponentId: string;
+    readyAt: bigint;
 }
 
 export type OpenBattleResult =
     | { ok: true; battleId: string }
-    | { ok: false; reason: 'pet-locked'; petId: string }
-    | { ok: false; reason: 'intent-already-consumed' };
+    | { ok: false; reason: typeof OPEN_BATTLE_REFUSALS.PET_LOCKED; petId: string }
+    | { ok: false; reason: typeof OPEN_BATTLE_REFUSALS.PET_PROGRESS_CHANGED; petId: string }
+    | { ok: false; reason: typeof OPEN_BATTLE_REFUSALS.INTENT_ALREADY_CONSUMED };
 
 /**
  * Signals a clean, expected abort of the `openBattle` transaction.
@@ -149,6 +170,12 @@ class OpenBattleAbort extends Error {
  * them fails cleanly on the primary key instead of the two deadlocking against each other
  * (threat T11). Numeric rather than lexicographic, because pet ids are decimal strings and
  * `"10" < "9"` as text.
+ *
+ * Read Committed, not Serializable. Every check here is a write that Postgres resolves
+ * against the latest committed row: the intent and progress guards are guarded updates, which
+ * re-evaluate their `where` once a concurrent writer commits, and the pet locks are inserts
+ * against a primary key. So a concurrent accept or a battle that signed meanwhile ends in its
+ * matching refusal rather than a serialization failure that would need a retry.
  */
 export async function openBattle(request: OpenBattleRequest): Promise<OpenBattleResult> {
     const petIds = sortPetIds(request.petIds);
@@ -162,7 +189,7 @@ export async function openBattle(request: OpenBattleRequest): Promise<OpenBattle
                         data: { consumedAt: new Date() },
                     });
                     if (count === 0) {
-                        throw new OpenBattleAbort({ ok: false, reason: 'intent-already-consumed' });
+                        throw new OpenBattleAbort({ ok: false, reason: OPEN_BATTLE_REFUSALS.INTENT_ALREADY_CONSUMED });
                     }
                 }
 
@@ -176,23 +203,64 @@ export async function openBattle(request: OpenBattleRequest): Promise<OpenBattle
                         });
                     } catch (error) {
                         if ((error as { code?: string }).code === 'P2002') {
-                            throw new OpenBattleAbort({ ok: false, reason: 'pet-locked', petId });
+                            throw new OpenBattleAbort({ ok: false, reason: OPEN_BATTLE_REFUSALS.PET_LOCKED, petId });
                         }
                         throw error;
                     }
+                }
+                if (request.expectedProgress) {
+                    await assertProgressUnchanged(tx, ledger.chainId, ledger.deploymentId, request.expectedProgress);
                 }
                 if (request.outbox && request.outbox.length > 0) {
                     await enqueueOutbox(tx, request.outbox);
                 }
                 return { ok: true, battleId: ledger.battleId };
             },
-            { isolationLevel: 'Serializable' },
+            { isolationLevel: 'ReadCommitted' },
         );
     } catch (error) {
         if (error instanceof OpenBattleAbort) {
             return error.result;
         }
         throw error;
+    }
+}
+
+/**
+ * A guarded write, not a read. It runs after the pet locks, so a battle that signed and
+ * released its lock while this transaction waited on that lock has already committed its
+ * progress: the update matches no row and the accept is refused. One still writing the row
+ * holds its row lock, so this update waits for it and then re-checks the `where` against what
+ * it wrote. Taken in lock order, so two transactions over the same rows queue instead of
+ * deadlocking.
+ */
+async function assertProgressUnchanged(
+    tx: Prisma.TransactionClient,
+    chainId: string,
+    deploymentId: string,
+    expected: readonly ExpectedProgress[],
+): Promise<void> {
+    const byPetId = new Map(expected.map((pet) => [pet.petId, pet]));
+    for (const petId of sortPetIds([...byPetId.keys()])) {
+        const pet = byPetId.get(petId)!;
+        const { count } = await tx.petBattleProgress.updateMany({
+            where: {
+                chainId,
+                deploymentId,
+                petId,
+                level: pet.level,
+                xp: pet.xp,
+                streak: pet.streak,
+                lastOpponentId: pet.lastOpponentId,
+                readyAt: pet.readyAt,
+            },
+            // Writes back the value it matched on: the point is the row lock and the
+            // conflict check, not a change.
+            data: { level: pet.level },
+        });
+        if (count === 0) {
+            throw new OpenBattleAbort({ ok: false, reason: OPEN_BATTLE_REFUSALS.PET_PROGRESS_CHANGED, petId });
+        }
     }
 }
 
