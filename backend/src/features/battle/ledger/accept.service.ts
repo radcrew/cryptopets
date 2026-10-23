@@ -152,12 +152,13 @@ export async function acceptBattle(request: AcceptBattleRequest): Promise<Accept
         return reject('drand-unavailable', roundChoice.detail);
     }
 
-    // Consumes one use of the defender's daily budget before the ledger row exists. A later
-    // pet-locked conflict (rare: it means a lock slipped past the readiness check above between
-    // here and Stage A) would then leave this use spent with no battle created. That is a
-    // conservative failure, not a permissive one — the cap is never exceeded, only occasionally
-    // reached one battle early — and fixing it needs threading a transaction client through
-    // consumeDailyBudget, which is not worth the added complexity for a race this narrow.
+    // Consumes one use of the defender's daily budget before the ledger row exists, so any
+    // refusal from `openBattle` leaves this use spent with no battle created. That is not rare:
+    // the readiness check above reads `readyAt`, which a battle only moves when it signs, so a
+    // pet still in another battle passes it and is refused at the lock (`pet-locked`) or at the
+    // progress recheck (`pet-progress-changed`). It is a conservative failure, not a permissive
+    // one: the cap is never exceeded, only reached early. Fixing it needs consumeDailyBudget to
+    // run inside the `openBattle` transaction.
     const budget = await consumeDailyBudget(coverage.authorizationHash, coverage.maxBattlesPerDay, request.nowSeconds);
     if (!budget.ok) {
         return reject('daily-cap-reached', 'defender daily battle cap reached');
