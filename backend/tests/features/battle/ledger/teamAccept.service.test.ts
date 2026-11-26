@@ -61,7 +61,7 @@ const pet = (petId: bigint, owner: string, level = 10) => ({
 });
 let pets: Map<string, ReturnType<typeof pet>>;
 
-const ROSTER = [21, 22, 23, 24, 25].map((id, i) => ({ petId: String(id), rank: i + 1, col: i % 3, row: Math.floor(i / 3), tactic: 'focus' }));
+const ROSTER = [21, 22, 23].map((id, i) => ({ petId: String(id), col: i, row: 1, tactic: 'focus' }));
 const PLAN = {
     planHash: PLAN_HASH, chainId: 'eip155:84532', deploymentId: 'base-sepolia-live', defenderOwner: DEFENDER, roster: ROSTER,
     rulesetHash: TEAM_HASH, minLevel: 1, maxLevel: 12, maxBattlesPerDay: 5, notBefore: BigInt(NOW - 1000),
@@ -85,7 +85,7 @@ beforeEach(() => {
     battleEnv.enabled = true;
     battleEnv.teamEnabled = true;
     pets = new Map(
-        [pet(11n, ATTACKER), pet(12n, ATTACKER, 11), pet(13n, ATTACKER), ...[21n, 22n, 23n, 24n, 25n].map((id) => pet(id, DEFENDER))].map((p) => [
+        [pet(11n, ATTACKER), pet(12n, ATTACKER, 11), pet(13n, ATTACKER), ...[21n, 22n, 23n].map((id) => pet(id, DEFENDER))].map((p) => [
             p.petId.toString(),
             p,
         ]),
@@ -109,7 +109,7 @@ beforeEach(() => {
 });
 
 describe('accepting a team challenge', () => {
-    it('freezes and locks all eight pets, spends one plan use, and signs a commitment over the team snapshot', async () => {
+    it('freezes and locks all six pets, spends one plan use, and signs a commitment over the team snapshot', async () => {
         const result = await accept();
         expect(result.ok).toBe(true);
 
@@ -118,14 +118,14 @@ describe('accepting a team challenge', () => {
             expectedProgress: unknown[];
             ledger: Record<string, unknown>;
         };
-        expect(opened.petIds).toEqual(['11', '12', '13', '21', '22', '23', '24', '25']);
-        expect(opened.expectedProgress).toHaveLength(8);
+        expect(opened.petIds).toEqual(['11', '12', '13', '21', '22', '23']);
+        expect(opened.expectedProgress).toHaveLength(6);
         expect(opened.ledger).toMatchObject({ kind: 'team', defensePlanHash: PLAN_HASH, attackerOwner: ATTACKER, defenderOwner: DEFENDER, rulesetHash: TEAM_HASH });
         expect(opened.ledger).not.toHaveProperty('authorizationHash');
         const snapshot = decodeStoredTeamSnapshot(opened.ledger.snapshot);
         expect(snapshot.schemaVersion).toBe(3);
         expect(opened.ledger.snapshotHash).toBe(hashTeamBattleSnapshot(snapshot));
-        expect(snapshot.roster.map((m) => m.rank)).toEqual([1, 2, 3, 4, 5]);
+        expect(snapshot.roster.map((m) => m.pet.petId)).toEqual([21n, 22n, 23n]);
 
         expect(consumePlanDailyBudget).toHaveBeenCalledTimes(1);
         // The commitment layout is shared: its consent field carries the plan, its snapshot the team one.
@@ -134,7 +134,7 @@ describe('accepting a team challenge', () => {
         };
         expect(committed.commitment.defenseAuthorizationHash).toBe(PLAN_HASH);
         expect(committed.commitment.snapshot.schemaVersion).toBe(3);
-        expect(committed.commitment.snapshot.roster).toHaveLength(5);
+        expect(committed.commitment.snapshot.roster).toHaveLength(3);
     });
 
     it('is refused once team battles are switched off', async () => {
@@ -150,17 +150,17 @@ describe('accepting a team challenge', () => {
     });
 
     it('refuses a pet that changed hands, on either side', async () => {
-        pets.set('24', { ...pets.get('24')!, owner: ATTACKER });
+        pets.set('23', { ...pets.get('23')!, owner: ATTACKER });
         expect(await accept()).toMatchObject({ ok: false, reason: 'pet-owner-changed' });
-        pets.set('24', { ...pets.get('24')!, owner: DEFENDER });
+        pets.set('23', { ...pets.get('23')!, owner: DEFENDER });
         pets.set('12', { ...pets.get('12')!, owner: DEFENDER });
         expect(await accept()).toMatchObject({ ok: false, reason: 'pet-owner-changed' });
     });
 
-    it('needs every attacker and every roster pet off cooldown, since any roster pet can be drawn', async () => {
-        pets.set('25', { ...pets.get('25')!, readyAt: NOW + 60 });
+    it('needs every pet on both sides off cooldown', async () => {
+        pets.set('23', { ...pets.get('23')!, readyAt: NOW + 60 });
         expect(await accept()).toMatchObject({ ok: false, reason: 'defender-not-ready' });
-        pets.set('25', { ...pets.get('25')!, readyAt: NOW - 1 });
+        pets.set('23', { ...pets.get('23')!, readyAt: NOW - 1 });
         pets.set('13', { ...pets.get('13')!, readyAt: NOW + 60 });
         expect(await accept()).toMatchObject({ ok: false, reason: 'attacker-not-ready' });
     });
@@ -175,9 +175,9 @@ describe('accepting a team challenge', () => {
         expect(await accept()).toMatchObject({ ok: false, reason: 'intent-ruleset-stale' });
     });
 
-    it('checks the gear of benched roster pets too', async () => {
+    it('checks the gear of every defending pet, not only the first', async () => {
         // Item type 9 is in no catalog: the ruleset cannot price it, so verification would fail.
-        pets.set('25', { ...pets.get('25')!, equipment: [{ slot: 0, itemType: 9n, hp: 0, atk: 5, def: 0, int: 0, mdef: 0 }] } as never);
+        pets.set('23', { ...pets.get('23')!, equipment: [{ slot: 0, itemType: 9n, hp: 0, atk: 5, def: 0, int: 0, mdef: 0 }] } as never);
         expect(await accept()).toMatchObject({ ok: false, reason: 'equipment-catalog-mismatch' });
         expect(openBattle).not.toHaveBeenCalled();
     });

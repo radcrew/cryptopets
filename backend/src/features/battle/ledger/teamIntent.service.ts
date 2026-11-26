@@ -24,8 +24,8 @@ import { findSessionDelegation } from './session.service';
  * The duel intent's job and the duel intent's checks, in the same order: the wallet signature
  * (or a key the wallet delegated) is the authorization, and nothing here creates a ledger row.
  * What changes is the subject. The attacker signs three placed pets rather than one, and names
- * the defender's plan by hash rather than a defending pet, since the seed decides later which
- * three of the plan's five defend.
+ * the defender's plan by hash rather than a defending pet, since the plan's three pets are the
+ * defenders.
  *
  * Shares `battle_intent` with duels, so a wallet has one nonce space across both kinds: a nonce
  * spent on a duel cannot be replayed as a team challenge or the reverse.

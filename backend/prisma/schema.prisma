@@ -394,8 +394,8 @@ model DefenseAuthorization {
 }
 
 /// A defender's signed team-battle roster and consent (docs/battle-protocol.md §F). The team
-/// counterpart of DefenseAuthorization: five pets with ranks, home tiles and tactics, bound to
-/// a ruleset. Saving a new plan revokes the owner's earlier ones, so a defender has at most
+/// counterpart of DefenseAuthorization: the three defending pets with their home tiles and
+/// tactics, bound to a ruleset. Saving a new plan revokes the owner's earlier ones, so a defender has at most
 /// one live plan.
 model DefensePlan {
   /// `hashDefensePlan` from @cryptopets/protocol.
@@ -403,7 +403,7 @@ model DefensePlan {
   chainId          String    @map("chain_id")
   deploymentId     String    @map("deployment_id")
   defenderOwner    String    @map("defender_owner")
-  /// The five roster pets in slot order, `[{ petId, rank, col, row, tactic }]`, as signed.
+  /// The three defending pets in slot order, `[{ petId, col, row, tactic }]`, as signed.
   roster           Json
   rulesetHash      String    @map("ruleset_hash")
   /// Inclusive band for the attacking squad's highest level.
@@ -489,7 +489,8 @@ model BattleLedger {
   attackerOwner String  @map("attacker_owner")
   defenderPetId String? @map("defender_pet_id")
   defenderOwner String  @map("defender_owner")
-  /// Team only: the defenders' roster indices, in roster order, once the seed has drawn them.
+  /// Unused: it held the drawn defenders when team battles drew three of five. Nothing writes
+  /// it now. Dropping it needs a migration that also rewrites the kind-shape check naming it.
   drawn         Json?
 
   /// The frozen photo, persisted before any randomness for this battle exists (§J).
@@ -639,7 +640,7 @@ model BattleReceipt {
 model BattleReceiptFighter {
   receiptHash         String        @map("receipt_hash")
   receipt             BattleReceipt @relation(fields: [receiptHash], references: [receiptHash], onDelete: Cascade)
-  /// 0-5: the attackers by slot, then the drawn defenders by slot, as in the receipt.
+  /// 0-5: the attackers by slot, then the defenders by slot, as in the receipt.
   position            Int
   chainId             String        @map("chain_id")
   petId               String        @map("pet_id")

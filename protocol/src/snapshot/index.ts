@@ -8,10 +8,8 @@ export {
     encodeTeamBattleSnapshot,
     hashTeamBattleSnapshot,
     replayTeamBattle,
-    type RosterMember,
     type SquadMember,
     type TeamBattleSnapshot,
-    type TeamReplay,
 } from './team';
 export {
     assertBattleSnapshot,

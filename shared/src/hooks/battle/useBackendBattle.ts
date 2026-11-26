@@ -34,8 +34,6 @@ export interface BattleStateSummary {
     /** Null on a team battle, whose pets are in its snapshot. */
     defenderPetId: string | null;
     defenderOwner: string;
-    /** Team battles: the defenders' roster indices once the battle is computed. */
-    drawn?: number[] | null;
     rulesetHash: string;
     createdAt: string;
     updatedAt: string;

@@ -70,7 +70,6 @@ describe('getBattleStateSummary', () => {
             attackerOwner: '0xabc',
             defenderPetId: '2',
             defenderOwner: '0xdef',
-            drawn: null,
             rulesetHash: `0x${'11'.repeat(32)}`,
             createdAt: '2026-07-26T00:00:00.000Z',
             updatedAt: '2026-07-26T00:05:00.000Z',

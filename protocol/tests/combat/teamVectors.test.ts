@@ -3,7 +3,6 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import {
-    drawDefenders,
     NO_BONUS,
     simulateTeam,
     type SkillConfig,
@@ -37,7 +36,6 @@ interface TeamVectorFile {
             log: number[][];
         };
     }[];
-    draws: { name: string; ranks: number[]; seed: string; expected: number[] }[];
 }
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -78,47 +76,6 @@ describe('team battle golden vectors', () => {
             expect(o.log.map(row)).toEqual(c.expected.log);
         });
     }
-
-    for (const d of vectors.draws) {
-        it(`draw: ${d.name}`, () => {
-            expect(drawDefenders(d.ranks, BigInt(d.seed))).toEqual(d.expected);
-        });
-    }
-});
-
-describe('the draw', () => {
-    // The chance each rank defends, from the weights alone: every ordered way to draw three
-    // of five without replacement, each weighted by its probability. This is the table in
-    // docs/plan-team-battles-3v3.md, so a change to the weights cannot go unnoticed.
-    it('gives each rank the published chance of defending', () => {
-        const weights = [5, 4, 3, 2, 1];
-        const chance = [0, 0, 0, 0, 0];
-        const walk = (left: number[], picked: number[], p: number) => {
-            if (picked.length === 3) {
-                for (const i of picked) chance[i] = (chance[i] ?? 0) + p;
-                return;
-            }
-            const total = left.reduce((sum, i) => sum + (weights[i] ?? 0), 0);
-            for (const i of left) walk(left.filter((j) => j !== i), [...picked, i], (p * (weights[i] ?? 0)) / total);
-        };
-        walk([0, 1, 2, 3, 4], [], 1);
-        expect(chance.map((c) => Math.round(c * 1000) / 10)).toEqual([82.6, 75.9, 65.6, 49, 26.8]);
-    });
-
-    it('returns three distinct roster indices in roster order', () => {
-        for (let seed = 0n; seed < 200n; seed++) {
-            const drawn = drawDefenders([2, 5, 1, 4, 3], seed);
-            expect(drawn).toHaveLength(3);
-            expect(new Set(drawn).size).toBe(3);
-            expect([...drawn].sort((x, y) => x - y)).toEqual(drawn);
-        }
-    });
-
-    it('refuses a roster that is not ranks 1 to 5 once each', () => {
-        expect(() => drawDefenders([1, 2, 3, 4], 1n)).toThrow();
-        expect(() => drawDefenders([1, 1, 3, 4, 5], 1n)).toThrow();
-        expect(() => drawDefenders([0, 2, 3, 4, 5], 1n)).toThrow();
-    });
 });
 
 describe('team input validation', () => {

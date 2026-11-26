@@ -11,7 +11,7 @@ import { servedDeploymentId } from './domain';
  * Team opponents: defence plans a player can challenge (docs/plan-team-battles-3v3.md, Phase 4).
  *
  * A plan is listed while it could actually be accepted: live, inside its window, signed for the
- * team rules being served, not the caller's own, and with all five pets still the defender's. A
+ * team rules being served, not the caller's own, and with all three pets still the defender's. A
  * plan failing any of those would only be refused at acceptance, after the attacker had placed a
  * squad and signed, so it is left off the list rather than offered.
  *
@@ -20,7 +20,6 @@ import { servedDeploymentId } from './domain';
  */
 export interface TeamOpponentPet {
     petId: string;
-    rank: number;
     col: number;
     row: number;
     tactic: Tactic;
@@ -39,9 +38,9 @@ export interface TeamOpponent {
     minLevel: number;
     maxLevel: number;
     expiresAt: number;
-    /** The five roster pets, in slot order. */
+    /** The three defending pets, in slot order. */
     roster: TeamOpponentPet[];
-    /** Every roster pet is off cooldown, which acceptance requires since any can be drawn. */
+    /** Every defending pet is off cooldown, which acceptance requires. */
     ready: boolean;
 }
 
@@ -86,7 +85,6 @@ export async function listTeamOpponents(params: {
             if (!pet || normalizeAccount(pet.owner) !== plan.defenderOwner) return; // stale plan: skip it
             roster.push({
                 petId: entry.petId,
-                rank: entry.rank,
                 col: entry.col,
                 row: entry.row,
                 tactic: entry.tactic,

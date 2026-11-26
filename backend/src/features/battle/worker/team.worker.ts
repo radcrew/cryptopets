@@ -30,10 +30,9 @@ import { buildAttestations, commitmentHashFor, failSigning, serializeBigints } f
  * outbox topics, the state machine and the retry behaviour are the duel's; only the work done at
  * each stage differs.
  *
- * - compute: the draw and the team engine (`replayTeamBattle`), six progressions, and the two
- *   benched roster pets released, in the same transaction as the move to `computed` (D3).
- * - verify: the Go port recomputes the draw, the fight and the progressions (`VerifyTeamBattle`),
- *   and its strike log is hashed with the one canonical encoder, as for duels.
+ * - compute: the team engine (`replayTeamBattle`) and six progressions.
+ * - verify: the Go port recomputes the fight and the progressions (`VerifyTeamBattle`), and its
+ *   strike log is hashed with the one canonical encoder, as for duels.
  * - sign: receipt schema 2, six fighter links, six progressions applied with their cooldowns, and
  *   drops once per battle. No `battle_history` rows: that table is head-to-head context for duel
  *   dialogue, and a three-on-three result is not a head-to-head between two pets.
@@ -53,11 +52,8 @@ export async function processTeamCompute(battle: LedgerRow, message: ClaimedMess
     }
     const ruleset = await loadBattleRuleset(battle);
     const snapshot = decodeStoredTeamSnapshot(battle.snapshot);
-    const { drawn, outcome } = replayTeamBattle(snapshot, battle.seed as Hex, ruleset);
-    const progression = computeTeamProgression(snapshot, drawn, outcome.result.attackerWins, { maxLevel: ruleset.maxLevel });
-
-    const drawnIds = new Set(drawn.map((index) => snapshot.roster[index]!.pet.petId.toString()));
-    const benched = snapshot.roster.map((m) => m.pet.petId.toString()).filter((id) => !drawnIds.has(id));
+    const outcome = replayTeamBattle(snapshot, battle.seed as Hex, ruleset);
+    const progression = computeTeamProgression(snapshot, outcome.result.attackerWins, { maxLevel: ruleset.maxLevel });
 
     await applyTransition({
         battleId: battle.battleId,
@@ -67,17 +63,11 @@ export async function processTeamCompute(battle: LedgerRow, message: ClaimedMess
             attackerWon: outcome.result.attackerWins,
             rounds: outcome.result.rounds,
             winnerHpRemaining: outcome.result.winnerHpRemaining,
-            drawn,
             // The start HP travels with the log: the log hash covers both, so a stored log
             // without them could not be re-hashed or replayed on its own.
             combatLog: serializeBigints({ startHp: outcome.startHp, log: outcome.log }),
             combatLogHash: hashTeamCombatLog(outcome),
             progression: serializeBigints(progression),
-        },
-        onApplied: async (tx) => {
-            // D3: the roster was locked because any of it could be drawn. Now it has been, the
-            // benched two go free, with the state change rather than in a job that could be lost.
-            await tx.petBattleLock.deleteMany({ where: { battleId: battle.battleId, petId: { in: benched } } });
         },
         outbox: [{ battleId: battle.battleId, topic: OUTBOX_TOPICS.verify }],
     });
@@ -99,8 +89,8 @@ export async function processTeamVerify(battle: LedgerRow, message: ClaimedMessa
     }
     const snapshot = decodeStoredTeamSnapshot(battle.snapshot);
     const go = await callVerifyTeamBattle({
-        attackers: snapshot.attackers.map((m) => ({ pet: verifyPetInputs(m.pet), col: m.col, row: m.row, tactic: m.tactic, rank: 0 })),
-        roster: snapshot.roster.map((m) => ({ pet: verifyPetInputs(m.pet), col: m.col, row: m.row, tactic: m.tactic, rank: m.rank })),
+        attackers: snapshot.attackers.map((m) => ({ pet: verifyPetInputs(m.pet), col: m.col, row: m.row, tactic: m.tactic })),
+        roster: snapshot.roster.map((m) => ({ pet: verifyPetInputs(m.pet), col: m.col, row: m.row, tactic: m.tactic })),
         seed: battle.seed,
         skillConfig: ruleset.skillConfig,
         teamConfig: { ...ruleset.teamConfig, turnOrder: 'int' },
@@ -141,7 +131,6 @@ export async function processTeamSign(battle: LedgerRow, message: ClaimedMessage
         !battle.beaconRandomness ||
         !battle.defensePlanHash ||
         !battle.progression ||
-        !battle.drawn ||
         battle.attackerWon === null ||
         battle.rounds === null ||
         battle.winnerHpRemaining === null
@@ -149,9 +138,8 @@ export async function processTeamSign(battle: LedgerRow, message: ClaimedMessage
         throw new Error(`team battle ${battle.battleId} is verified but is missing a field sign needs`);
     }
     const snapshot = decodeStoredTeamSnapshot(battle.snapshot);
-    const drawn = battle.drawn as number[];
     const progression = (battle.progression as unknown as StoredProgression[]).map(deserializeProgression);
-    const fighterIds = [...snapshot.attackers.map((m) => m.pet.petId), ...drawn.map((i) => snapshot.roster[i]!.pet.petId)].map(String);
+    const fighterIds = [...snapshot.attackers, ...snapshot.roster].map((m) => m.pet.petId.toString());
 
     for (let attempt = 0; attempt < MAX_RECEIPT_CHAIN_RETRIES; attempt++) {
         const key = activeSigningKey(battle.chainId);
@@ -188,7 +176,6 @@ export async function processTeamSign(battle: LedgerRow, message: ClaimedMessage
             seed: battle.seed as Hex,
             rulesetVersion: battle.rulesetVersion,
             rulesetHash: battle.rulesetHash as Hex,
-            drawn,
             result: { attackerWon: battle.attackerWon, rounds: battle.rounds, winnerHpRemaining: battle.winnerHpRemaining },
             combatLogHash: battle.combatLogHash as Hex,
             progression,
@@ -280,8 +267,6 @@ async function loadBattleRuleset(battle: LedgerRow): Promise<Ruleset> {
 /** Every disagreement between the stored TypeScript result and Go's, as readable lines. */
 function compareTeam(battle: LedgerRow, go: VerifyTeamBattleWire): string[] {
     const mismatches: string[] = [];
-    const drawn = (battle.drawn as number[] | null) ?? [];
-    if (drawn.join(',') !== go.drawn.join(',')) mismatches.push(`drawn: ts=${drawn.join(',')} go=${go.drawn.join(',')}`);
     if (battle.attackerWon !== go.attackerWins) mismatches.push(`winner: ts=${battle.attackerWon} go=${go.attackerWins}`);
     if (battle.rounds !== go.rounds) mismatches.push(`rounds: ts=${battle.rounds} go=${go.rounds}`);
     if (battle.winnerHpRemaining !== go.winnerHpRemaining) {

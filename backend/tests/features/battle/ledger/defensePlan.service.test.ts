@@ -40,11 +40,9 @@ const wire: DefensePlanWire = {
     deploymentId: 'base-sepolia-live',
     defenderOwner: DEFENDER,
     roster: [
-        { petId: '21', rank: 1, col: 2, row: 1, tactic: 'focus' },
-        { petId: '22', rank: 2, col: 2, row: 0, tactic: 'bodyguard' },
-        { petId: '23', rank: 3, col: 1, row: 1, tactic: 'breaker' },
-        { petId: '24', rank: 4, col: 0, row: 1, tactic: 'hunter' },
-        { petId: '25', rank: 5, col: 2, row: 2, tactic: 'focus' },
+        { petId: '21', col: 2, row: 1, tactic: 'focus' },
+        { petId: '22', col: 2, row: 0, tactic: 'bodyguard' },
+        { petId: '23', col: 1, row: 1, tactic: 'breaker' },
     ],
     rulesetHash: RULESET,
     minLevel: 1,
@@ -94,7 +92,7 @@ describe('saving a plan', () => {
     });
 
     it.each([
-        ['four pets', { roster: wire.roster.slice(0, 4) }, 'malformed-plan'],
+        ['two pets', { roster: wire.roster.slice(0, 2) }, 'malformed-plan'],
         ['another deployment', { deploymentId: 'base-mainnet-live' }, 'wrong-deployment'],
         ['an expired plan', { expiresAt: NOW }, 'already-expired'],
     ] as const)('refuses %s', async (_name, overrides, reason) => {
@@ -129,10 +127,10 @@ describe('saving a plan', () => {
 
     it('refuses a roster pet the defender does not own, or that is not indexed', async () => {
         vi.mocked(getPetById).mockImplementation((async (_chain: string, petId: string) =>
-            petId === '24' ? { petId, owner: STRANGER } : { petId, owner: DEFENDER }) as never);
+            petId === '22' ? { petId, owner: STRANGER } : { petId, owner: DEFENDER }) as never);
         expect(await submit()).toMatchObject({ ok: false, reason: 'not-pet-owner' });
 
-        vi.mocked(getPetById).mockImplementation((async (_chain: string, petId: string) => (petId === '25' ? null : { petId, owner: DEFENDER })) as never);
+        vi.mocked(getPetById).mockImplementation((async (_chain: string, petId: string) => (petId === '23' ? null : { petId, owner: DEFENDER })) as never);
         expect(await submit()).toMatchObject({ ok: false, reason: 'unknown-pet' });
     });
 

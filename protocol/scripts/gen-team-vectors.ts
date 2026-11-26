@@ -19,7 +19,6 @@ import {
     type AttrBonus,
     DEFAULT_SKILL_CONFIG,
     DEFAULT_TEAM_CONFIG,
-    drawDefenders,
     NO_BONUS,
     NO_SKILL,
     type Range,
@@ -382,15 +381,6 @@ const CASES: CaseSpec[] = [
     },
 ];
 
-const DRAWS: { name: string; note: string; ranks: number[]; seed: bigint }[] = [
-    { name: 'ranks-in-roster-order-seed-1', note: 'Roster pet i has rank i + 1.', ranks: [1, 2, 3, 4, 5], seed: 1n },
-    { name: 'ranks-in-roster-order-seed-0', note: 'The zero seed.', ranks: [1, 2, 3, 4, 5], seed: 0n },
-    { name: 'ranks-in-roster-order-seed-max', note: 'The largest uint256 seed.', ranks: [1, 2, 3, 4, 5], seed: (1n << 256n) - 1n },
-    { name: 'ranks-reversed', note: 'The top-ranked pet is last in the roster, so rank and roster position are not confused.', ranks: [5, 4, 3, 2, 1], seed: 1n },
-    { name: 'ranks-shuffled', note: 'Ranks in no particular order.', ranks: [3, 1, 5, 2, 4], seed: 7n },
-    { name: 'ranks-shuffled-other-seed', note: 'Same roster, a seed that draws a different lineup.', ranks: [3, 1, 5, 2, 4], seed: 12345n },
-];
-
 const LOG_COLUMNS = [
     'round', 'side', 'actor', 'target', 'victim', 'isMagic', 'crit', 'damage', 'elementMult', 'combo',
     'longShot', 'furyTriggered', 'temperament', 'exposed', 'guarded', 'secondChance', 'knockedOut',
@@ -446,11 +436,9 @@ const doc = {
     skillConfig: DEFAULT_SKILL_CONFIG,
     logColumns: LOG_COLUMNS,
     cases,
-    draws: DRAWS.map((d) => ({ name: d.name, note: d.note, ranks: d.ranks, seed: d.seed.toString(), expected: drawDefenders(d.ranks, d.seed) })),
 };
 
 const out = join(process.cwd(), '../contracts/test-vectors/team.json');
 writeFileSync(out, `${JSON.stringify(doc, null, 2)}\n`);
 console.log('wrote', out);
 for (const c of cases) console.log(' ', c.name.padEnd(46), 'seed', c.seed.padEnd(5), JSON.stringify({ w: c.expected.attackerWins, r: c.expected.rounds, hp: c.expected.winnerHpRemaining, strikes: c.expected.log.length }));
-for (const d of doc.draws) console.log(' ', d.name.padEnd(46), JSON.stringify(d.expected));

@@ -14,8 +14,7 @@ import { CanonicalWriter } from '../encoding/writer';
  * bound, because a playback that showed a guard nobody made would be the same lie as one
  * showing the wrong winner.
  *
- * Fighters are named by side and slot; the receipt's `drawn` says which roster pets the
- * defenders' slots are.
+ * Fighters are named by side and slot, the slot orders the snapshot freezes.
  */
 export function encodeTeamCombatLog(outcome: TeamOutcome): Uint8Array {
     const writer = CanonicalWriter.withDomain(DOMAIN_TAGS.COMBAT_LOG).u16(TEAM_SCHEMA_VERSIONS.combatLog);

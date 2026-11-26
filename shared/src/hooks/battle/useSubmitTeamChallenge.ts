@@ -25,7 +25,7 @@ import type { PlanRosterEntry } from './useDefensePlan';
  */
 export interface SubmitTeamChallengeVars {
     /** Three of the player's pets, each placed on their own 3×3 zone with a tactic. */
-    attackers: Omit<PlanRosterEntry, 'rank'>[];
+    attackers: PlanRosterEntry[];
     defenderOwner: string;
     defensePlanHash: string;
     roomId?: string;

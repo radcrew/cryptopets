@@ -22,41 +22,29 @@ beforeEach(() => {
 });
 
 describe('TeamPlan', () => {
-    it('saves five pets with ranks in list order, after a reorder', async () => {
+    it('saves the three chosen pets in the order they were added', async () => {
         const user = userEvent.setup();
         render(<TeamPlan />);
         const saveButton = screen.getByRole('button', { name: 'Save team' });
         expect(saveButton).toBeDisabled();
 
-        for (const id of ['1', '2', '3', '4', '5']) {
+        for (const id of ['1', '2', '3']) {
             await user.click(screen.getByRole('button', { name: `Pet ${id}, level 10` }));
         }
-        // A full team takes no sixth pet.
-        expect(screen.getByRole('button', { name: 'Pet 6, level 10' })).toBeDisabled();
-        // Ranking happens in the details panel: picking rank 1 for Pet 2 swaps it with Pet 1.
-        await user.click(screen.getByRole('button', { name: 'Pet 2, front column, top row' }));
-        const details = screen.getByRole('complementary', { name: 'Pet details' });
-        const rankOne = within(details).getByRole('button', { name: 'Rank 1, defends in about 83% of battles' });
-        expect(rankOne).toHaveAttribute('aria-pressed', 'false');
-        await user.click(rankOne);
-        expect(rankOne).toHaveAttribute('aria-pressed', 'true');
+        // A full team takes no fourth pet until one is taken out.
+        expect(screen.getByRole('button', { name: 'Pet 4, level 10' })).toBeDisabled();
+        await user.click(screen.getByRole('button', { name: 'Pet 1, level 10' }));
+        await user.click(screen.getByRole('button', { name: 'Pet 4, level 10' }));
         await user.click(saveButton);
 
-        const vars = saveCall();
-        expect(vars.roster.map((e: { petId: string; rank: number }) => [e.petId, e.rank])).toEqual([
-            ['2', 1],
-            ['1', 2],
-            ['3', 3],
-            ['4', 4],
-            ['5', 5],
-        ]);
+        expect(saveCall().roster.map((e) => e.petId)).toEqual(['2', '3', '4']);
         expect(await screen.findByRole('status')).toHaveTextContent(/saved/i);
     });
 
     it('shows the selected pet in the details panel, moves it to an empty tile, and saves the tactic set there', async () => {
         const user = userEvent.setup();
         render(<TeamPlan />);
-        for (const id of ['1', '2', '3', '4', '5']) {
+        for (const id of ['1', '2', '3']) {
             await user.click(screen.getByRole('button', { name: `Pet ${id}, level 10` }));
         }
         const details = screen.getByRole('complementary', { name: 'Pet details' });
@@ -64,7 +52,6 @@ describe('TeamPlan', () => {
 
         await user.click(screen.getByRole('button', { name: 'Pet 1, front column, middle row' }));
         expect(details).toHaveTextContent('Pet 1');
-        expect(within(details).getByRole('button', { name: 'Rank 1, defends in about 83% of battles' })).toHaveAttribute('aria-pressed', 'true');
         // DNA 1 at rarity 1 and level 10 has every stat gene at 0: HP is 100 + 6 * 10, ATK 10 + 2 * 10.
         expect(within(details).getByRole('list', { name: 'Base stats' })).toHaveTextContent('160HP30ATK');
 
@@ -74,7 +61,7 @@ describe('TeamPlan', () => {
 
         await user.selectOptions(within(details).getByRole('combobox'), 'breaker');
         await user.click(screen.getByRole('button', { name: 'Save team' }));
-        expect(saveCall().roster[0]).toMatchObject({ petId: '1', rank: 1, col: 0, row: 0, tactic: 'breaker' });
+        expect(saveCall().roster[0]).toMatchObject({ petId: '1', col: 0, row: 0, tactic: 'breaker' });
     });
 });
 
@@ -101,7 +88,7 @@ describe('TeamPetGrid', () => {
 });
 
 function saveCall() {
-    return save.mock.calls[0]![0] as { roster: { petId: string; rank: number }[] };
+    return save.mock.calls[0]![0] as { roster: { petId: string }[] };
 }
 
 describe('TeamPlayback', () => {

@@ -36,23 +36,18 @@ export function checkCombatReplay(receipt: AnyBattleReceipt, ruleset: Ruleset): 
 }
 
 /**
- * A team battle's replay: the draw, then the fight, from the same function the backend
- * computes it with. Everything the duel replay compares, plus who the draw picked, since a
- * receipt naming the wrong three defenders is a different battle even if its result matches.
+ * A team battle's replay, from the same function the backend computes it with. Everything the
+ * duel replay compares.
  */
 function checkTeamReplay(receipt: TeamBattleReceipt, ruleset: Ruleset): CheckResult {
     const check = 'combat-replay';
-    let replay: ReturnType<typeof replayTeamBattle>;
+    let outcome: ReturnType<typeof replayTeamBattle>;
     try {
-        replay = replayTeamBattle(receipt.snapshot, receipt.seed, ruleset);
+        outcome = replayTeamBattle(receipt.snapshot, receipt.seed, ruleset);
     } catch (error) {
         return { check, ok: false, detail: `replay could not run: ${(error as Error).message}` };
     }
-    const { drawn, outcome } = replay;
     const mismatches: string[] = [];
-    if (drawn.join(',') !== receipt.drawn.join(',')) {
-        mismatches.push(`drawn: replay=${drawn.join(',')} receipt=${receipt.drawn.join(',')}`);
-    }
     if (outcome.result.attackerWins !== receipt.result.attackerWon) {
         mismatches.push(`attackerWon: replay=${outcome.result.attackerWins} receipt=${receipt.result.attackerWon}`);
     }

@@ -68,7 +68,7 @@ export function verifyReceiptBeacon(receipt: AnyBattleReceipt): ReceiptVerificat
  */
 export function verifyTeamReceiptProgression(receipt: TeamBattleReceipt, params: ProgressionParams): ReceiptVerification {
     const checked = assertTeamBattleReceipt(receipt);
-    const recomputed = computeTeamProgression(checked.snapshot, checked.drawn, checked.result.attackerWon, params);
+    const recomputed = computeTeamProgression(checked.snapshot, checked.result.attackerWon, params);
     const mismatches = recomputed.flatMap((expected, i) => compareProgression(`fighter ${i}`, expected, checked.progression[i]));
     return mismatches.length === 0 ? { ok: true } : { ok: false, failures: [{ check: 'progression', detail: mismatches.join('; ') }] };
 }

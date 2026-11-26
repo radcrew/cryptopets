@@ -26,8 +26,8 @@ import type { SignatureFormat } from './intent.service';
  * bounded by a level band, a daily cap and a validity window, and bound to a ruleset hash so a
  * rules change invalidates it rather than reinterpreting it.
  *
- * Two differences. A plan names exactly five pets, with the rank, home tile and tactic each
- * fights with, so it is checked against the roster when saved rather than first when someone
+ * Two differences. A plan names exactly the three pets that defend, with the home tile and
+ * tactic each fights with, so it is checked against the roster when saved rather than first when someone
  * challenges it. And a defender has one live plan: saving a new one revokes the earlier ones in
  * the same transaction, because an attacker challenges "this defender", and two live plans would
  * leave which roster they meet up to whichever row a query happened to return first.
@@ -38,7 +38,7 @@ export interface DefensePlanWire {
     chainId: string;
     deploymentId: string;
     defenderOwner: string;
-    roster: { petId: string; rank: number; col: number; row: number; tactic: Tactic }[];
+    roster: { petId: string; col: number; row: number; tactic: Tactic }[];
     rulesetHash: string;
     minLevel: number;
     maxLevel: number;
@@ -148,7 +148,7 @@ export async function submitDefensePlan(request: SubmitPlanRequest): Promise<Sub
                     chainId: plan.domain.chainId,
                     deploymentId: plan.domain.deploymentId,
                     defenderOwner: plan.defenderOwner,
-                    roster: plan.roster.map((e) => ({ petId: e.petId.toString(), rank: e.rank, col: e.col, row: e.row, tactic: e.tactic })),
+                    roster: plan.roster.map((e) => ({ petId: e.petId.toString(), col: e.col, row: e.row, tactic: e.tactic })),
                     rulesetHash: plan.rulesetHash,
                     minLevel: plan.minLevel,
                     maxLevel: plan.maxLevel,
@@ -273,7 +273,7 @@ export function toProtocolPlan(wire: DefensePlanWire): DefensePlan {
     return {
         domain: { chainId: wire.chainId as ChainId, deploymentId: wire.deploymentId },
         defenderOwner: wire.defenderOwner,
-        roster: (wire.roster ?? []).map((e) => ({ petId: BigInt(e.petId), rank: e.rank, col: e.col, row: e.row, tactic: e.tactic })),
+        roster: (wire.roster ?? []).map((e) => ({ petId: BigInt(e.petId), col: e.col, row: e.row, tactic: e.tactic })),
         rulesetHash: wire.rulesetHash as `0x${string}`,
         minLevel: wire.minLevel,
         maxLevel: wire.maxLevel,

@@ -36,6 +36,8 @@ export type TurnOrder = 'int' | 'speed';
 export type Side = 0 | 1;
 
 export const MAX_TEAM_SIZE = 3;
+/** Pets on each side of a team battle: the attacker's squad and the defender's plan alike. */
+export const SQUAD_SIZE = 3;
 
 export interface TeamFighter {
     dna: bigint;

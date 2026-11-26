@@ -6,10 +6,9 @@ import { useActiveChain } from '../session/useActiveChain';
 import { chainIdFor } from './chainIdFor';
 import { useBattleConfig } from './useBattleConfig';
 
-/** One roster pet of a defence plan, as the opponent list serves it. */
+/** One defending pet of a defence plan, as the opponent list serves it. */
 export interface TeamOpponentPet {
     petId: string;
-    rank: number;
     col: number;
     row: number;
     tactic: Tactic;
@@ -28,7 +27,7 @@ export interface TeamOpponent {
     maxLevel: number;
     expiresAt: number;
     roster: TeamOpponentPet[];
-    /** All five pets are off cooldown, which a challenge needs. */
+    /** All three pets are off cooldown, which a challenge needs. */
     ready: boolean;
 }
 

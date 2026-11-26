@@ -137,13 +137,12 @@ export type VerifyFailure = { ok: false; reason: 'not-configured' | 'breaker-ope
 
 export type VerifyBattleResult = { ok: true; response: VerifyBattleWire } | VerifyFailure;
 
-/** One team-battle pet (docs/battle-protocol.md §F, "Team battles"). `rank` is 0 for attackers. */
+/** One team-battle pet (docs/battle-protocol.md §F, "Team battles"). */
 export interface VerifyTeamPetWire {
     pet: VerifyPetInputsWire;
     col: number;
     row: number;
     tactic: 'focus' | 'breaker' | 'hunter' | 'bodyguard';
-    rank: number;
 }
 
 /** Mirrors protocol's TeamConfig. `turnOrder` is 'int' until Attributes 2.0. */
@@ -160,7 +159,7 @@ export interface VerifyTeamConfigWire {
 export interface VerifyTeamBattleParams {
     /** Exactly three, in slot order. */
     attackers: VerifyTeamPetWire[];
-    /** The defender's whole five-pet roster, so Go recomputes the draw rather than trusting it. */
+    /** The defender's three pets, the plan's roster, in slot order. */
     roster: VerifyTeamPetWire[];
     /** 32-byte seed, 0x-hex. */
     seed: string;
@@ -196,15 +195,13 @@ export interface VerifyTeamStrikeWire {
 }
 
 export interface VerifyTeamBattleWire {
-    /** The defenders' roster indices, in roster order. */
-    drawn: number[];
     attackerWins: boolean;
     rounds: number;
     winnerHpRemaining: number;
     attackerStartHp: number[];
     defenderStartHp: number[];
     log: VerifyTeamStrikeWire[];
-    /** The six fighters, attackers then drawn defenders, each by slot. */
+    /** The six fighters, attackers then defenders, each by slot. */
     progression: VerifyPetProgressionWire[];
 }
 
@@ -259,8 +256,7 @@ export function callVerifyBattle(params: VerifyBattleParams): Promise<VerifyBatt
 }
 
 /**
- * VerifyTeamBattle: the Go recomputation of a team battle's draw, fight and six
- * progressions. Fail-closed for the same reason as `callVerifyBattle`, and on the same
+ * VerifyTeamBattle: the Go recomputation of a team battle's fight and six progressions. Fail-closed for the same reason as `callVerifyBattle`, and on the same
  * client and breaker: both calls reach one Go process, so if it is down neither should be
  * attempted.
  */

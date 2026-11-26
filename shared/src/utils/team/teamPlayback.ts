@@ -107,11 +107,7 @@ export function buildTeamPlayback(receipt: TeamBattleReceipt, combatLog: TeamCom
     }
 
     const attackers = receipt.snapshot.attackers.map((m, slot) => fighterView(0, slot, m, Number(startHp[0][slot] ?? 0n)));
-    const defenders = receipt.drawn.map((index, slot) => {
-        const member = receipt.snapshot.roster[index];
-        if (!member) throw new Error(`receipt draws roster index ${index}, which does not exist`);
-        return fighterView(1, slot, member, Number(startHp[1][slot] ?? 0n));
-    });
+    const defenders = receipt.snapshot.roster.map((m, slot) => fighterView(1, slot, m, Number(startHp[1][slot] ?? 0n)));
 
     const hp: [number[], number[]] = [attackers.map((f) => f.startHp), defenders.map((f) => f.startHp)];
     const frames = strikes.map((strike) => {
@@ -190,9 +186,8 @@ export interface SquadPreviewPet {
 
 /**
  * The order a squad acts in among itself, by today's team rules: pets without Shell before
- * Shell pets, then higher INT, then Swift, then the lower slot. Returns slot indices. The
- * defenders are drawn only once the battle starts, so this cannot place them; it is the part
- * of the order the attacker controls.
+ * Shell pets, then higher INT, then Swift, then the lower slot. Returns slot indices. It
+ * orders one squad, which is the part of the order the attacker controls.
  */
 export function previewSquadTurnOrder(pets: readonly SquadPreviewPet[]): number[] {
     const ints = pets.map((pet) => {

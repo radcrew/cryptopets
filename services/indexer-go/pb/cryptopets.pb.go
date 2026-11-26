@@ -1077,7 +1077,6 @@ type VerifyTeamPet struct {
 	Col           uint32                 `protobuf:"varint,2,opt,name=col,proto3" json:"col,omitempty"` // own zone: 0 back, 1 mid, 2 front
 	Row           uint32                 `protobuf:"varint,3,opt,name=row,proto3" json:"row,omitempty"`
 	Tactic        string                 `protobuf:"bytes,4,opt,name=tactic,proto3" json:"tactic,omitempty"` // "focus" | "breaker" | "hunter" | "bodyguard"
-	Rank          uint32                 `protobuf:"varint,5,opt,name=rank,proto3" json:"rank,omitempty"`    // roster pets only: 1-5, each once. 0 for attackers.
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1138,13 +1137,6 @@ func (x *VerifyTeamPet) GetTactic() string {
 		return x.Tactic
 	}
 	return ""
-}
-
-func (x *VerifyTeamPet) GetRank() uint32 {
-	if x != nil {
-		return x.Rank
-	}
-	return 0
 }
 
 // Mirrors protocol's TeamConfig field for field.
@@ -1243,7 +1235,7 @@ func (x *VerifyTeamConfig) GetTemperamentPct() uint32 {
 type VerifyTeamBattleRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Attackers     []*VerifyTeamPet       `protobuf:"bytes,1,rep,name=attackers,proto3" json:"attackers,omitempty"` // exactly 3, slot order
-	Roster        []*VerifyTeamPet       `protobuf:"bytes,2,rep,name=roster,proto3" json:"roster,omitempty"`       // exactly 5, roster order
+	Roster        []*VerifyTeamPet       `protobuf:"bytes,2,rep,name=roster,proto3" json:"roster,omitempty"`       // the defenders: exactly 3, slot order
 	Seed          []byte                 `protobuf:"bytes,3,opt,name=seed,proto3" json:"seed,omitempty"`           // 32 bytes, big-endian
 	SkillConfig   *VerifySkillConfig     `protobuf:"bytes,4,opt,name=skill_config,json=skillConfig,proto3" json:"skill_config,omitempty"`
 	TeamConfig    *VerifyTeamConfig      `protobuf:"bytes,5,opt,name=team_config,json=teamConfig,proto3" json:"team_config,omitempty"`
@@ -1524,14 +1516,13 @@ func (x *VerifyTeamStrike) GetVictimHpAfter() uint32 {
 
 type VerifyTeamBattleResponse struct {
 	state             protoimpl.MessageState `protogen:"open.v1"`
-	Drawn             []uint32               `protobuf:"varint,1,rep,packed,name=drawn,proto3" json:"drawn,omitempty"` // the defenders' roster indices, in roster order
 	AttackerWins      bool                   `protobuf:"varint,2,opt,name=attacker_wins,json=attackerWins,proto3" json:"attacker_wins,omitempty"`
 	Rounds            uint32                 `protobuf:"varint,3,opt,name=rounds,proto3" json:"rounds,omitempty"`
 	WinnerHpRemaining uint32                 `protobuf:"varint,4,opt,name=winner_hp_remaining,json=winnerHpRemaining,proto3" json:"winner_hp_remaining,omitempty"`
 	AttackerStartHp   []uint32               `protobuf:"varint,5,rep,packed,name=attacker_start_hp,json=attackerStartHp,proto3" json:"attacker_start_hp,omitempty"`
 	DefenderStartHp   []uint32               `protobuf:"varint,6,rep,packed,name=defender_start_hp,json=defenderStartHp,proto3" json:"defender_start_hp,omitempty"`
 	Log               []*VerifyTeamStrike    `protobuf:"bytes,7,rep,name=log,proto3" json:"log,omitempty"`
-	// The six fighters, attackers then drawn defenders, each by slot.
+	// The six fighters, attackers then defenders, each by slot.
 	Progression   []*VerifyPetProgression `protobuf:"bytes,8,rep,name=progression,proto3" json:"progression,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -1565,13 +1556,6 @@ func (x *VerifyTeamBattleResponse) ProtoReflect() protoreflect.Message {
 // Deprecated: Use VerifyTeamBattleResponse.ProtoReflect.Descriptor instead.
 func (*VerifyTeamBattleResponse) Descriptor() ([]byte, []int) {
 	return file_cryptopets_proto_rawDescGZIP(), []int{14}
-}
-
-func (x *VerifyTeamBattleResponse) GetDrawn() []uint32 {
-	if x != nil {
-		return x.Drawn
-	}
-	return nil
 }
 
 func (x *VerifyTeamBattleResponse) GetAttackerWins() bool {
@@ -1739,13 +1723,12 @@ const file_cryptopets_proto_rawDesc = "" +
 	"\tstart_hp2\x18\x05 \x01(\rR\bstartHp2\x122\n" +
 	"\x03log\x18\x06 \x03(\v2 .cryptopets.VerifyStrikeLogEntryR\x03log\x12<\n" +
 	"\battacker\x18\a \x01(\v2 .cryptopets.VerifyPetProgressionR\battacker\x12<\n" +
-	"\bdefender\x18\b \x01(\v2 .cryptopets.VerifyPetProgressionR\bdefender\"\x8e\x01\n" +
+	"\bdefender\x18\b \x01(\v2 .cryptopets.VerifyPetProgressionR\bdefender\"\x86\x01\n" +
 	"\rVerifyTeamPet\x12-\n" +
 	"\x03pet\x18\x01 \x01(\v2\x1b.cryptopets.VerifyPetInputsR\x03pet\x12\x10\n" +
 	"\x03col\x18\x02 \x01(\rR\x03col\x12\x10\n" +
 	"\x03row\x18\x03 \x01(\rR\x03row\x12\x16\n" +
-	"\x06tactic\x18\x04 \x01(\tR\x06tactic\x12\x12\n" +
-	"\x04rank\x18\x05 \x01(\rR\x04rank\"\x81\x02\n" +
+	"\x06tactic\x18\x04 \x01(\tR\x06tacticJ\x04\b\x05\x10\x06R\x04rank\"\x81\x02\n" +
 	"\x10VerifyTeamConfig\x12\x1d\n" +
 	"\n" +
 	"turn_order\x18\x01 \x01(\tR\tturnOrder\x12$\n" +
@@ -1786,16 +1769,15 @@ const file_cryptopets_proto_rawDesc = "" +
 	"knockedOut\x12\x12\n" +
 	"\x04heal\x18\x12 \x01(\x04R\x04heal\x12\x16\n" +
 	"\x06healed\x18\x13 \x01(\x05R\x06healed\x12&\n" +
-	"\x0fvictim_hp_after\x18\x14 \x01(\rR\rvictimHpAfter\"\xe9\x02\n" +
-	"\x18VerifyTeamBattleResponse\x12\x14\n" +
-	"\x05drawn\x18\x01 \x03(\rR\x05drawn\x12#\n" +
+	"\x0fvictim_hp_after\x18\x14 \x01(\rR\rvictimHpAfter\"\xe0\x02\n" +
+	"\x18VerifyTeamBattleResponse\x12#\n" +
 	"\rattacker_wins\x18\x02 \x01(\bR\fattackerWins\x12\x16\n" +
 	"\x06rounds\x18\x03 \x01(\rR\x06rounds\x12.\n" +
 	"\x13winner_hp_remaining\x18\x04 \x01(\rR\x11winnerHpRemaining\x12*\n" +
 	"\x11attacker_start_hp\x18\x05 \x03(\rR\x0fattackerStartHp\x12*\n" +
 	"\x11defender_start_hp\x18\x06 \x03(\rR\x0fdefenderStartHp\x12.\n" +
 	"\x03log\x18\a \x03(\v2\x1c.cryptopets.VerifyTeamStrikeR\x03log\x12B\n" +
-	"\vprogression\x18\b \x03(\v2 .cryptopets.VerifyPetProgressionR\vprogression2\xc3\x02\n" +
+	"\vprogression\x18\b \x03(\v2 .cryptopets.VerifyPetProgressionR\vprogressionJ\x04\b\x01\x10\x02R\x05drawn2\xc3\x02\n" +
 	"\x0fGameDataService\x12>\n" +
 	"\vGetPetState\x12\x16.cryptopets.PetRequest\x1a\x17.cryptopets.PetResponse\x12>\n" +
 	"\vEstimateWin\x12\x16.cryptopets.WinRequest\x1a\x17.cryptopets.WinResponse\x12Q\n" +

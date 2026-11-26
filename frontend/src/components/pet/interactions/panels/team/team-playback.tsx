@@ -1,3 +1,4 @@
+import clsx from 'clsx';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import PetArt from '@components/pet/pet-art';
@@ -47,93 +48,124 @@ const TeamPlayback: React.FC<TeamPlaybackProps> = ({ result, name, onDone, stepM
                 art: teamPetArt(f.petId, f.dna, name(f.side, f.slot)),
                 name: name(f.side, f.slot),
                 startHp: f.startHp,
-                hp: frame ? (frame.hp[f.side][f.slot] ?? f.startHp) : f.startHp,
+                hp: frame ? frame.hp[f.side][f.slot] ?? f.startHp : f.startHp,
             })),
         [frame, name, playback.fighters],
     );
-    const captions = frames.slice(Math.max(0, shown - 4), shown).map((f) => describeStrike(f.strike, name));
+    const captions = frames
+        .slice(Math.max(0, shown - 4), shown)
+        .map((f) => describeStrike(f.strike, name));
     const strike = frame?.strike;
     const enemy = strike ? (strike.side === 0 ? 1 : 0) : 0;
 
+    // The board on the left and the result beside it, so the whole fight fits one screen.
     return (
-        <div className={styles.panel}>
-            <BattleBoard
-                fighters={fighters}
-                actor={strike ? { side: strike.side, slot: strike.actor } : null}
-                victim={strike ? { side: enemy, slot: strike.victim } : null}
-            />
-            <div className={styles.captions} aria-live="polite">
-                {strike && <strong>Round {strike.round + 1}</strong>}
-                {captions.map((line, i) => (
-                    <span key={`${shown}-${i}`}>{line}</span>
-                ))}
-            </div>
-            <div className={styles.row}>
-                {!finished && (
-                    <NeonButton size="sm" tone="cyan" onClick={() => setPlaying((p) => !p)}>
-                        {playing ? 'Pause' : 'Play'}
-                    </NeonButton>
-                )}
-                {!finished && (
-                    <NeonButton size="sm" tone="violet" onClick={() => setIndex(frames.length)}>
-                        Skip to result
-                    </NeonButton>
-                )}
-                <NeonButton
-                    size="sm"
-                    tone="azure"
-                    onClick={() => {
-                        setIndex(0);
-                        setPlaying(true);
-                    }}
-                >
-                    Replay
-                </NeonButton>
-            </div>
-
-            {finished && (
-                <div className={styles.panel} aria-label="Battle result">
-                    <h4 className={summary.attackerWon ? styles.victory : styles.defeat}>
-                        {summary.attackerWon ? 'Victory' : 'Defeat'} in {summary.rounds} round{summary.rounds === 1 ? '' : 's'}
-                    </h4>
-                    <table className={styles.table}>
-                        <thead>
-                            <tr>
-                                <th>Pet</th>
-                                <th className={styles.num}>Damage</th>
-                                <th className={styles.num}>Knockouts</th>
-                                <th className={styles.num}>XP</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {playback.fighters.flat().map((f) => {
-                                const isMvp = summary.mvp?.side === f.side && summary.mvp.slot === f.slot;
-                                // The six progressions run attackers then defenders, by slot.
-                                const xp = receipt.progression[f.side === 0 ? f.slot : 3 + f.slot]?.xpAwarded ?? 0;
-                                return (
-                                    <tr key={`${f.side}-${f.slot}`}>
-                                        <td>
-                                            <span className={styles.miniArt} aria-hidden>
-                                                <PetArt pet={teamPetArt(f.petId, f.dna, name(f.side, f.slot))} />
-                                            </span>{' '}
-                                            {name(f.side, f.slot)}
-                                            {isMvp && ' ⭐ MVP'}
-                                        </td>
-                                        <td className={styles.num}>{summary.damage[f.side][f.slot] ?? 0}</td>
-                                        <td className={styles.num}>{summary.knockouts[f.side][f.slot] ?? 0}</td>
-                                        <td className={styles.num}>+{xp}</td>
-                                    </tr>
-                                );
-                            })}
-                        </tbody>
-                    </table>
+        <div className={clsx(styles.panel, styles.arena)}>
+            <div className={styles.playRow}>
+                <div className={styles.playBoard}>
+                    <BattleBoard
+                        fighters={fighters}
+                        actor={strike ? { side: strike.side, slot: strike.actor } : null}
+                        victim={strike ? { side: enemy, slot: strike.victim } : null}
+                    />
+                    <div className={styles.captions} aria-live="polite">
+                        {strike && <strong>Round {strike.round + 1}</strong>}
+                        {captions.map((line, i) => (
+                            <span key={`${shown}-${i}`}>{line}</span>
+                        ))}
+                    </div>
                     <div className={styles.row}>
-                        <NeonButton tone="emerald" onClick={onDone}>
-                            New challenge
+                        {!finished && (
+                            <NeonButton size="sm" tone="cyan" onClick={() => setPlaying((p) => !p)}>
+                                {playing ? 'Pause' : 'Play'}
+                            </NeonButton>
+                        )}
+                        {!finished && (
+                            <NeonButton
+                                size="sm"
+                                tone="violet"
+                                onClick={() => setIndex(frames.length)}
+                            >
+                                Skip to result
+                            </NeonButton>
+                        )}
+                        <NeonButton
+                            size="sm"
+                            tone="azure"
+                            onClick={() => {
+                                setIndex(0);
+                                setPlaying(true);
+                            }}
+                        >
+                            Replay
                         </NeonButton>
                     </div>
                 </div>
-            )}
+
+                <div className={styles.playSide}>
+                    {!finished && (
+                        <p className={styles.muted}>The result appears here when the fight ends.</p>
+                    )}
+                    {finished && (
+                        <div className={styles.result} aria-label="Battle result">
+                            <h4 className={summary.attackerWon ? styles.victory : styles.defeat}>
+                                {summary.attackerWon ? 'Victory' : 'Defeat'} in {summary.rounds}{' '}
+                                round{summary.rounds === 1 ? '' : 's'}
+                            </h4>
+                            <table className={styles.table}>
+                                <thead>
+                                    <tr>
+                                        <th>Pet</th>
+                                        <th className={styles.num}>Damage</th>
+                                        <th className={styles.num}>Knockouts</th>
+                                        <th className={styles.num}>XP</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {playback.fighters.flat().map((f) => {
+                                        const isMvp =
+                                            summary.mvp?.side === f.side &&
+                                            summary.mvp.slot === f.slot;
+                                        // The six progressions run attackers then defenders, by slot.
+                                        const xp =
+                                            receipt.progression[f.side === 0 ? f.slot : 3 + f.slot]
+                                                ?.xpAwarded ?? 0;
+                                        return (
+                                            <tr key={`${f.side}-${f.slot}`}>
+                                                <td>
+                                                    <span className={styles.miniArt} aria-hidden>
+                                                        <PetArt
+                                                            pet={teamPetArt(
+                                                                f.petId,
+                                                                f.dna,
+                                                                name(f.side, f.slot),
+                                                            )}
+                                                        />
+                                                    </span>{' '}
+                                                    {name(f.side, f.slot)}
+                                                    {isMvp && ' ⭐ MVP'}
+                                                </td>
+                                                <td className={styles.num}>
+                                                    {summary.damage[f.side][f.slot] ?? 0}
+                                                </td>
+                                                <td className={styles.num}>
+                                                    {summary.knockouts[f.side][f.slot] ?? 0}
+                                                </td>
+                                                <td className={styles.num}>+{xp}</td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                            <div className={styles.row}>
+                                <NeonButton size="sm" tone="emerald" onClick={onDone}>
+                                    New challenge
+                                </NeonButton>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </div>
         </div>
     );
 };

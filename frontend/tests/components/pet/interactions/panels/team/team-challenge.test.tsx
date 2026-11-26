@@ -5,8 +5,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const setTactic = vi.fn();
 const placePet = vi.fn();
 const pet = (id: string) => ({ id, chain: 'evm', name: `Mine ${id}`, level: 10, dna: 1n, rarity: 1, readyAt: 0 });
-const rival = (petId: string, rank: number, col: number, row: number) => ({
-    petId, rank, col, row, tactic: 'hunter', name: `Rival ${petId}`, level: 12, rarity: 2, dna: '1', speciesId: 0, readyAt: 0,
+const rival = (petId: string, col: number, row: number) => ({
+    petId, col, row, tactic: 'hunter', name: `Rival ${petId}`, level: 12, rarity: 2, dna: '1', speciesId: 0, readyAt: 0,
 });
 
 vi.mock('@hooks/team/useTeamBattlePanel', async () => ({
@@ -17,7 +17,7 @@ vi.mock('@hooks/team/useTeamBattlePanel', async () => ({
         opponentsLoading: false,
         opponent: {
             planHash: '0xplan', defenderOwner: '0xdef', minLevel: 1, maxLevel: 30, expiresAt: 0, ready: true,
-            roster: [rival('7', 2, 2, 1), rival('8', 1, 1, 0)],
+            roster: [rival('7', 2, 1), rival('8', 1, 0)],
         },
         chooseOpponent: vi.fn(),
         pets: [pet('1'), pet('2')],
@@ -47,14 +47,13 @@ import TeamChallenge from '@components/pet/interactions/panels/team/team-challen
 beforeEach(() => vi.clearAllMocks());
 
 describe('TeamChallenge pet details', () => {
-    it("shows a rival pet's details read-only, with its rank and its signed tactic", async () => {
+    it("shows a rival pet's details read-only, with its signed tactic", async () => {
         const user = userEvent.setup();
         render(<TeamChallenge />);
         await user.click(screen.getByRole('button', { name: 'Rival 7, front column, middle row' }));
 
         const details = screen.getByRole('complementary', { name: 'Pet details' });
         expect(details).toHaveTextContent('Rival pet');
-        expect(details).toHaveTextContent('2 of 5, defends in about 76% of battles');
         expect(details).toHaveTextContent('Hunter: an enemy its element beats');
         expect(within(details).queryByRole('combobox')).toBeNull();
     });

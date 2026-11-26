@@ -3,22 +3,20 @@ package combat
 import "fmt"
 
 // VerifyTeam is Verify for a three-on-three team battle (docs/battle-protocol.md §F, "Team
-// battles"): the squad draw, the fight, and all six fighters' progression, recomputed from
-// the frozen inputs alone. The same contract as Verify: release safety, not a trust
-// boundary, and no database, network or clock.
+// battles"): the fight and all six fighters' progression, recomputed from the frozen inputs
+// alone. The same contract as Verify: release safety, not a trust boundary, and no
+// database, network or clock.
 
-// TeamPet is one team-battle pet: its frozen inputs and its placement. Rank is read for
-// roster pets only.
+// TeamPet is one team-battle pet: its frozen inputs and its placement.
 type TeamPet struct {
 	Pet    PetInputs
 	Col    uint8
 	Row    uint8
 	Tactic Tactic
-	Rank   uint8
 }
 
 // TeamVerifyRequest is everything needed to recompute one team battle. Roster is the
-// defender's whole five-pet plan, so the draw is recomputed rather than taken on trust.
+// defender's three pets, the plan's roster, in slot order.
 type TeamVerifyRequest struct {
 	Attackers   []TeamPet
 	Roster      []TeamPet
@@ -31,53 +29,42 @@ type TeamVerifyRequest struct {
 // TeamVerifyResult is Go's recomputation. As with VerifyResult, the log travels back as
 // structured data for the caller to hash with the one canonical encoder.
 type TeamVerifyResult struct {
-	// Drawn is the defenders' roster indices, in roster order.
-	Drawn  []int
 	Battle TeamResult
-	// Progression covers the six fighters: attackers, then drawn defenders, each by slot.
+	// Progression covers the six fighters: attackers, then defenders, each by slot.
 	Progression []PetProgression
 }
 
-// VerifyTeam runs the draw, the fight and the progression.
+// VerifyTeam runs the fight and the progression.
 //
 // Every pet fights neutral (Melee, no temperament, speed unused), which is what ruleset
 // layout 3 means: it carries no Attributes 2.0 data. The TypeScript side applies the same
 // rule in one place, protocol's replayTeamBattle.
 func VerifyTeam(req TeamVerifyRequest) (TeamVerifyResult, error) {
-	if len(req.Roster) != RosterSize {
-		return TeamVerifyResult{}, fmt.Errorf("roster has %d pets, want %d", len(req.Roster), RosterSize)
+	if len(req.Attackers) != SquadSize || len(req.Roster) != SquadSize {
+		return TeamVerifyResult{}, fmt.Errorf("a team battle has %d pets a side, got %d and %d", SquadSize, len(req.Attackers), len(req.Roster))
 	}
-	ranks := make([]uint8, len(req.Roster))
-	for i, p := range req.Roster {
-		ranks[i] = p.Rank
-	}
-	drawn, err := DrawDefenders(ranks, req.Seed)
-	if err != nil {
-		return TeamVerifyResult{}, err
-	}
-
-	attackers := make([]TeamFighter, len(req.Attackers))
-	attackerPets := make([]PetInputs, len(req.Attackers))
-	for i, p := range req.Attackers {
-		attackers[i] = neutralFighter(p)
-		attackerPets[i] = p.Pet
-	}
-	defenders := make([]TeamFighter, len(drawn))
-	defenderPets := make([]PetInputs, len(drawn))
-	for i, index := range drawn {
-		defenders[i] = neutralFighter(req.Roster[index])
-		defenderPets[i] = req.Roster[index].Pet
-	}
+	attackers, attackerPets := fighters(req.Attackers)
+	defenders, defenderPets := fighters(req.Roster)
 
 	battle, err := SimulateTeam(attackers, defenders, req.Seed, req.SkillConfig, req.TeamConfig)
 	if err != nil {
 		return TeamVerifyResult{}, err
 	}
 	return TeamVerifyResult{
-		Drawn:       drawn,
 		Battle:      battle,
 		Progression: ComputeTeamProgression(attackerPets, defenderPets, battle.AttackerWins, req.MaxLevel),
 	}, nil
+}
+
+// fighters turns one side's pets into neutral fighters and the inputs progression needs.
+func fighters(pets []TeamPet) ([]TeamFighter, []PetInputs) {
+	out := make([]TeamFighter, len(pets))
+	inputs := make([]PetInputs, len(pets))
+	for i, p := range pets {
+		out[i] = neutralFighter(p)
+		inputs[i] = p.Pet
+	}
+	return out, inputs
 }
 
 func neutralFighter(p TeamPet) TeamFighter {

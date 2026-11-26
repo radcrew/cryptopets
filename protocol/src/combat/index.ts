@@ -24,6 +24,7 @@ export {
     type Range,
     type Side,
     simulateTeam,
+    SQUAD_SIZE,
     type Tactic,
     type TeamConfig,
     type TeamFighter,
@@ -33,7 +34,6 @@ export {
     type Temperament,
     type TurnOrder,
 } from './team';
-export { drawDefenders, ROSTER_SIZE, SQUAD_SIZE } from './teamDraw';
 export {
     applyDecayShift,
     applyXp,

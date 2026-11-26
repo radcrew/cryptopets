@@ -28,8 +28,7 @@ import type { CheckResult } from './types';
  */
 export function checkEquipment(receipt: AnyBattleReceipt, ruleset: Ruleset): CheckResult {
     const check = 'equipment';
-    // A team battle checks every loadout it froze, all eight, benched roster pets included:
-    // any of the five could have been drawn, so each one's gear is a claim the receipt makes.
+    // A team battle checks every loadout it froze, all six fighters'.
     const bearers: EquipmentBearer[] = isTeamBattleReceipt(receipt)
         ? [
               ...receipt.snapshot.attackers.map((m, i) => ({ role: `attackers[${i}]`, equipment: m.pet.equipment })),

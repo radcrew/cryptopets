@@ -107,8 +107,8 @@ const pet = (petId: string) => ({
 });
 
 const TEAM_PARAMS: VerifyTeamBattleParams = {
-    attackers: [0, 1, 2].map((i) => ({ pet: pet(String(11 + i)), col: 2, row: i, tactic: 'focus' as const, rank: 0 })),
-    roster: [0, 1, 2, 3, 4].map((i) => ({ pet: pet(String(21 + i)), col: i % 3, row: Math.floor(i / 3), tactic: 'focus' as const, rank: i + 1 })),
+    attackers: [0, 1, 2].map((i) => ({ pet: pet(String(11 + i)), col: 2, row: i, tactic: 'focus' as const })),
+    roster: [0, 1, 2].map((i) => ({ pet: pet(String(21 + i)), col: i, row: 1, tactic: 'focus' as const })),
     seed: `0x${'cd'.repeat(32)}`,
     skillConfig: PARAMS.skillConfig,
     teamConfig: { turnOrder: 'int', comboStepPct: 10, exposePct: 120, auraPct: 110, tailwindBps: 200, longShotPct: 85, temperamentPct: 105 },
@@ -127,12 +127,12 @@ describe('VerifyTeamBattle', () => {
         expect(await callVerifyTeamBattle(TEAM_PARAMS)).toMatchObject({ ok: false, reason: 'transport-error', detail: 'unavailable' });
     });
 
-    it('sends the whole roster and the seed as raw bytes, and returns the response', async () => {
-        const response = { drawn: [0, 2, 3], attackerWins: true, rounds: 6, winnerHpRemaining: 400, log: [], progression: [] };
+    it('sends both squads and the seed as raw bytes, and returns the response', async () => {
+        const response = { attackerWins: true, rounds: 6, winnerHpRemaining: 400, log: [], progression: [] };
         verifyTeamBattleMock.mockImplementation((req, _opts, cb) => {
             expect(req.attackers).toHaveLength(3);
-            expect(req.roster).toHaveLength(5);
-            expect(req.roster[4]).toMatchObject({ rank: 5, pet: { petId: '25' } });
+            expect(req.roster).toHaveLength(3);
+            expect(req.roster[2]).toMatchObject({ col: 2, row: 1, pet: { petId: '23' } });
             expect(req.teamConfig).toEqual(TEAM_PARAMS.teamConfig);
             expect(req.seed).toBeInstanceOf(Buffer);
             expect((req.seed as Buffer).length).toBe(32);

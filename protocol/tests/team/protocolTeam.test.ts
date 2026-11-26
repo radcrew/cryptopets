@@ -109,10 +109,9 @@ describe('protocol-team.json', () => {
     });
 
     // The receipts are only worth pinning if they are true. Replay each one from scratch.
-    it.each(receipts.map((r) => [r.battleId, r] as const))('replays %s to the recorded draw, result and log', (_id, r) => {
+    it.each(receipts.map((r) => [r.battleId, r] as const))('replays %s to the recorded result and log', (_id, r) => {
         expect(hashRuleset(RULESET)).toBe(r.rulesetHash);
-        const { drawn, outcome } = replayTeamBattle(r.snapshot, r.seed, RULESET);
-        expect(drawn).toEqual(r.drawn);
+        const outcome = replayTeamBattle(r.snapshot, r.seed, RULESET);
         expect(outcome.result.attackerWins).toBe(r.result.attackerWon);
         expect(outcome.result.rounds).toBe(r.result.rounds);
         expect(outcome.result.winnerHpRemaining).toBe(r.result.winnerHpRemaining);
@@ -122,17 +121,12 @@ describe('protocol-team.json', () => {
 });
 
 describe('team receipts', () => {
-    it('refuses a draw the seed does not give', () => {
-        expect(() => assertTeamBattleReceipt({ ...first, drawn: [0, 1, 2] })).toThrow(/is not the draw this seed gives/);
-    });
-
     it('refuses a seed that does not follow from its inputs', () => {
         expect(() => assertTeamBattleReceipt({ ...first, battleId: 'btl_other' })).toThrow(/does not follow/);
     });
 
-    it('lists the six fighters, attackers then drawn defenders', () => {
-        expect(first.drawn).toEqual([0, 2, 3]);
-        expect(teamFighterIds(first)).toEqual([11n, 12n, 13n, 21n, 23n, 24n]);
+    it('lists the six fighters, attackers then defenders', () => {
+        expect(teamFighterIds(first)).toEqual([11n, 12n, 13n, 21n, 22n, 23n]);
         const shuffled = [first.progression[1]!, first.progression[0]!, ...first.progression.slice(2)];
         expect(() => assertTeamBattleReceipt({ ...first, progression: shuffled })).toThrow(/progression\[0\]/);
     });
@@ -153,15 +147,12 @@ describe('team receipts', () => {
         expect(verifyReceiptChain([linked, first], null).ok).toBe(false);
     });
 
-    it('links fighters only, never a benched pet', () => {
-        // A different battle id is a different seed, so this receipt drew its own defenders.
+    it('links each of the six fighters, and no pet that did not fight', () => {
         const fighters = teamFighterIds(linked);
-        const benched = linked.snapshot.roster.map((m) => m.pet.petId).filter((id) => !fighters.includes(id));
-        expect(benched).toHaveLength(2);
         expect(petPreviousReceiptHash(linked, fighters[0]!)).toBe(`0x${'a1'.repeat(32)}`);
         expect(petPreviousReceiptHash(linked, fighters[4]!)).toBe(`0x${'b2'.repeat(32)}`);
         expect(petPreviousReceiptHash(linked, fighters[5]!)).toBeNull();
-        expect(petPreviousReceiptHash(linked, benched[0]!)).toBeUndefined();
+        expect(petPreviousReceiptHash(linked, 99n)).toBeUndefined();
     });
 });
 
@@ -169,9 +160,8 @@ describe('defence plans', () => {
     const plan = planFromWire(vectors.defensePlans[0]!.plan);
 
     it.each([
-        ['four pets', { roster: plan.roster.slice(0, 4) }, /exactly 5/],
-        ['a pet twice', { roster: [plan.roster[0]!, ...plan.roster.slice(0, 4)] }, /listed twice/],
-        ['a rank twice', { roster: plan.roster.map((e, i) => (i === 1 ? { ...e, rank: 1 } : e)) }, /each used once/],
+        ['two pets', { roster: plan.roster.slice(0, 2) }, /exactly 3/],
+        ['a pet twice', { roster: [plan.roster[0]!, ...plan.roster.slice(0, 2)] }, /listed twice/],
         ['two pets on one tile', { roster: plan.roster.map((e, i) => (i === 1 ? { ...e, col: 1, row: 1 } : e)) }, /share tile/],
         ['an unknown tactic', { roster: plan.roster.map((e, i) => (i === 1 ? { ...e, tactic: 'charge' as never } : e)) }, /unknown tactic/],
     ])('refuses %s', (_name, patch, error) => {
@@ -186,11 +176,12 @@ describe('defence plans', () => {
         expect(planCovers(plan, { ...query, nowSeconds: plan.expiresAt })).toEqual({ covered: false, reason: 'expired' });
     });
 
-    it('shows the owner every pet, rank, tile and tactic by name', () => {
+    it('shows the owner every pet, tile and tactic by name', () => {
         const typed = defensePlanTypedData(plan);
         expect(typed.primaryType).toBe('DefensePlan');
         expect(typed.message.schemaVersion).toBe(1);
-        expect(typed.message.roster[2]).toEqual({ petId: 23n, rank: 3, col: 2, row: 0, tactic: 'bodyguard' });
+        expect(typed.message.roster).toHaveLength(3);
+        expect(typed.message.roster[2]).toEqual({ petId: 23n, col: 2, row: 0, tactic: 'bodyguard' });
     });
 });
 
@@ -224,7 +215,7 @@ describe('team snapshots', () => {
     });
 
     it('refuses two owners on one side', () => {
-        const roster = snapshot.roster.map((m, i) => (i === 4 ? { ...m, pet: { ...m.pet, owner: '0x9999999999999999999999999999999999999999' } } : m));
+        const roster = snapshot.roster.map((m, i) => (i === 2 ? { ...m, pet: { ...m.pet, owner: '0x9999999999999999999999999999999999999999' } } : m));
         expect(() => assertTeamBattleSnapshot({ ...snapshot, roster })).toThrow(/same owner/);
     });
 

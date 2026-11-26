@@ -93,8 +93,6 @@ export interface BattleStateSummary {
     /** Null on a team battle, whose pets are in its snapshot. */
     defenderPetId: string | null;
     defenderOwner: string;
-    /** Team battles: the defenders' roster indices once computed, else null. */
-    drawn: number[] | null;
     rulesetHash: string;
     createdAt: string;
     updatedAt: string;
@@ -114,7 +112,6 @@ export async function getBattleStateSummary(battleId: string): Promise<BattleSta
         attackerOwner: battle.attackerOwner,
         defenderPetId: battle.defenderPetId,
         defenderOwner: battle.defenderOwner,
-        drawn: (battle.drawn as number[] | null) ?? null,
         rulesetHash: battle.rulesetHash,
         createdAt: battle.createdAt.toISOString(),
         updatedAt: battle.updatedAt.toISOString(),

@@ -6,7 +6,7 @@ import { type Hex, hexToBytes, normalizeAccount } from '../encoding/bytes';
 import { DOMAIN_TAGS } from '../encoding/domain';
 import { keccak256Hex } from '../encoding/hash';
 import { CanonicalWriter } from '../encoding/writer';
-import { ROSTER_SIZE } from '../combat/teamDraw';
+import { SQUAD_SIZE } from '../combat/team';
 
 import type { CoverageResult } from './types';
 
@@ -14,20 +14,19 @@ import type { CoverageResult } from './types';
  * A defender's team-battle roster and their consent to be challenged with it.
  *
  * The team counterpart of `DefenseAuthorization` (§D), and signed the same way, once and in
- * advance, so a defender does not have to be online. It names five pets rather than a
- * scope, because the battle draws three of them by rank (docs/battle-protocol.md §F, "The
- * draw"), and each pet's home tile and tactic are part of what the defender is agreeing to
- * fight with. The roster order is the defenders' slot order after the draw, so it is part
- * of the plan rather than a presentation choice, and it is not sorted.
+ * advance, so a defender does not have to be online. It names the three pets that defend
+ * rather than a scope, because each pet's home tile and tactic are part of what the defender
+ * is agreeing to fight with. The roster order is the defenders' slot order, so it is part of
+ * the plan rather than a presentation choice, and it is not sorted.
  *
  * Bound to `rulesetHash` like every consent: a rules change invalidates the plan rather
  * than reinterpreting it under new combat math.
  */
 export interface DefensePlan {
     domain: ProtocolDomain;
-    /** Wallet that owns all five pets and signs the plan. */
+    /** Wallet that owns all three pets and signs the plan. */
     defenderOwner: string;
-    /** Exactly five pets, in slot order. */
+    /** Exactly three pets, in slot order. */
     roster: RosterEntry[];
     rulesetHash: Hex;
     /** Inclusive band for the attacking squad's highest level, so a strong pet cannot hide
@@ -43,10 +42,9 @@ export interface DefensePlan {
     revocationNonce: number;
 }
 
-/** One roster pet: rank 1 to 5 (each used once), home tile and tactic. */
+/** One roster pet: its home tile and tactic. */
 export interface RosterEntry extends Placement {
     petId: bigint;
-    rank: number;
 }
 
 const SAFE_ACCOUNT_PATTERN = /^[A-Za-z0-9._:-]+$/;
@@ -59,21 +57,16 @@ export function assertDefensePlan(plan: DefensePlan): DefensePlan {
         throw new Error(`defenderOwner is not a valid account: ${JSON.stringify(plan.defenderOwner)}`);
     }
 
-    if (!Array.isArray(plan.roster) || plan.roster.length !== ROSTER_SIZE) {
-        throw new Error(`a defence plan lists exactly ${ROSTER_SIZE} pets`);
+    if (!Array.isArray(plan.roster) || plan.roster.length !== SQUAD_SIZE) {
+        throw new Error(`a defence plan lists exactly ${SQUAD_SIZE} pets`);
     }
     const petIds = new Set<bigint>();
-    const ranks = new Set<number>();
     plan.roster.forEach((entry, i) => {
         if (typeof entry.petId !== 'bigint' || entry.petId <= 0n || entry.petId >= MAX_U256) {
             throw new Error(`roster[${i}].petId is not a valid pet id: ${entry.petId}`);
         }
         if (petIds.has(entry.petId)) throw new Error(`roster[${i}]: pet ${entry.petId} is listed twice`);
         petIds.add(entry.petId);
-        if (!Number.isSafeInteger(entry.rank) || entry.rank < 1 || entry.rank > ROSTER_SIZE || ranks.has(entry.rank)) {
-            throw new Error(`roster[${i}].rank must be 1 to ${ROSTER_SIZE}, each used once; got ${entry.rank}`);
-        }
-        ranks.add(entry.rank);
     });
     assertPlacements(plan.roster, 'roster');
 
@@ -100,7 +93,7 @@ export function assertDefensePlan(plan: DefensePlan): DefensePlan {
     return {
         domain,
         defenderOwner: normalizeAccount(plan.defenderOwner),
-        roster: plan.roster.map((e) => ({ petId: e.petId, rank: e.rank, col: e.col, row: e.row, tactic: e.tactic })),
+        roster: plan.roster.map((e) => ({ petId: e.petId, col: e.col, row: e.row, tactic: e.tactic })),
         rulesetHash: plan.rulesetHash,
         minLevel: plan.minLevel,
         maxLevel: plan.maxLevel,
@@ -137,16 +130,15 @@ export function planCovers(plan: DefensePlan, query: PlanCoverageQuery): Coverag
 }
 
 /**
- * Canonical encoding: header, then the owner, the roster in slot order (pet id, rank,
- * column, row, tactic), and the consent fields in the same order as a defence
- * authorization's.
+ * Canonical encoding: header, then the owner, the roster in slot order (pet id, column, row,
+ * tactic), and the consent fields in the same order as a defence authorization's.
  */
 export function encodeDefensePlan(plan: DefensePlan): Uint8Array {
     const checked = assertDefensePlan(plan);
     const writer = CanonicalWriter.withDomain(DOMAIN_TAGS.DEFENSE_PLAN);
     writeHeader(writer, 'defensePlan', checked.domain, TEAM_SCHEMA_VERSIONS.defensePlan)
         .account(checked.defenderOwner)
-        .array(checked.roster, (w, e) => writePlacement(w.u256(e.petId).u8(e.rank), e));
+        .array(checked.roster, (w, e) => writePlacement(w.u256(e.petId), e));
     return writer
         .hash(checked.rulesetHash)
         .u16(checked.minLevel)
@@ -183,7 +175,6 @@ export const EIP712_DEFENSE_PLAN_TYPES = {
     // will do, and a number would not tell them.
     RosterEntry: [
         { name: 'petId', type: 'uint256' },
-        { name: 'rank', type: 'uint8' },
         { name: 'col', type: 'uint8' },
         { name: 'row', type: 'uint8' },
         { name: 'tactic', type: 'string' },
@@ -199,7 +190,7 @@ export interface DefensePlanTypedData {
         chainId: string;
         deploymentId: string;
         defenderOwner: string;
-        roster: { petId: bigint; rank: number; col: number; row: number; tactic: string }[];
+        roster: { petId: bigint; col: number; row: number; tactic: string }[];
         rulesetHash: string;
         minLevel: number;
         maxLevel: number;
@@ -228,7 +219,7 @@ export function defensePlanTypedData(plan: DefensePlan): DefensePlanTypedData {
             chainId: checked.domain.chainId,
             deploymentId: checked.domain.deploymentId,
             defenderOwner: checked.defenderOwner,
-            roster: checked.roster.map((e) => ({ petId: e.petId, rank: e.rank, col: e.col, row: e.row, tactic: e.tactic })),
+            roster: checked.roster.map((e) => ({ petId: e.petId, col: e.col, row: e.row, tactic: e.tactic })),
             rulesetHash: checked.rulesetHash,
             minLevel: checked.minLevel,
             maxLevel: checked.maxLevel,

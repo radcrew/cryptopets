@@ -542,7 +542,7 @@ unsigned integers, and every division rounds down.
 
 **Inputs.** Two sides, the attacker (side 0) and the defender (side 1), each with one to three
 fighters. A fighter's **slot** is its index in its side's list: the attacker's in the order the
-intent lists them, the defender's in roster order after the draw. Each fighter carries:
+intent lists them, the defender's in the order the defence plan lists them. Each fighter carries:
 
 - `dna`, `rarity`, `level`, `skill` and an equipment bonus, exactly as in a duel
 - a tile in its own 3×3 zone: `col` 0 (back), 1 (mid) or 2 (front), and `row` 0 to 2. Two
@@ -640,17 +640,9 @@ compare `Σhp · 10000 / ΣstartHp` per side: side 0 wins only when its value is
 tie goes to the defender. `rounds` counts the rounds that started, and `winnerHpRemaining` is the
 winning side's total HP, capped at 65535.
 
-**The draw.** A defence plan lists five pets with ranks 1 to 5, each rank used once. Each pet
-weighs `6 − rank`. For `k` = 1, 2, 3:
-
-```text
-roll_k = uint256(keccak256("CRYPTOPETS_SQUAD_DRAW_V1" ‖ seed ‖ uint8(k))) mod Σ weight(remaining)
-```
-
-Walk the remaining pets in roster order, adding up their weights, and draw the first pet whose
-running total exceeds `roll_k`. The three drawn pets become the defender's fighters, in roster
-order. The tag is the protocol's usual domain separation, so a draw roll can never equal a
-combat roll.
+**The defenders.** A defence plan lists exactly three pets, and they are the defender's
+fighters, in the plan's order. There is no draw: the defender's lineup is fixed by the plan the
+attacker challenged.
 
 **Duels are the special case.** With one fighter a side, the `int` order, no temperament and the
 default team configuration, every rule above that involves a teammate, a neighbour or a second

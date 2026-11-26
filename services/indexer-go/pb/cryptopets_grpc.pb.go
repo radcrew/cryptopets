@@ -52,10 +52,8 @@ type GameDataServiceClient interface {
 	// is for" section). Never wired to any state-mutating path.
 	VerifyBattle(ctx context.Context, in *VerifyBattleRequest, opts ...grpc.CallOption) (*VerifyBattleResponse, error)
 	// VerifyBattle's job for a three-on-three team battle (docs/battle-protocol.md §F,
-	// "Team battles"): the squad draw from the defender's roster, the fight, and all six
-	// fighters' progression, recomputed by the Go port. The whole five-pet roster is sent,
-	// not the three who fought, so the draw is checked too rather than taken on trust.
-	// Release safety only, exactly as VerifyBattle.
+	// "Team battles"): the fight and all six fighters' progression, recomputed by the Go
+	// port. Release safety only, exactly as VerifyBattle.
 	VerifyTeamBattle(ctx context.Context, in *VerifyTeamBattleRequest, opts ...grpc.CallOption) (*VerifyTeamBattleResponse, error)
 }
 
@@ -130,10 +128,8 @@ type GameDataServiceServer interface {
 	// is for" section). Never wired to any state-mutating path.
 	VerifyBattle(context.Context, *VerifyBattleRequest) (*VerifyBattleResponse, error)
 	// VerifyBattle's job for a three-on-three team battle (docs/battle-protocol.md §F,
-	// "Team battles"): the squad draw from the defender's roster, the fight, and all six
-	// fighters' progression, recomputed by the Go port. The whole five-pet roster is sent,
-	// not the three who fought, so the draw is checked too rather than taken on trust.
-	// Release safety only, exactly as VerifyBattle.
+	// "Team battles"): the fight and all six fighters' progression, recomputed by the Go
+	// port. Release safety only, exactly as VerifyBattle.
 	VerifyTeamBattle(context.Context, *VerifyTeamBattleRequest) (*VerifyTeamBattleResponse, error)
 	mustEmbedUnimplementedGameDataServiceServer()
 }

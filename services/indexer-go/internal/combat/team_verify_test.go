@@ -3,14 +3,13 @@ package combat
 import (
 	"encoding/hex"
 	"encoding/json"
-	"reflect"
 	"strconv"
 	"strings"
 	"testing"
 )
 
 // The team receipts in contracts/test-vectors/protocol-team.json were produced by the
-// TypeScript side: its draw, its engine, and its computeTeamProgression. Recomputing them
+// TypeScript side: its engine and its computeTeamProgression. Recomputing them
 // here locks the team progression composition across the two languages, the way
 // progression_test.go does for duels.
 const protocolTeamVectorsPath = "../../../../contracts/test-vectors/protocol-team.json"
@@ -36,7 +35,6 @@ type vectorTeamPet struct {
 	Col    uint8  `json:"col"`
 	Row    uint8  `json:"row"`
 	Tactic string `json:"tactic"`
-	Rank   uint8  `json:"rank"`
 }
 
 type vectorProgression struct {
@@ -64,7 +62,6 @@ type protocolTeamVectors struct {
 				Roster    []vectorTeamPet `json:"roster"`
 			} `json:"snapshot"`
 			Seed   string `json:"seed"`
-			Drawn  []int  `json:"drawn"`
 			Result struct {
 				AttackerWon       bool   `json:"attackerWon"`
 				Rounds            uint8  `json:"rounds"`
@@ -100,7 +97,7 @@ func (p vectorTeamPet) toTeamPet(t *testing.T) TeamPet {
 			Skill: p.Pet.Skill, XP: p.Pet.XP, LastOpponentID: parse(p.Pet.LastOpponentID), Streak: p.Pet.Streak,
 			Bonus: SumBonuses(items),
 		},
-		Col: p.Col, Row: p.Row, Tactic: lookup(t, tactics, p.Tactic), Rank: p.Rank,
+		Col: p.Col, Row: p.Row, Tactic: lookup(t, tactics, p.Tactic),
 	}
 }
 
@@ -141,9 +138,6 @@ func TestVerifyTeamMatchesProtocolTeamReceipts(t *testing.T) {
 			got, err := VerifyTeam(req)
 			if err != nil {
 				t.Fatal(err)
-			}
-			if !reflect.DeepEqual(got.Drawn, r.Drawn) {
-				t.Fatalf("drawn: got %v, want %v", got.Drawn, r.Drawn)
 			}
 			if got.Battle.AttackerWins != r.Result.AttackerWon || got.Battle.Rounds != r.Result.Rounds ||
 				got.Battle.WinnerHpRemaining != r.Result.WinnerHpRemaining {

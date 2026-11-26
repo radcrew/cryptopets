@@ -5,32 +5,21 @@ the execution order and the decisions it depends on. Steps are small on purpose:
 a command that passes, so the branch is revertible at any point. The golden-vector and
 schema-version rules in `AGENTS.md` apply throughout.
 
-Branch: `feat/team-battles-3v3`. **Status: Phases 0 to 5 done (same-owner battles blocked, decisions recorded, team engine in both languages with `team.json`, team protocol objects and the public verifier, `VerifyTeamBattle` in the Go service, the backend, and the web frontend). The Phase 4 migration is written but not yet applied. Phase 6 not started.**
+Branch: `feat/team-battles-3v3`. **Status: Phases 0 to 5 done (same-owner battles blocked, decisions recorded, team engine in both languages with `team.json`, team protocol objects and the public verifier, `VerifyTeamBattle` in the Go service, the backend, and the web frontend). The Phase 4 migration is applied, and team battles are switched on in a local backend for testing. Phase 6 not finished. Since Phase 5, defenders are three fixed pets with no draw (D8).**
 
 ## 1. What a team battle is
 
-### Rosters, the challenge, and the draw
+### Rosters and the challenge
 
-- **Defence plan.** A defender saves a roster of five pets, each with a rank (1 to 5), a tactic and
-  a home tile in their 3×3 zone. The plan is signed, and it doubles as their consent to be
-  challenged.
-- **Challenge.** The attacker sees the five rival pets on their home tiles, then picks three of
+- **Defence plan.** A defender saves three pets, each with a tactic and a home tile in their 3×3
+  zone. These three defend in every battle against the plan. The plan is signed, and it doubles as
+  their consent to be challenged.
+- **Challenge.** The attacker sees the three rival pets on their home tiles, then picks three of
   their own pets, places them in their own zone, chooses a tactic for each, and signs.
-- **Draw.** The defender's three fighters are drawn by the battle seed, weighted by rank, without
-  replacement. Past battles therefore never reveal the exact lineup.
 
-  ```text
-  weight_i = 6 − rank_i
-  roll_k   = keccak256("CRYPTOPETS_SQUAD_DRAW_V1" ‖ seed ‖ k) mod Σ weight(remaining),  k = 1, 2, 3
-  ```
-
-  | Rank | Weight | Chance of defending |
-  |---|---|---|
-  | 1 | 5 | 82.6% |
-  | 2 | 4 | 75.9% |
-  | 3 | 3 | 65.6% |
-  | 4 | 2 | 49.0% |
-  | 5 | 1 | 26.8% |
+The first design drew the three defenders from a five-pet roster, weighted by rank, so an attacker
+could not know the lineup in advance. It was dropped before launch for this simpler one (D8): the
+attacker now sees exactly who they will fight.
 
 ### The map
 
@@ -100,10 +89,10 @@ attacker back 0, mid 1, front 2; defender front 3, mid 4, back 5.
 | Rule | How it works |
 |---|---|
 | Level band | A squad counts as its highest-level pet, so a strong pet cannot hide behind weak ones |
-| Consent | The defence plan must cover all five roster pets |
+| Consent | The defence plan names the three defenders |
 | Daily limit | One team battle counts once against the defender's limit |
 | XP | The team result decides win or loss for all three fighters; each earns XP against the highest-level enemy |
-| Cooldown | All three fighters get it; benched pets stay free |
+| Cooldown | Every pet that fought gets it, on both sides |
 | Rewards and drops | Counted once per battle |
 | Self-battles | Blocked, including different pets of the same owner (Phase 0) |
 
@@ -124,12 +113,13 @@ these, so if one is reopened, change it here first.
 | | Question | Decided |
 |---|---|---|
 | D1 | **Attributes 2.0.** The rules use Speed, Range and Temperament, which do not exist yet. | Build the team engine with them as inputs, and ship team battles first with neutral values (everyone Melee, no temperament bonus, and today's turn order: a Shell pet last, then higher INT). Attributes 2.0 then fills those inputs under a later ruleset version, and that version is also where turn order switches to Speed first. Note that "equal Speed" would not be neutral: it would reduce the order to the tie-breaks and drop INT, so a team battle would order differently from a duel between the same pets. The cost is a second re-consent when Attributes 2.0 ships; the benefit is not blocking on genes that need a contract upgrade. |
-| D2 | **Consent object.** | A new signed object kind, `defensePlan` v1 (roster, ranks, tactics, home tiles, plus today's consent fields). `DefenseAuthorization` v1 stays for duels. |
-| D3 | **Locks.** The three defenders are unknown until the seed. | Lock all five roster pets from acceptance until the battle is computed, then release the two benched pets. |
-| D4 | **Receipt shape.** | `receipt` v2: a team result, per-pet previous-receipt links for the six fighters (benched pets are not linked), and progression for six pets. `combatLog` v2 records actor and target slots and the guard, expose and second-chance events. |
+| D2 | **Consent object.** | A new signed object kind, `defensePlan` v1 (three pets with their tactics and home tiles, plus today's consent fields). `DefenseAuthorization` v1 stays for duels. |
+| D3 | **Locks.** | Superseded by D8. With no draw, the six fighters are locked from acceptance until the battle settles, as a duel's two are. (Was: lock all five roster pets until computed, then release the two benched pets.) |
+| D4 | **Receipt shape.** | `receipt` v2: a team result, per-pet previous-receipt links for the six fighters, and progression for six pets. `combatLog` v2 records actor and target slots and the guard, expose and second-chance events. |
 | D5 | **Duels.** | Keep one-on-one battles for everyone, including players with fewer than three pets. Team battles are a separate challenge type. |
 | D6 | **Chains.** | Base first. Solana battles are paused, and the frozen Solana port is not touched. |
 | D7 | **Same-owner battles.** Today only a pet fighting itself is blocked (`backend/src/features/battle/ledger/intent.service.ts`). | Block different pets of the same owner before team battles exist, as its own small PR (Phase 0). **Done:** intents naming one owner on both sides are refused as `same-owner`. |
+| D8 | **Defenders.** Drawing three of five by rank made the plan, the receipt and both engines carry a draw, and the plan editor carry ranks. | Decided 2026-11-27, before any plan, battle or receipt existed: a plan names exactly the three pets that defend, and there is no draw. The trade-off is that an attacker sees the exact lineup and can counter-pick it. Changed in place rather than as new versions, since nothing had been signed: `defensePlan` v1, snapshot v3 and receipt v2 lost their ranks and `drawn`, `VerifyTeamBattle` reserved its rank and drawn fields, and `team.json` lost its draw cases while every fight case stayed byte for byte the same. |
 
 ## 3. How it fits the current code
 
@@ -139,7 +129,7 @@ these, so if one is reopened, change it here first.
 | Go engine `services/indexer-go/internal/combat/` | Same, independently written | The same generalisation, written independently from the spec. **Must change with the TS engine** |
 | Vectors `contracts/test-vectors/` | `battle.json`, `xp.json`, `equipment.json` | New `team.json`; the existing files are never edited |
 | Schemas `protocol/src/domain/schemaVersions.ts` | intent 1, defence 1, snapshot 2, ruleset 2, receipt 1, combat log 1 | intent 2, `defensePlan` 1 (new kind), snapshot 3, ruleset 3, receipt 2, combat log 2. Every older version stays in `SUPPORTED_VERSIONS`, and an absent version still means 1 |
-| Public verifier `verifier/` | Replays duel receipts | Also replays team receipts, including the draw, placements and every targeting decision |
+| Public verifier `verifier/` | Replays duel receipts | Also replays team receipts, including placements and every targeting decision |
 | gRPC `proto/cryptopets.proto` | `VerifyBattle` | A new `VerifyTeamBattle`; the old call stays |
 | Backend ledger `backend/src/features/battle/` | Intent, accept, snapshot, compute, verify, sign, progression, locks for two pets | Team variants of each (Phase 4) |
 | Database | `defense_authorization`, `battle_ledger`, `pet_battle_lock`, `pet_battle_progress` | New tables for defence plans and team battles. Every migration ends with `ENABLE ROW LEVEL SECURITY` and is applied with `prisma migrate deploy` |
@@ -159,8 +149,8 @@ these, so if one is reopened, change it here first.
 
 1. Write the engine spec in `docs/battle-protocol.md`: integer arithmetic and flooring at each
    step, turn order (today's, and the Speed-first order that Attributes 2.0 switches to, chosen by
-   ruleset version) with its tie-breaks, the per-round seed, tactic tie-breaks, the draw, and the
-   30-round rule.
+   ruleset version) with its tie-breaks, the per-round seed, tactic tie-breaks, and the 30-round
+   rule.
 2. Implement it in TypeScript under `protocol/src/combat/` (pure: no clock, no ambient randomness,
    no I/O).
 3. Implement it in Go under `services/indexer-go/internal/combat/`, from the spec rather than from
@@ -173,7 +163,6 @@ these, so if one is reopened, change it here first.
      expose, guard, auras, tailwind, rally, lifelink, second chance, the 30-round HP share and the
      defender's tie
    - full three-on-three battles
-   - draw cases
 5. Add `team.json` to the vector lists in `AGENTS.md`, `CLAUDE.md` and `.github/workflows/parity.yml`.
 
 *Done when:* `pnpm --filter @cryptopets/protocol test` and `go test ./internal/combat` both pass on
@@ -181,8 +170,8 @@ these, so if one is reopened, change it here first.
 
 ### Phase 2: protocol objects and the public verifier
 
-1. `defensePlan` v1, intent v2, snapshot v3 (three attackers with tiles and tactics, five roster
-   pets with ranks, tiles and tactics, gear for all), ruleset v3 (map, cooperation values, team
+1. `defensePlan` v1, intent v2, snapshot v3 (three attackers and three defenders with tiles and
+   tactics, gear for all), ruleset v3 (map, cooperation values, team
    parameters), receipt v2 and combat log v2, each with hashing vectors in
    `contracts/test-vectors/protocol-*.json`.
 2. The public verifier replays team receipts, and runs `findEquipmentMismatches`
@@ -204,8 +193,7 @@ pass, and the verifier workflow's existing receipt corpus still verifies.
   duel consent is cancelled early. `TEAM_SOURCE_DEFAULT_RULESET` is the layout 3 ruleset,
   built in and pinned in the verifier. `ENGINE_VERSION` stays 2: duels are unchanged, and
   ruleset layout 3 already identifies the team rules.
-- The receipt states `drawn` (checked against the seed) and links only the six fighters;
-  benched roster pets are not part of the battle's history.
+- The receipt links each of the six fighters to its previous receipt.
 - At layout 3 every pet fights neutral (Melee, no temperament, `int` order), enforced by
   `replayTeamBattle`, the one place a team snapshot becomes engine inputs.
 - EIP-712 signing payloads only, for Base (D6). No Solana messages yet.
@@ -223,9 +211,8 @@ test passes.
 
 *As built:*
 
-- The request carries the whole five-pet roster, not the three who fought, so Go recomputes the
-  draw too. The response returns the draw, the result, the start HP, the full strike log and the
-  six progressions; the backend hashes the log with the canonical encoder, as for duels.
+- The request carries both squads. The response returns the result, the start HP, the full
+  strike log and the six progressions; the backend hashes the log with the canonical encoder, as for duels.
 - Go gained `ComputeTeamProgression`, locked to the TypeScript one by replaying the team
   receipts in `protocol-team.json`, both directly and over gRPC.
 - The backend client is `callVerifyTeamBattle` in `backend/src/grpc/verifyBattle.ts`, beside
@@ -239,13 +226,12 @@ test passes.
 2. APIs: save and revoke a defence plan, list team opponents, submit a team challenge, read a team
    battle.
 3. Ledger:
-   - accept: consent covers all five, the level band uses the highest level, the daily limit
-     counts once, all three attackers are off cooldown, and `findEquipmentMismatches` passes for
-     all eight snapshotted pets (any of the five roster pets can be drawn, so each loadout must be
-     checked before the seed picks them)
-   - lock the five roster pets until computed (D3)
-   - snapshot three plus five, with gear
-   - compute: draw, then the team engine
+   - accept: the plan covers the battle, the level band uses the highest level, the daily limit
+     counts once, all six pets are off cooldown, and `findEquipmentMismatches` passes for all six
+     snapshotted pets
+   - lock the six pets until the battle settles (D8)
+   - snapshot three plus three, with gear
+   - compute: the team engine
    - verify through `VerifyTeamBattle`
    - sign receipt v2
    - progression and cooldowns for the six fighters
@@ -264,9 +250,10 @@ test passes.
 - Team battles get their own served ruleset (layout 3, the same item catalog), so duel consent is
   untouched until Phase 6 decides otherwise. `GET /config` reports it as `team.ruleset`.
 - A defender has one live plan: saving one revokes the earlier ones in the same transaction.
-- Acceptance needs all five roster pets off cooldown, as a duel defender must be, since any of them
-  can be drawn. Only the three fighters get a cooldown afterwards, so a plan is unchallengeable
-  until its last fighters recover (`BATTLE_COOLDOWN_SECONDS`, 15 minutes by default).
+- `battle_ledger.drawn` is unused since D8. Nothing writes it; dropping it needs a migration that
+  also rewrites the `battle_ledger_kind_shape` check, which names it.
+- Acceptance needs all three defending pets off cooldown, as a duel defender must be. They get a
+  cooldown after each battle, so a plan is unchallengeable until they recover (`BATTLE_COOLDOWN_SECONDS`, 15 minutes by default).
 - Acceptance also refuses a challenge signed under rules no longer served
   (`intent-ruleset-stale`). Duel acceptance has no such check today; worth adding separately.
 - **No `battle_history` rows for team battles.** That table is head-to-head context for duel
@@ -277,8 +264,8 @@ test passes.
 
 ### Phase 5: web frontend
 
-1. Defence plan editor: rank, tactic and home tile for five pets, then sign.
-2. Team challenge: the rival's five home tiles, pick three, drag-to-place on the 3×3 zone,
+1. Defence plan editor: tactic and home tile for three pets, then sign.
+2. Team challenge: the rival's three pets on their home tiles, pick three, drag-to-place on the 3×3 zone,
    tactics, a turn-order preview, start.
 3. Map playback (strikes, knockouts, guard, expose, second chance), a result screen (damage per
    pet, MVP, XP) and replay.
@@ -295,8 +282,8 @@ test passes.
   controller hook) and setting up your own (`team-plan.tsx`, a form with local state).
 - Placement is click a pet, then a tile, which works from the keyboard; native drag-and-drop
   works on top of it.
-- The turn-order preview covers the attacker's own squad. The defenders join the order only once
-  the seed draws them, so the screen says so rather than guessing.
+- The turn-order preview covers the attacker's own squad: each squad tile shows when its pet acts
+  among the three, and its tactic.
 - Platform-neutral parts are in `@shared/core`: `useDefensePlan`, `useTeamOpponents`,
   `useSubmitTeamChallenge`, `useTeamBattleResult`, and the pure playback functions
   (`buildTeamPlayback`, `summarizeTeamBattle`, `describeStrike`, `previewSquadTurnOrder`).
@@ -351,8 +338,8 @@ differences are deliberate, but each one should be either accepted or pulled bac
   passing.
 - **Re-consent friction.** Saving a defence plan is a new prompt for every defender. Put the editor
   in onboarding and make the default plan one tap.
-- **Availability.** Locking five roster pets per accepted challenge (D3) makes defenders busier.
-  Watch how often challenges are refused for locks.
+- **Availability.** A plan's three pets are locked for each accepted challenge and then rest, so a
+  popular plan is often unavailable. Watch how often challenges are refused for locks or cooldowns.
 - **Balance.** The whitepaper's simulations (section 8.7, 100,000 battles per setup, Speed first)
   show that formation matters most: a ranged back line behind one Melee pet wins 82% to 89% against
   every rival formation, while putting a lone caster in front drops to 7% to 15%. Hunter is the weak
@@ -365,7 +352,6 @@ differences are deliberate, but each one should be either accepted or pulled bac
 
 1. Should a defender be able to cancel a plan while one of its pets is locked in a battle?
 2. How should the leaderboard rank team wins against duel wins: together or on separate boards?
-3. What do benched defenders earn, if anything?
 
 ## References
 

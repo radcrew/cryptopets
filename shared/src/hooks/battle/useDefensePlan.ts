@@ -13,17 +13,15 @@ import { useBattleConfig } from './useBattleConfig';
  * A defender's team-battle roster: read, save and withdraw (docs/plan-team-battles-3v3.md).
  *
  * The team counterpart of `useDefenseAuthorization` and signed the same way, once and in
- * advance, so opponents can challenge while the defender is away. It names five pets with the
- * rank, home tile and tactic each fights with; the battle seed later draws three of them,
- * favouring the higher ranks. Saving a plan replaces the previous one.
+ * advance, so opponents can challenge while the defender is away. It names the three pets
+ * that defend, with the home tile and tactic each fights with. Saving a plan replaces the
+ * previous one.
  *
  * Bound to the *team* ruleset in the battle config, not the duel one, and EVM only for now:
  * team battles ship on Base first.
  */
 export interface PlanRosterEntry {
     petId: string;
-    /** 1 to 5, each used once. Rank 1 defends most often. */
-    rank: number;
     /** Own-zone column (0 back, 1 mid, 2 front) and row. */
     col: number;
     row: number;
@@ -99,7 +97,7 @@ export function useDefensePlan() {
                 const plan: DefensePlan = {
                     domain: { chainId: chainIdFor('evm', config.chainIds), deploymentId: config.deploymentId },
                     defenderOwner: activeChain.address,
-                    roster: vars.roster.map((e) => ({ petId: BigInt(e.petId), rank: e.rank, col: e.col, row: e.row, tactic: e.tactic })),
+                    roster: vars.roster.map((e) => ({ petId: BigInt(e.petId), col: e.col, row: e.row, tactic: e.tactic })),
                     rulesetHash: team.ruleset.hash as `0x${string}`,
                     minLevel: vars.minLevel ?? DEFAULTS.minLevel,
                     maxLevel: vars.maxLevel ?? DEFAULTS.maxLevel,

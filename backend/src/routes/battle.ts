@@ -64,7 +64,7 @@ router.get('/authorizations', verifyToken, asyncRoute(getDefenseAuthorizations))
 router.post('/sessions', requireBackendBattleMode, verifyToken, battleRoomRateLimit, asyncRoute(postSessionDelegation));
 router.delete('/sessions', verifyToken, asyncRoute(deleteSessionDelegations));
 
-// Team-battle defence plans: a defender's five-pet roster and their consent to be challenged
+// Team-battle defence plans: a defender's three defending pets and their consent to be challenged
 // with it. Saving is gated on team battles; revoking and reading are not, for the same reasons
 // as consent above. Declared before `/:battleId`, which would otherwise match this path.
 router.post('/defense-plans', requireTeamBattles, verifyToken, battleRoomRateLimit, asyncRoute(postDefensePlan));

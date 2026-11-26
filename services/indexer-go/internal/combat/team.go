@@ -1,7 +1,6 @@
 package combat
 
 import (
-	"errors"
 	"fmt"
 	"slices"
 )
@@ -559,55 +558,6 @@ func validateTeam(team []TeamFighter, label string) error {
 	return nil
 }
 
-// ErrBadRoster reports a defence plan whose ranks are not 1 to 5, each used once.
-var ErrBadRoster = errors.New("a roster has five pets ranked 1 to 5, each rank used once")
-
-// RosterSize and SquadSize are the defence plan's roster and the drawn squad.
-const (
-	RosterSize = 5
-	SquadSize  = 3
-)
-
-const squadDrawTag = "CRYPTOPETS_SQUAD_DRAW_V1"
-
-// DrawDefenders draws a team battle's defenders from a five-pet roster, weighting roster
-// pet i by 6 - ranks[i]. It returns the drawn roster indices in roster order, which is the
-// defenders' slot order.
-func DrawDefenders(ranks []uint8, seed [32]byte) ([]int, error) {
-	if len(ranks) != RosterSize {
-		return nil, ErrBadRoster
-	}
-	var seen [RosterSize + 1]bool
-	for _, rank := range ranks {
-		if rank < 1 || rank > RosterSize || seen[rank] {
-			return nil, ErrBadRoster
-		}
-		seen[rank] = true
-	}
-
-	remaining := []int{0, 1, 2, 3, 4}
-	drawn := make([]int, 0, SquadSize)
-	for k := 1; k <= SquadSize; k++ {
-		var total uint64
-		for _, i := range remaining {
-			total += uint64(6 - ranks[i])
-		}
-		preimage := make([]byte, 0, len(squadDrawTag)+33)
-		preimage = append(preimage, squadDrawTag...)
-		preimage = append(preimage, seed[:]...)
-		preimage = append(preimage, byte(k))
-		roll := beBytesMod(keccak256(preimage), total)
-
-		var running uint64
-		for at, i := range remaining {
-			running += uint64(6 - ranks[i])
-			if running > roll {
-				drawn = append(drawn, i)
-				remaining = slices.Delete(remaining, at, at+1)
-				break
-			}
-		}
-	}
-	slices.Sort(drawn)
-	return drawn, nil
-}
+// SquadSize is the pets on each side of a team battle: the attacker's squad and the
+// defender's plan alike.
+const SquadSize = 3

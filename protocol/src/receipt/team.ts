@@ -1,4 +1,3 @@
-import { drawDefenders } from '../combat/teamDraw';
 import { assertProtocolDomain, assertSameDomain, type ProtocolDomain, writeHeader } from '../domain/deployment';
 import { TEAM_SCHEMA_VERSIONS } from '../domain/schemaVersions';
 import type { Hex } from '../encoding/bytes';
@@ -39,11 +38,8 @@ import {
  *
  * - `defensePlanHash` names the defender's consent, where a duel names a defence
  *   authorization.
- * - `drawn` says which three roster pets defended. It follows from the seed, and is checked
- *   against it, but is stated so a reader does not have to run the draw to know who fought.
  * - `progression` and `fighterPreviousReceiptHashes` cover all six fighters, in fight order:
- *   attackers by slot, then defenders by slot. Benched roster pets fought no one, so this
- *   battle is not part of their history and they are not linked.
+ *   attackers by slot, then defenders by slot.
  */
 export interface TeamBattleReceipt {
     schemaVersion: 2;
@@ -57,8 +53,6 @@ export interface TeamBattleReceipt {
     seed: Hex;
     rulesetVersion: number;
     rulesetHash: Hex;
-    /** Roster indices of the three defenders, in roster order. */
-    drawn: number[];
     result: BattleResult;
     combatLogHash: Hex;
     /** The six fighters, attackers then defenders, each by slot. */
@@ -80,22 +74,14 @@ export function isTeamBattleReceipt(receipt: AnyBattleReceipt): receipt is TeamB
 
 /** The six fighters' pet ids, in the order `progression` and the links use. */
 export function teamFighterIds(receipt: TeamBattleReceipt): bigint[] {
-    return [
-        ...receipt.snapshot.attackers.map((m) => m.pet.petId),
-        ...receipt.drawn.map((index) => {
-            const member = receipt.snapshot.roster[index];
-            if (!member) throw new Error(`drawn roster index ${index} does not exist`);
-            return member.pet.petId;
-        }),
-    ];
+    return [...receipt.snapshot.attackers, ...receipt.snapshot.roster].map((m) => m.pet.petId);
 }
 
 /**
  * Validates an untrusted team receipt, returning a normalized copy.
  *
- * The duel receipt's internal-consistency checks (`assertBattleReceipt`), plus the ones a
- * team battle adds: `drawn` is what the draw gives for this seed, and the progression and
- * per-fighter links list exactly the six fighters, in order.
+ * The duel receipt's internal-consistency checks (`assertBattleReceipt`), plus the one a team
+ * battle adds: the progression and per-fighter links list exactly the six fighters, in order.
  */
 export function assertTeamBattleReceipt(receipt: TeamBattleReceipt): TeamBattleReceipt {
     if (receipt.schemaVersion !== TEAM_SCHEMA_VERSIONS.receipt) {
@@ -151,11 +137,6 @@ export function assertTeamBattleReceipt(receipt: TeamBattleReceipt): TeamBattleR
         throw new Error(`seed ${receipt.seed} does not follow from this receipt inputs (expected ${expectedSeed})`);
     }
 
-    const expectedDrawn = drawDefenders(snapshot.roster.map((m) => m.rank), BigInt(expectedSeed));
-    if (!Array.isArray(receipt.drawn) || receipt.drawn.join(',') !== expectedDrawn.join(',')) {
-        throw new Error(`drawn ${String(receipt.drawn)} is not the draw this seed gives (${expectedDrawn.join(', ')})`);
-    }
-
     const normalized: TeamBattleReceipt = {
         schemaVersion: TEAM_SCHEMA_VERSIONS.receipt,
         domain,
@@ -168,7 +149,6 @@ export function assertTeamBattleReceipt(receipt: TeamBattleReceipt): TeamBattleR
         seed: receipt.seed,
         rulesetVersion: receipt.rulesetVersion,
         rulesetHash: receipt.rulesetHash,
-        drawn: expectedDrawn,
         result: { ...receipt.result },
         combatLogHash: receipt.combatLogHash,
         progression: receipt.progression,
@@ -196,8 +176,8 @@ export function assertTeamBattleReceipt(receipt: TeamBattleReceipt): TeamBattleR
 /**
  * Canonical encoding: header at version 2, then the duel receipt's fields in the duel
  * receipt's order, with the team's additions where their duel counterparts sit. The plan
- * hash takes the authorization hash's place, `drawn` precedes the result it shaped, and the
- * six fighters' links follow the global one.
+ * hash takes the authorization hash's place, and the six fighters' links follow the global
+ * one.
  */
 export function encodeTeamBattleReceipt(receipt: TeamBattleReceipt): Uint8Array {
     const checked = assertTeamBattleReceipt(receipt);
@@ -215,7 +195,6 @@ export function encodeTeamBattleReceipt(receipt: TeamBattleReceipt): Uint8Array 
         .hash(checked.seed)
         .u32(checked.rulesetVersion)
         .hash(checked.rulesetHash)
-        .array(checked.drawn, (w, index) => w.u8(index))
         .bool(checked.result.attackerWon)
         .u16(checked.result.rounds)
         .u16(checked.result.winnerHpRemaining)

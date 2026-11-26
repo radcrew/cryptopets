@@ -140,81 +140,168 @@ button.tile:focus-visible {
 }
 
 .tokenSub {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
     font-size: 0.65rem;
     opacity: 0.75;
-    white-space: nowrap;
 }
 
-/* The board and the selected pet's details, side by side. */
+/* Each screen is a size container, so its layout follows the room the panel actually has,
+   not the window: the dashboard's sidebar takes a different share at every width. */
+.arena {
+    container-type: inline-size;
+}
+
+/* The zones and the selected pet's details, side by side. Each column is a heading and a box,
+   and the row stretches the columns to one height, so with equal headings the details box is
+   exactly as tall as the zones. */
 .boardRow {
     display: flex;
     align-items: stretch;
     gap: 0.75rem;
 }
 
-/* A zone with its heading, sized to the zone so the details panel beside it takes the rest. */
 .zoneColumn {
-    flex: 0 1 16rem;
-    min-width: 0;
+    flex: 0 1 14rem;
+    min-width: 11rem;
 }
 
-/* The selected pet's details: the full remaining width, and exactly the board's height. The
-   body is taken out of the flow, so a long description scrolls inside the panel instead of
-   making the row taller than the board. */
+.detailsColumn {
+    flex: 1 1 18rem;
+    min-width: 16rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.columnHeading {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin: 0 0 0.4rem;
+    font-size: 0.95rem;
+}
+
+/* A heading with its actions on the same line, which saves the page a row of buttons. */
+.sectionHead {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.sectionHead .columnHeading {
+    margin: 0;
+}
+
+/* The box fills its column; the body is taken out of the flow, so the details can never make
+   the row taller than the zones beside them, and they are kept short enough to fit. */
 .details {
     position: relative;
-    flex: 1 1 0;
-    min-width: 0;
+    flex: 1 1 auto;
+    min-height: 11rem;
+    overflow: hidden;
     border: 1px solid rgb(125 214 255 / 22%);
-    border-radius: 10px;
-    background: rgb(4 10 26 / 60%);
+    border-radius: 12px;
+    background: linear-gradient(135deg, rgb(12 22 48 / 90%), rgb(4 10 26 / 90%));
+    box-shadow: inset 0 0 24px rgb(125 214 255 / 5%);
 }
 
 .detailsBody {
     position: absolute;
     inset: 0;
-    overflow-y: auto;
-    padding: 0.75rem;
-    display: grid;
-    /* Two columns when the panel is wide enough, so it rarely needs to scroll at all. */
-    grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
-    align-content: start;
-    gap: 0.75rem 1rem;
-    scrollbar-width: thin;
-    scrollbar-color: rgb(125 214 255 / 35%) transparent;
+    display: flex;
 }
 
-.detailsColumn {
+.detailsEmpty {
+    margin: auto;
+    padding: 1rem;
+    text-align: center;
+}
+
+/* Square and full height; capped in width so a narrow panel still leaves room for the info.
+   PetArt's `fill` image covers it, which is why nothing here sets a transform or filter. */
+.detailsArt {
+    position: relative;
+    flex: 0 0 auto;
+    height: 100%;
+    aspect-ratio: 1;
+    max-width: 42%;
     display: flex;
-    flex-direction: column;
-    gap: 0.6rem;
+    align-items: center;
+    justify-content: center;
+    font-size: 5rem;
+    border-right: 1px solid rgb(125 214 255 / 15%);
+    background: radial-gradient(circle at 50% 45%, rgb(125 214 255 / 16%), transparent 70%);
+}
+
+.detailsEmoji {
+    font-size: 5rem;
+    line-height: 1;
+}
+
+.detailsInfo {
+    flex: 1 1 0;
     min-width: 0;
-}
-
-/* A phone has no room beside the board: the panel goes below it, at its natural height. */
-@media (max-width: 760px) {
-    .boardRow {
-        flex-wrap: wrap;
-    }
-
-    .zoneColumn {
-        flex: 1 1 13rem;
-    }
-
-    .details {
-        flex-basis: 100%;
-    }
-
-    .detailsBody {
-        position: static;
-    }
-}
-
-.field {
     display: flex;
     flex-direction: column;
+    gap: 0.45rem;
+    padding: 0.6rem 0.8rem;
+}
+
+.detailsName {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #f6f3ff;
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
+.detailsMeta {
+    font-size: 0.8rem;
+    opacity: 0.85;
+}
+
+.chips {
+    display: flex;
+    flex-wrap: wrap;
     gap: 4px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.chip {
+    padding: 1px 8px;
+    border: 1px solid rgb(125 214 255 / 25%);
+    border-radius: 999px;
+    background: rgb(5 13 30 / 70%);
+    font-size: 0.72rem;
+}
+
+/* One line, with the whole description on hover, so a long one cannot push the tactic out. */
+.detailsSkill {
+    margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.8rem;
+}
+
+/* Pinned to the bottom, level with the art's lower edge. */
+.tacticRow {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: auto;
     font-size: 0.85rem;
+}
+
+.tacticRow .select {
+    flex: 1 1 auto;
 }
 
 .fieldLabel {
@@ -226,7 +313,7 @@ button.tile:focus-visible {
 .select {
     width: 100%;
     min-width: 0;
-    padding: 7px 10px;
+    padding: 6px 10px;
     border-radius: 8px;
     border: 1px solid rgb(255 255 255 / 15%);
     background: rgb(0 0 0 / 30%);
@@ -235,76 +322,61 @@ button.tile:focus-visible {
     font-size: 13px;
 }
 
-.rankPicker {
-    display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-    gap: 4px;
-}
-
-.rankOption {
+/* The battle map and its result, side by side. */
+.playRow {
     display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 0.3rem 0;
-    border: 1px solid rgb(125 214 255 / 22%);
-    border-radius: 6px;
-    background: rgb(0 0 0 / 30%);
-    color: rgb(195 210 255 / 78%);
-    font: inherit;
-    font-size: 0.7rem;
-    cursor: pointer;
-}
-
-.rankOption strong {
-    font-size: 0.95rem;
-}
-
-.rankOption:hover {
-    border-color: rgb(125 214 255 / 55%);
-}
-
-.rankOption:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 2px var(--cp-cyan);
-}
-
-.rankOptionChosen {
-    border-color: var(--cp-cyan);
-    background: rgb(125 214 255 / 12%);
-    color: #f6f3ff;
-}
-
-.detailsHead {
-    display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 0.75rem;
 }
 
-.detailsArt {
-    display: inline-flex;
-    font-size: 4rem;
-    line-height: 1;
+.playBoard {
+    flex: 1 1 24rem;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
 }
 
-.detailsArt img {
-    border-radius: 8px;
+.playSide {
+    flex: 0 1 20rem;
+    min-width: 16rem;
 }
 
-.facts {
-    display: grid;
-    grid-template-columns: max-content 1fr;
-    align-items: baseline;
-    gap: 0.25rem 0.75rem;
+.result {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.result h4 {
     margin: 0;
-    font-size: 0.85rem;
 }
 
-.facts dt {
-    opacity: 0.7;
-}
+/* Too narrow for side by side: the details and the result go below, at their natural height. */
+@container (max-width: 46rem) {
+    .boardRow,
+    .playRow {
+        flex-wrap: wrap;
+    }
 
-.facts dd {
-    margin: 0;
+    .zoneColumn {
+        flex: 1 1 13rem;
+    }
+
+    .detailsColumn,
+    .playSide {
+        flex-basis: 100%;
+    }
+
+    .detailsBody {
+        position: static;
+    }
+
+    .detailsArt {
+        align-self: flex-start;
+        height: auto;
+        width: 7.5rem;
+    }
 }
 
 .stats {
@@ -356,13 +428,16 @@ button.tile:focus-visible {
 }
 
 /* The pet chooser, following PetPicker's tiles so the two choosers read as one control. */
+/* One row that scrolls sideways: however many pets a player has, the chooser stays one tile
+   tall, so the page never needs scrolling down to reach it. */
 .petGrid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+    grid-auto-flow: column;
+    grid-auto-columns: 88px;
     gap: 8px;
-    max-height: 300px;
-    overflow-y: auto;
-    padding: 2px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 2px 2px 6px;
     scrollbar-width: thin;
     scrollbar-color: rgb(125 214 255 / 35%) transparent;
 }
@@ -410,7 +485,7 @@ button.tile:focus-visible {
     color: #f6f3ff;
 }
 
-/* A chosen pet's place in the order: its slot in a squad, its rank in a defence plan. */
+/* A chosen pet's place in the order: its slot in the squad or the defence team. */
 .petBadge {
     position: absolute;
     top: 4px;
@@ -433,7 +508,7 @@ button.tile:focus-visible {
     justify-content: center;
     width: 100%;
     aspect-ratio: 1;
-    font-size: 2.8rem;
+    font-size: 2.4rem;
     line-height: 1;
     border-radius: 8px;
     overflow: hidden;

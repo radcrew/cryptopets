@@ -30,11 +30,9 @@ func teamRequest() *pb.VerifyTeamBattleRequest {
 			{Pet: pet("13", "3412457044705502", 11, 2), Col: 1, Row: 2, Tactic: "hunter"},
 		},
 		Roster: []*pb.VerifyTeamPet{
-			{Pet: pet("21", "3412757264528005", 14, 5), Col: 1, Row: 1, Tactic: "breaker", Rank: 1},
-			{Pet: pet("22", "3412555075457001", 12, 1), Col: 2, Row: 1, Tactic: "hunter", Rank: 2},
-			{Pet: pet("23", "3412506055309003", 10, 0), Col: 2, Row: 0, Tactic: "bodyguard", Rank: 3},
-			{Pet: pet("24", "3412604060506004", 9, 7), Col: 2, Row: 2, Tactic: "focus", Rank: 4},
-			{Pet: pet("25", "3412306070405002", 8, 6), Col: 0, Row: 1, Tactic: "focus", Rank: 5},
+			{Pet: pet("21", "3412757264528005", 14, 5), Col: 1, Row: 1, Tactic: "breaker"},
+			{Pet: pet("22", "3412555075457001", 12, 1), Col: 2, Row: 1, Tactic: "hunter"},
+			{Pet: pet("23", "3412506055309003", 10, 0), Col: 2, Row: 0, Tactic: "bodyguard"},
 		},
 		Seed:     make([]byte, 32),
 		MaxLevel: 100,
@@ -50,18 +48,14 @@ func TestVerifyTeamBattleWorksWithNoCache(t *testing.T) {
 	if err != nil {
 		t.Fatalf("VerifyTeamBattle: %v", err)
 	}
-	if len(resp.GetDrawn()) != 3 || len(resp.GetAttackerStartHp()) != 3 || len(resp.GetDefenderStartHp()) != 3 {
-		t.Fatalf("want three drawn defenders and three start HPs a side, got %v / %v / %v",
-			resp.GetDrawn(), resp.GetAttackerStartHp(), resp.GetDefenderStartHp())
+	if len(resp.GetAttackerStartHp()) != 3 || len(resp.GetDefenderStartHp()) != 3 {
+		t.Fatalf("want three start HPs a side, got %v / %v", resp.GetAttackerStartHp(), resp.GetDefenderStartHp())
 	}
 	if resp.GetRounds() == 0 || len(resp.GetLog()) == 0 {
 		t.Error("expected at least one round and a non-empty strike log")
 	}
-	// Six fighters, attackers then drawn defenders, each by slot.
-	ids := []string{"11", "12", "13"}
-	for _, index := range resp.GetDrawn() {
-		ids = append(ids, teamRequest().Roster[index].Pet.PetId)
-	}
+	// Six fighters, attackers then defenders, each by slot.
+	ids := []string{"11", "12", "13", "21", "22", "23"}
 	got := make([]string, len(resp.GetProgression()))
 	for i, p := range resp.GetProgression() {
 		got[i] = p.GetPetId()
@@ -102,11 +96,10 @@ func TestVerifyTeamBattleRejectsMalformedInput(t *testing.T) {
 		modify func(*pb.VerifyTeamBattleRequest)
 	}{
 		{"two attackers", func(r *pb.VerifyTeamBattleRequest) { r.Attackers = r.Attackers[:2] }},
-		{"four roster pets", func(r *pb.VerifyTeamBattleRequest) { r.Roster = r.Roster[:4] }},
+		{"two defenders", func(r *pb.VerifyTeamBattleRequest) { r.Roster = r.Roster[:2] }},
 		{"unknown tactic", func(r *pb.VerifyTeamBattleRequest) { r.Attackers[0].Tactic = "charge" }},
 		{"tile off the zone", func(r *pb.VerifyTeamBattleRequest) { r.Attackers[0].Col = 3 }},
 		{"two pets on one tile", func(r *pb.VerifyTeamBattleRequest) { r.Attackers[1].Col, r.Attackers[1].Row = 2, 1 }},
-		{"a rank used twice", func(r *pb.VerifyTeamBattleRequest) { r.Roster[1].Rank = 1 }},
 		{"short seed", func(r *pb.VerifyTeamBattleRequest) { r.Seed = make([]byte, 16) }},
 		{"zero max level", func(r *pb.VerifyTeamBattleRequest) { r.MaxLevel = 0 }},
 		{"speed turn order", func(r *pb.VerifyTeamBattleRequest) {
@@ -142,8 +135,8 @@ func TestVerifyTeamBattleMatchesProtocolTeamReceiptsOverGRPC(t *testing.T) {
 				HP, ATK, DEF, INT, MDEF uint32
 			} `json:"equipment"`
 		} `json:"pet"`
-		Col, Row, Rank uint32
-		Tactic         string `json:"tactic"`
+		Col, Row uint32
+		Tactic   string `json:"tactic"`
 	}
 	var v struct {
 		Rulesets []struct {
@@ -157,8 +150,7 @@ func TestVerifyTeamBattleMatchesProtocolTeamReceiptsOverGRPC(t *testing.T) {
 					Attackers []vectorPet `json:"attackers"`
 					Roster    []vectorPet `json:"roster"`
 				} `json:"snapshot"`
-				Seed   string   `json:"seed"`
-				Drawn  []uint32 `json:"drawn"`
+				Seed   string `json:"seed"`
 				Result struct {
 					AttackerWon       bool   `json:"attackerWon"`
 					Rounds            uint32 `json:"rounds"`
@@ -223,7 +215,7 @@ func TestVerifyTeamBattleMatchesProtocolTeamReceiptsOverGRPC(t *testing.T) {
 			in.BonusInt += e.INT
 			in.BonusMdef += e.MDEF
 		}
-		return &pb.VerifyTeamPet{Pet: in, Col: p.Col, Row: p.Row, Tactic: p.Tactic, Rank: p.Rank}
+		return &pb.VerifyTeamPet{Pet: in, Col: p.Col, Row: p.Row, Tactic: p.Tactic}
 	}
 
 	client := verifyClient(t)
@@ -247,9 +239,6 @@ func TestVerifyTeamBattleMatchesProtocolTeamReceiptsOverGRPC(t *testing.T) {
 			resp, err := client.VerifyTeamBattle(ctx, req)
 			if err != nil {
 				t.Fatal(err)
-			}
-			if !reflect.DeepEqual(resp.GetDrawn(), r.Drawn) {
-				t.Fatalf("drawn = %v, want %v", resp.GetDrawn(), r.Drawn)
 			}
 			if resp.GetAttackerWins() != r.Result.AttackerWon || resp.GetRounds() != r.Result.Rounds ||
 				resp.GetWinnerHpRemaining() != r.Result.WinnerHpRemaining {

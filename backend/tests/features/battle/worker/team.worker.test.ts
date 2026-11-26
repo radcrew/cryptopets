@@ -91,7 +91,6 @@ function row(state: string, patch: Record<string, unknown> = {}) {
 
 /** What compute stores, taken from the receipt rather than from compute itself. */
 const COMPUTED = {
-    drawn: WIRE.drawn,
     attackerWon: WIRE.result.attackerWon,
     rounds: WIRE.result.rounds,
     winnerHpRemaining: WIRE.result.winnerHpRemaining,
@@ -118,26 +117,24 @@ beforeEach(() => {
 });
 
 describe('compute', () => {
-    it('lands on the receipt draw, result, log hash and progression, and frees only the benched pets', async () => {
+    it('lands on the receipt result, log hash and progression, and keeps every pet locked', async () => {
         await processTeamCompute(row('seeded'), MESSAGE, RECEIPT.createdAt);
         const [{ request, tx }] = transitions as [(typeof transitions)[number]];
         expect(request).toMatchObject({ from: 'seeded', to: 'computed' });
         const patch = request.patch as Record<string, unknown>;
-        expect(patch).toMatchObject({ drawn: COMPUTED.drawn, attackerWon: COMPUTED.attackerWon, rounds: COMPUTED.rounds, combatLogHash: COMPUTED.combatLogHash });
+        expect(patch).toMatchObject({ attackerWon: COMPUTED.attackerWon, rounds: COMPUTED.rounds, combatLogHash: COMPUTED.combatLogHash });
+        expect(patch).not.toHaveProperty('drawn');
         expect(patch.progression).toEqual(COMPUTED.progression);
-
-        const benched = WIRE.snapshot.roster.map((m) => m.pet.petId).filter((_id, i) => !WIRE.drawn.includes(i));
-        expect(benched).toHaveLength(2);
-        expect(tx.petBattleLock!.deleteMany).toHaveBeenCalledWith({ where: { battleId: WIRE.battleId, petId: { in: benched } } });
+        // All six pets fought, so none is released before the battle settles.
+        expect(tx.petBattleLock!.deleteMany).not.toHaveBeenCalled();
     });
 });
 
 describe('verify', () => {
     /** What an honest Go port answers: an independent replay, in the wire's shape. */
     function goResponse() {
-        const { drawn, outcome } = replayTeamBattle(RECEIPT.snapshot, RECEIPT.seed, parseRulesetBundle(JSON.stringify(BUNDLE)));
+        const outcome = replayTeamBattle(RECEIPT.snapshot, RECEIPT.seed, parseRulesetBundle(JSON.stringify(BUNDLE)));
         return {
-            drawn,
             attackerWins: outcome.result.attackerWins,
             rounds: outcome.result.rounds,
             winnerHpRemaining: outcome.result.winnerHpRemaining,
@@ -148,13 +145,15 @@ describe('verify', () => {
         };
     }
 
-    it('sends the whole roster with ranks, and moves to verified when Go agrees', async () => {
+    it('sends both squads with their placements, and moves to verified when Go agrees', async () => {
         vi.mocked(callVerifyTeamBattle).mockResolvedValue({ ok: true, response: goResponse() } as never);
         await processTeamVerify(row('computed', COMPUTED), MESSAGE, RECEIPT.createdAt);
 
         const sent = vi.mocked(callVerifyTeamBattle).mock.calls[0]?.[0];
-        expect(sent?.roster.map((p) => p.rank)).toEqual([1, 2, 3, 4, 5]);
-        expect(sent?.attackers.map((p) => p.rank)).toEqual([0, 0, 0]);
+        expect(sent?.attackers).toHaveLength(3);
+        expect(sent?.roster.map((p) => [p.pet.petId, p.col, p.row, p.tactic])).toEqual(
+            WIRE.snapshot.roster.map((m) => [m.pet.petId, m.col, m.row, m.tactic]),
+        );
         expect(transitions[0]?.request).toMatchObject({ from: 'computed', to: 'verified' });
     });
 

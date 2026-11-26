@@ -12,14 +12,14 @@ import (
 )
 
 // VerifyTeamBattle independently recomputes a team battle (docs/battle-protocol.md §F,
-// "Team battles"): the draw from the roster, the fight, and the six fighters' progression.
-// Like VerifyBattle it reads no cache and needs no warm-up; every input is in the request.
+// "Team battles"): the fight and the six fighters' progression. Like VerifyBattle it reads
+// no cache and needs no warm-up; every input is in the request.
 func (s *Server) VerifyTeamBattle(_ context.Context, req *pb.VerifyTeamBattleRequest) (*pb.VerifyTeamBattleResponse, error) {
 	if n := len(req.GetAttackers()); n != combat.SquadSize {
 		return nil, status.Errorf(codes.InvalidArgument, "attackers: want %d pets, got %d", combat.SquadSize, n)
 	}
-	if n := len(req.GetRoster()); n != combat.RosterSize {
-		return nil, status.Errorf(codes.InvalidArgument, "roster: want %d pets, got %d", combat.RosterSize, n)
+	if n := len(req.GetRoster()); n != combat.SquadSize {
+		return nil, status.Errorf(codes.InvalidArgument, "roster: want %d pets, got %d", combat.SquadSize, n)
 	}
 
 	verifyReq := combat.TeamVerifyRequest{SkillConfig: skillConfigFromProto(req.GetSkillConfig())}
@@ -58,7 +58,7 @@ func (s *Server) VerifyTeamBattle(_ context.Context, req *pb.VerifyTeamBattleReq
 
 	result, err := combat.VerifyTeam(verifyReq)
 	if err != nil {
-		// Shared tiles, a bad rank set and the like: inputs no honest battle produces.
+		// Shared tiles and the like: inputs no honest battle produces.
 		return nil, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 	return teamResultToProto(result), nil
@@ -84,14 +84,11 @@ func teamPetFromProto(p *pb.VerifyTeamPet) (combat.TeamPet, error) {
 	if p.GetCol() > 2 || p.GetRow() > 2 {
 		return combat.TeamPet{}, fmt.Errorf("col and row must be 0-2, got %d, %d", p.GetCol(), p.GetRow())
 	}
-	if p.GetRank() > combat.RosterSize {
-		return combat.TeamPet{}, fmt.Errorf("rank must be 0-%d, got %d", combat.RosterSize, p.GetRank())
-	}
 	tactic, ok := tacticsByName[p.GetTactic()]
 	if !ok {
 		return combat.TeamPet{}, fmt.Errorf("unknown tactic %q", p.GetTactic())
 	}
-	return combat.TeamPet{Pet: pet, Col: uint8(p.GetCol()), Row: uint8(p.GetRow()), Tactic: tactic, Rank: uint8(p.GetRank())}, nil
+	return combat.TeamPet{Pet: pet, Col: uint8(p.GetCol()), Row: uint8(p.GetRow()), Tactic: tactic}, nil
 }
 
 // teamConfigFromProto defaults an absent config, as skillConfigFromProto does, so a client
@@ -124,10 +121,6 @@ func teamConfigFromProto(p *pb.VerifyTeamConfig) (combat.TeamConfig, error) {
 }
 
 func teamResultToProto(r combat.TeamVerifyResult) *pb.VerifyTeamBattleResponse {
-	drawn := make([]uint32, len(r.Drawn))
-	for i, index := range r.Drawn {
-		drawn[i] = uint32(index)
-	}
 	log := make([]*pb.VerifyTeamStrike, 0, len(r.Battle.Log))
 	for _, s := range r.Battle.Log {
 		log = append(log, &pb.VerifyTeamStrike{
@@ -143,7 +136,6 @@ func teamResultToProto(r combat.TeamVerifyResult) *pb.VerifyTeamBattleResponse {
 		progression = append(progression, petProgressionToProto(p))
 	}
 	return &pb.VerifyTeamBattleResponse{
-		Drawn:             drawn,
 		AttackerWins:      r.Battle.AttackerWins,
 		Rounds:            uint32(r.Battle.Rounds),
 		WinnerHpRemaining: uint32(r.Battle.WinnerHpRemaining),

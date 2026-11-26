@@ -1,4 +1,4 @@
-import type { BattleSnapshot, EquipEntry, PetSnapshot, RosterMember, SquadMember, TeamBattleSnapshot } from '@cryptopets/protocol';
+import type { BattleSnapshot, EquipEntry, PetSnapshot, SquadMember, TeamBattleSnapshot } from '@cryptopets/protocol';
 
 /**
  * Reads a frozen snapshot back out of the ledger row it was stored in.
@@ -93,7 +93,7 @@ export function decodeStoredSnapshot(stored: unknown): BattleSnapshot {
 export interface StoredTeamBattleSnapshot {
     domain: TeamBattleSnapshot['domain'];
     attackers: (Omit<SquadMember, 'pet'> & { pet: StoredPetSnapshot })[];
-    roster: (Omit<RosterMember, 'pet'> & { pet: StoredPetSnapshot })[];
+    roster: (Omit<SquadMember, 'pet'> & { pet: StoredPetSnapshot })[];
     takenAt: number;
     schemaVersion: number;
 }
@@ -104,7 +104,7 @@ export function decodeStoredTeamSnapshot(stored: unknown): TeamBattleSnapshot {
     return {
         domain: snapshot.domain,
         attackers: snapshot.attackers.map((m) => ({ col: m.col, row: m.row, tactic: m.tactic, pet: decodeStoredPet(m.pet) })),
-        roster: snapshot.roster.map((m) => ({ rank: m.rank, col: m.col, row: m.row, tactic: m.tactic, pet: decodeStoredPet(m.pet) })),
+        roster: snapshot.roster.map((m) => ({ col: m.col, row: m.row, tactic: m.tactic, pet: decodeStoredPet(m.pet) })),
         takenAt: snapshot.takenAt,
         schemaVersion: snapshot.schemaVersion,
     };

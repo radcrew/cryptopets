@@ -29,7 +29,7 @@ const vectors = JSON.parse(readFileSync(join(__dirname, '../../../contracts/test
 };
 const RECEIPT = teamReceiptFromWire(vectors.teamReceipts[0]!.receipt);
 const RULESET = parseRulesetBundle(vectors.rulesets.find((r) => r.name === 'team-geared')!.bundle);
-const { outcome } = replayTeamBattle(RECEIPT.snapshot, RECEIPT.seed, RULESET);
+const outcome = replayTeamBattle(RECEIPT.snapshot, RECEIPT.seed, RULESET);
 const SERVED: TeamCombatLogWire = JSON.parse(
     JSON.stringify({ startHp: outcome.startHp, log: outcome.log }, (_k, v: unknown) => (typeof v === 'bigint' ? v.toString() : v)),
 );
@@ -37,9 +37,9 @@ const SERVED: TeamCombatLogWire = JSON.parse(
 describe('buildTeamPlayback', () => {
     const playback = buildTeamPlayback(RECEIPT, SERVED);
 
-    it('places the three attackers and the three drawn defenders on the board', () => {
+    it('places the three attackers and the three defenders on the board', () => {
         expect(playback.fighters[0].map((f) => f.petId)).toEqual(RECEIPT.snapshot.attackers.map((m) => m.pet.petId.toString()));
-        expect(playback.fighters[1].map((f) => f.petId)).toEqual(RECEIPT.drawn.map((i) => RECEIPT.snapshot.roster[i]!.pet.petId.toString()));
+        expect(playback.fighters[1].map((f) => f.petId)).toEqual(['21', '22', '23']);
         // Board columns: the attackers' own columns, the defenders' mirrored onto 3 to 5.
         for (const f of playback.fighters[1]) expect(f.x).toBe(5 - f.col);
     });

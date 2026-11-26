@@ -57,10 +57,9 @@ import { openBattle } from './transitions';
  *
  * - consent is the defender's plan, covering the squad's highest level (so a strong pet cannot
  *   hide behind weak ones), with one use of its daily cap for the whole battle;
- * - all eight pets are frozen, the three attackers and the whole roster, because the seed that
- *   picks the three defenders is derived from this snapshot;
- * - all eight must be ready and priced by the catalog, since any roster pet can be drawn;
- * - all eight are locked until the battle is computed (D3), when the benched two go free.
+ * - all six pets are frozen, the three attackers and the plan's three defenders;
+ * - all six must be ready and priced by the catalog;
+ * - all six are locked until the battle settles, as a duel's two are.
  */
 export async function acceptTeamBattle(request: AcceptBattleRequest): Promise<AcceptBattleResult> {
     if (!teamBattlesEnabled()) {
@@ -114,7 +113,7 @@ export async function acceptTeamBattle(request: AcceptBattleRequest): Promise<Ac
         schemaVersion: TEAM_SCHEMA_VERSIONS.snapshot,
     };
 
-    // Stage A: consume the intent, lock all eight pets, persist the photo.
+    // Stage A: consume the intent, lock all six pets, persist the photo.
     const pets = [...attackers, ...roster].map((m) => m.pet);
     const opened = await openBattle({
         consumeIntentHash: row.intentHash,
@@ -224,9 +223,8 @@ async function loadPlan(planHash: string | null): Promise<Step<LoadedPlan>> {
 type IntentRow = NonNullable<Awaited<ReturnType<typeof prisma.battleIntent.findUnique>>>;
 
 /**
- * The frozen photo of all eight pets, and the checks that depend on it: each pet still owned
- * by its side's wallet, and each off cooldown. Every roster pet must be ready, not only the
- * three who end up fighting, because which three fight is not known until the seed is.
+ * The frozen photo of all six pets, and the checks that depend on it: each pet still owned by
+ * its side's wallet, and each off cooldown.
  */
 async function freezeSquads(
     chainId: ChainId,
@@ -259,20 +257,20 @@ async function freezeSquads(
     const roster: TeamBattleSnapshot['roster'] = [];
     for (const [i, pet] of rosterPets.entries()) {
         const entry = plan.wire.roster[i]!;
-        if (!pet) return refuse(BATTLE_REFUSALS.DEFENDER_PET_MISSING, `roster pet ${entry.petId} is not in the roster`);
+        if (!pet) return refuse(BATTLE_REFUSALS.DEFENDER_PET_MISSING, `defending pet ${entry.petId} is not in the roster`);
         if (normalizeAccount(pet.owner) !== normalizeAccount(plan.wire.defenderOwner)) {
-            return refuse(BATTLE_REFUSALS.PET_OWNER_CHANGED, `roster pet ${entry.petId} now belongs to ${pet.owner}`);
+            return refuse(BATTLE_REFUSALS.PET_OWNER_CHANGED, `defending pet ${entry.petId} now belongs to ${pet.owner}`);
         }
-        if (!isBattleReady(pet, nowSeconds)) return refuse(BATTLE_REFUSALS.DEFENDER_NOT_READY, `roster pet ${entry.petId} ready at ${pet.readyAt}`);
-        roster.push({ pet, rank: entry.rank, col: entry.col, row: entry.row, tactic: entry.tactic });
+        if (!isBattleReady(pet, nowSeconds)) return refuse(BATTLE_REFUSALS.DEFENDER_NOT_READY, `defending pet ${entry.petId} ready at ${pet.readyAt}`);
+        roster.push({ pet, col: entry.col, row: entry.row, tactic: entry.tactic });
     }
     return proceed({ attackers, roster });
 }
 
 /**
- * The served team ruleset, after checking it prices every pet's gear. All eight loadouts, not
- * only the three fighters': any roster pet can be drawn, and a battle the verifier will refuse
- * should be refused here instead (docs/plan-team-battles-3v3.md, Phase 2 and 4).
+ * The served team ruleset, after checking it prices every pet's gear. All six loadouts: a
+ * battle the verifier will refuse should be refused here instead
+ * (docs/plan-team-battles-3v3.md, Phase 2 and 4).
  */
 async function priceUnderTeamRuleset(pets: PetSnapshot[]): Promise<Step<{ ruleset: Ruleset; rulesetHash: Hex }>> {
     let ruleset: Ruleset;

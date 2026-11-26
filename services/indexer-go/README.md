@@ -194,9 +194,9 @@ computed the same strikes, never whether Go's encoding agrees with TS's (there
 is only one canonical encoding, and it lives in `protocol/`).
 
 Team battles get the same check as `VerifyTeamBattle` (`internal/grpcsrv/verify_team.go`,
-`internal/combat/team_verify.go`). The backend sends the attackers and the defender's whole
-five-pet roster, so Go recomputes the squad draw as well as the fight and all six fighters'
-progression (`ComputeTeamProgression`) rather than trusting which three defended.
+`internal/combat/team_verify.go`). The backend sends the three attackers and the three
+defenders the defence plan names, and Go recomputes the fight and all six fighters'
+progression (`ComputeTeamProgression`).
 `TestVerifyTeamMatchesProtocolTeamReceipts` replays the team receipts in
 `contracts/test-vectors/protocol-team.json`, which the TypeScript side produced, and
 `TestVerifyTeamBattleMatchesProtocolTeamReceiptsOverGRPC` does the same through the wire.

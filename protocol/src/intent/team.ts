@@ -1,4 +1,4 @@
-import { SQUAD_SIZE } from '../combat/teamDraw';
+import { SQUAD_SIZE } from '../combat/team';
 import { chainFamily, evmChainIdNumber } from '../domain/chainId';
 import { assertProtocolDomain, type ProtocolDomain, writeHeader } from '../domain/deployment';
 import { assertPlacements, type Placement, writePlacement } from '../domain/placement';
@@ -17,9 +17,8 @@ import { assertAccount, assertId, assertPetId } from './types';
  * The duel intent's job (§D), for three pets against a defence plan. The attacker signs
  * where each of their pets stands and what it does, so the backend cannot rearrange a squad
  * any more than it can pick a different pet in a duel. It names the defender's plan by
- * hash rather than by pet: the defenders are drawn from that plan's roster by the battle
- * seed, and naming the hash stops the defender from swapping the roster after seeing the
- * challenge.
+ * hash rather than by pet: the plan's three pets are the defenders, and naming the hash stops
+ * the defender from swapping them after seeing the challenge.
  */
 export interface TeamBattleIntent {
     domain: ProtocolDomain;

@@ -1,12 +1,16 @@
+import clsx from 'clsx';
 import React, { useCallback, useState } from 'react';
 
 import PetArt from '@components/pet/pet-art';
+import InfoTooltip from '@components/ui/info-tooltip';
 import NeonButton from '@components/ui/neon-button';
 import { SQUAD_SIZE, useTeamBattlePanel } from '@hooks/team/useTeamBattlePanel';
+import type { Tactic } from '@shared/core';
 
 import { type ArtPet, teamPetArt } from './art';
+import { tacticShort } from './tactics';
 import { ZoneGrid } from './team-board';
-import TeamPetDetails, { type PetSelection, rankFact } from './team-pet-details';
+import TeamPetDetails, { type PetSelection } from './team-pet-details';
 import TeamPetGrid from './team-pet-grid';
 import TeamPlayback from './team-playback';
 import styles from './index.module.css';
@@ -14,7 +18,7 @@ import styles from './index.module.css';
 const STATE_LABELS: Record<string, string> = {
     accepted: 'Challenge accepted. Freezing both teams…',
     committed: 'Waiting for the randomness round both sides were promised…',
-    seeded: 'Drawing the defenders and fighting…',
+    seeded: 'Fighting…',
     computed: 'Fight computed. Waiting for the independent verifier to agree…',
     verified: 'Verified. Signing the receipt…',
 };
@@ -76,10 +80,7 @@ const TeamChallenge: React.FC = () => {
     if (panel.phase === 'choose-opponent' || !panel.opponent) {
         return (
             <div className={styles.panel}>
-                <p className={styles.muted}>
-                    Each defender sets five pets. Three of them, drawn at random with higher ranks
-                    more likely, meet your squad of three on the battle map.
-                </p>
+                <p className={styles.muted}>Each defender sets three pets, who meet your squad of three on the battle map.</p>
                 {panel.opponentsLoading && <p className={styles.muted}>Loading teams…</p>}
                 {!panel.opponentsLoading && panel.opponents.length === 0 && (
                     <p className={styles.muted}>No teams are open to challenges right now.</p>
@@ -88,17 +89,15 @@ const TeamChallenge: React.FC = () => {
                     {panel.opponents.map((o) => (
                         <div key={o.planHash} className={styles.listItem}>
                             <div className={styles.rosterStrip}>
-                                {[...o.roster]
-                                    .sort((a, b) => a.rank - b.rank)
-                                    .map((p) => (
-                                        <span key={p.petId} className={styles.rosterPet} title={`${p.name}, level ${p.level}, rank ${p.rank}`}>
-                                            <span className={styles.miniArt} aria-hidden>
-                                                <PetArt pet={teamPetArt(p.petId, p.dna, p.name)} />
-                                            </span>
-                                            <span className={styles.tokenName}>{p.name}</span>
-                                            <span className={styles.tokenSub}>Lv {p.level}</span>
+                                {o.roster.map((p) => (
+                                    <span key={p.petId} className={styles.rosterPet} title={`${p.name}, level ${p.level}`}>
+                                        <span className={styles.miniArt} aria-hidden>
+                                            <PetArt pet={teamPetArt(p.petId, p.dna, p.name)} />
                                         </span>
-                                    ))}
+                                        <span className={styles.tokenName}>{p.name}</span>
+                                        <span className={styles.tokenSub}>Lv {p.level}</span>
+                                    </span>
+                                ))}
                             </div>
                             <span className={styles.muted}>{o.ready ? `Levels ${o.minLevel}–${o.maxLevel}` : 'Resting'}</span>
                             <NeonButton size="sm" tone="magenta" disabled={!o.ready} onClick={() => panel.chooseOpponent(o)}>
@@ -128,7 +127,7 @@ const TeamChallenge: React.FC = () => {
                 col: member.col,
                 row: member.row,
                 tactic: member.tactic,
-                facts: order >= 0 ? [{ label: 'Turn order', value: `Acts ${ORDINALS[order] ?? order + 1} in your squad` }] : [],
+                facts: order >= 0 ? [`Acts ${ORDINALS[order] ?? order + 1} in your squad`] : [],
             };
         }
         if (inspected?.side === 1) {
@@ -141,20 +140,31 @@ const TeamChallenge: React.FC = () => {
                 col: p.col,
                 row: p.row,
                 tactic: p.tactic,
-                facts: [rankFact(p.rank)],
             };
         }
         return null;
     })();
+    // Each squad pet's tile says when it acts and how, so the order and tactics read at a glance.
+    const ownSub = (slot: number, tactic: Tactic) => {
+        const order = panel.turnOrder.indexOf(slot);
+        return order >= 0 ? `${ORDINALS[order] ?? order + 1} · ${tacticShort(tactic)}` : tacticShort(tactic);
+    };
     return (
-        <div className={styles.panel}>
+        <div className={clsx(styles.panel, styles.arena)}>
             <div className={styles.boardRow}>
                 <div className={styles.zoneColumn}>
-                    <h4>Your squad</h4>
+                    <h4 className={styles.columnHeading}>Your squad</h4>
                     <ZoneGrid
                         label="Your zone"
                         side={0}
-                        members={panel.squad.map((m) => ({ petId: m.petId, col: m.col, row: m.row, art: ownArt(m.petId), label: petName(m.petId) }))}
+                        members={panel.squad.map((m, slot) => ({
+                            petId: m.petId,
+                            col: m.col,
+                            row: m.row,
+                            art: ownArt(m.petId),
+                            label: petName(m.petId),
+                            sub: ownSub(slot, m.tactic),
+                        }))}
                         selectedPetId={movingPetId}
                         onPetClick={(petId) => toggleInspected(0, petId)}
                         onEmptyClick={movingPetId ? (col, row) => panel.placePet(movingPetId, col, row) : undefined}
@@ -162,7 +172,7 @@ const TeamChallenge: React.FC = () => {
                     />
                 </div>
                 <div className={styles.zoneColumn}>
-                    <h4>Their team</h4>
+                    <h4 className={styles.columnHeading}>Their team</h4>
                     <ZoneGrid
                         label="Rival zone"
                         side={1}
@@ -174,24 +184,37 @@ const TeamChallenge: React.FC = () => {
                             row: p.row,
                             art: teamPetArt(p.petId, p.dna, p.name),
                             label: p.name,
-                            sub: `Rank ${p.rank}`,
+                            sub: tacticShort(p.tactic),
                         }))}
                     />
                 </div>
-                <TeamPetDetails
-                    selection={selection}
-                    onTacticChange={selection?.side === 0 ? (tactic) => panel.setTactic(selection.petId, tactic) : undefined}
-                />
+                <div className={styles.detailsColumn}>
+                    <h4 className={styles.columnHeading}>Pet details</h4>
+                    <TeamPetDetails
+                        selection={selection}
+                        onTacticChange={selection?.side === 0 ? (tactic) => panel.setTactic(selection.petId, tactic) : undefined}
+                    />
+                </div>
             </div>
-            <p className={styles.muted}>
-                Tap a pet below to add or remove it. Tap a pet on either zone to see its details. To
-                move one of yours, select it and tap an empty tile, or drag it onto another pet to swap
-                them. Melee pets can only reach the enemy front line.
-            </p>
 
-            <h4>
-                Choose your squad ({panel.squad.length}/{SQUAD_SIZE})
-            </h4>
+            <div className={styles.sectionHead}>
+                <h4 className={styles.columnHeading}>
+                    Choose your squad ({panel.squad.length}/{SQUAD_SIZE})
+                    <InfoTooltip subject="Building your squad">
+                        Tap a pet to add or remove it. Tap a pet on either zone to see its details and set
+                        your pets&apos; tactics. To move one of yours, select it and tap an empty tile, or drag it
+                        onto another pet to swap them. Melee pets can only reach the enemy front line.
+                    </InfoTooltip>
+                </h4>
+                <div className={styles.row}>
+                    <NeonButton size="sm" tone="magenta" disabled={!panel.canStart} onClick={() => void panel.start()}>
+                        Start team battle
+                    </NeonButton>
+                    <NeonButton size="sm" tone="azure" onClick={() => panel.chooseOpponent(null)}>
+                        Pick another team
+                    </NeonButton>
+                </div>
+            </div>
             <TeamPetGrid
                 label="Your pets"
                 pets={panel.pets}
@@ -201,23 +224,8 @@ const TeamChallenge: React.FC = () => {
                 onToggle={(petId) => (squadIds.includes(petId) ? panel.removePet(petId) : panel.addPet(petId))}
             />
 
-            {panel.squad.length === SQUAD_SIZE && (
-                <p className={styles.muted}>
-                    Your squad acts in this order: {panel.turnOrder.map((slot) => petName(panel.squad[slot]?.petId ?? '')).join(', ')}.
-                    The defenders join the order once they are drawn.
-                </p>
-            )}
             {!panel.squadReady && <p className={styles.error}>One of your pets is still resting.</p>}
             {panel.error && <p className={styles.error}>{panel.error.message}</p>}
-
-            <div className={styles.row}>
-                <NeonButton tone="magenta" disabled={!panel.canStart} onClick={() => void panel.start()}>
-                    Start team battle
-                </NeonButton>
-                <NeonButton tone="azure" onClick={() => panel.chooseOpponent(null)}>
-                    Pick another team
-                </NeonButton>
-            </div>
         </div>
     );
 };

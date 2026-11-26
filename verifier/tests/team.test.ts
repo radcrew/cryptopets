@@ -20,8 +20,8 @@ import { buildReceipt, envelopeFor, signWithTestKey, testTrustedKey } from './fi
 
 /**
  * Team receipts through the public verifier (§H), using the coherent receipts in
- * contracts/test-vectors/protocol-team.json: real beacon, derived seed, replayed draw and
- * fight. Signed here with the test key, since the vectors pin hashes, not signatures.
+ * contracts/test-vectors/protocol-team.json: real beacon, derived seed, replayed fight.
+ * Signed here with the test key, since the vectors pin hashes, not signatures.
  */
 const here = dirname(fileURLToPath(import.meta.url));
 const vectors = JSON.parse(readFileSync(join(here, '../../contracts/test-vectors/protocol-team.json'), 'utf8')) as {
@@ -60,10 +60,13 @@ describe('team receipts in the public verifier', () => {
         expect(failed(verify([envelope(forged)]))).not.toContain('operator-signature');
     });
 
-    it('refuses a receipt naming defenders the seed did not draw', () => {
-        // Built by hand: such a receipt cannot even be hashed, so the forger reuses an honest
+    it('refuses a receipt whose defenders were rearranged after the battle', () => {
+        // The seed derives from the snapshot hash, so reordering who defended breaks it. Built
+        // by hand: such a receipt cannot even be hashed, so the forger reuses an honest
         // envelope around the tampered payload.
-        const forged: SignedReceiptEnvelope = { ...envelope(FIRST), payload: toWire({ ...FIRST, drawn: [1, 2, 4] }) };
+        const [a, b, c] = FIRST.snapshot.roster;
+        const snapshot = { ...FIRST.snapshot, roster: [b!, a!, c!] };
+        const forged: SignedReceiptEnvelope = { ...envelope(FIRST), payload: toWire({ ...FIRST, snapshot }) };
         expect(failed(verify([forged]))).toContain('malformed-receipt');
     });
 

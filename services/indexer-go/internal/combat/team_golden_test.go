@@ -73,12 +73,6 @@ type teamVectors struct {
 			Log               [][]int64  `json:"log"`
 		} `json:"expected"`
 	} `json:"cases"`
-	Draws []struct {
-		Name     string  `json:"name"`
-		Ranks    []uint8 `json:"ranks"`
-		Seed     string  `json:"seed"`
-		Expected []int   `json:"expected"`
-	} `json:"draws"`
 }
 
 var (
@@ -176,23 +170,6 @@ func TestSimulateTeamMatchesGoldenVectors(t *testing.T) {
 	}
 }
 
-func TestDrawDefendersMatchesGoldenVectors(t *testing.T) {
-	var v teamVectors
-	loadJSON(t, teamVectorsPath, &v)
-	if len(v.Draws) == 0 {
-		t.Fatal("no draw vectors")
-	}
-	for _, d := range v.Draws {
-		got, err := DrawDefenders(d.Ranks, seedBytes(t, d.Seed))
-		if err != nil {
-			t.Fatalf("%s: %v", d.Name, err)
-		}
-		if !reflect.DeepEqual(got, d.Expected) {
-			t.Errorf("%s: got %v, want %v", d.Name, got, d.Expected)
-		}
-	}
-}
-
 // A one-on-one team battle is a duel strike for strike (§F, "Duels are the special case").
 // The expected result is each vector's own, so the two engines cannot pass by agreeing on
 // something wrong; the strike comparison proves no team rule fired along the way.
@@ -282,11 +259,6 @@ func TestSimulateTeamRejectsBadInput(t *testing.T) {
 	for name, sides := range bad {
 		if _, err := SimulateTeam(sides[0], sides[1], seed, sc, tc); err == nil {
 			t.Errorf("%s: accepted", name)
-		}
-	}
-	for _, ranks := range [][]uint8{{1, 2, 3, 4}, {1, 1, 3, 4, 5}, {0, 2, 3, 4, 5}, {1, 2, 3, 4, 6}} {
-		if _, err := DrawDefenders(ranks, seed); err == nil {
-			t.Errorf("ranks %v: accepted", ranks)
 		}
 	}
 }
