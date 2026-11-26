@@ -148,7 +148,7 @@ const TeamChallenge: React.FC = () => {
     })();
     return (
         <div className={styles.panel}>
-            <div className={styles.row}>
+            <div className={styles.boardRow}>
                 <div className={styles.zoneColumn}>
                     <h4>Your squad</h4>
                     <ZoneGrid

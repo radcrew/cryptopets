@@ -145,26 +145,133 @@ button.tile:focus-visible {
     white-space: nowrap;
 }
 
-/* A zone with its heading, sized to the zone so the details panel beside it takes the rest. */
-.zoneColumn {
-    flex: 1 1 13rem;
-    min-width: 0;
-    max-width: 16rem;
+/* The board and the selected pet's details, side by side. */
+.boardRow {
+    display: flex;
+    align-items: stretch;
+    gap: 0.75rem;
 }
 
-/* The selected pet's details, to the right of the board, or below it on a narrow screen. */
-.details {
-    flex: 1 1 15rem;
+/* A zone with its heading, sized to the zone so the details panel beside it takes the rest. */
+.zoneColumn {
+    flex: 0 1 16rem;
     min-width: 0;
-    max-width: 24rem;
-    align-self: flex-start;
-    display: flex;
-    flex-direction: column;
-    gap: 0.6rem;
-    padding: 0.75rem;
+}
+
+/* The selected pet's details: the full remaining width, and exactly the board's height. The
+   body is taken out of the flow, so a long description scrolls inside the panel instead of
+   making the row taller than the board. */
+.details {
+    position: relative;
+    flex: 1 1 0;
+    min-width: 0;
     border: 1px solid rgb(125 214 255 / 22%);
     border-radius: 10px;
     background: rgb(4 10 26 / 60%);
+}
+
+.detailsBody {
+    position: absolute;
+    inset: 0;
+    overflow-y: auto;
+    padding: 0.75rem;
+    display: grid;
+    /* Two columns when the panel is wide enough, so it rarely needs to scroll at all. */
+    grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+    align-content: start;
+    gap: 0.75rem 1rem;
+    scrollbar-width: thin;
+    scrollbar-color: rgb(125 214 255 / 35%) transparent;
+}
+
+.detailsColumn {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    min-width: 0;
+}
+
+/* A phone has no room beside the board: the panel goes below it, at its natural height. */
+@media (max-width: 760px) {
+    .boardRow {
+        flex-wrap: wrap;
+    }
+
+    .zoneColumn {
+        flex: 1 1 13rem;
+    }
+
+    .details {
+        flex-basis: 100%;
+    }
+
+    .detailsBody {
+        position: static;
+    }
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 0.85rem;
+}
+
+.fieldLabel {
+    opacity: 0.7;
+    font-size: 0.8rem;
+}
+
+/* Matches the equip panel's select, the app's other native dropdown. */
+.select {
+    width: 100%;
+    min-width: 0;
+    padding: 7px 10px;
+    border-radius: 8px;
+    border: 1px solid rgb(255 255 255 / 15%);
+    background: rgb(0 0 0 / 30%);
+    color: inherit;
+    font: inherit;
+    font-size: 13px;
+}
+
+.rankPicker {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 4px;
+}
+
+.rankOption {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0.3rem 0;
+    border: 1px solid rgb(125 214 255 / 22%);
+    border-radius: 6px;
+    background: rgb(0 0 0 / 30%);
+    color: rgb(195 210 255 / 78%);
+    font: inherit;
+    font-size: 0.7rem;
+    cursor: pointer;
+}
+
+.rankOption strong {
+    font-size: 0.95rem;
+}
+
+.rankOption:hover {
+    border-color: rgb(125 214 255 / 55%);
+}
+
+.rankOption:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--cp-cyan);
+}
+
+.rankOptionChosen {
+    border-color: var(--cp-cyan);
+    background: rgb(125 214 255 / 12%);
+    color: #f6f3ff;
 }
 
 .detailsHead {
@@ -192,8 +299,7 @@ button.tile:focus-visible {
     font-size: 0.85rem;
 }
 
-.facts dt,
-.facts > span {
+.facts dt {
     opacity: 0.7;
 }
 

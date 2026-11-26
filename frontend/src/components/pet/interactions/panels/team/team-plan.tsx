@@ -5,7 +5,7 @@ import { type PlanRosterEntry, type Tactic, useDefensePlan, usePetList } from '@
 
 import { type ArtPet, teamPetArt } from './art';
 import { ZoneGrid } from './team-board';
-import TeamPetDetails, { type PetSelection, rankFact } from './team-pet-details';
+import TeamPetDetails, { type PetSelection } from './team-pet-details';
 import TeamPetGrid from './team-pet-grid';
 import styles from './index.module.css';
 
@@ -53,12 +53,14 @@ const TeamPlan: React.FC = () => {
             return free ? [...current, { petId, col: free[0], row: free[1], tactic: 'focus' }] : current;
         });
     const remove = (petId: string) => setRoster((current) => current.filter((d) => d.petId !== petId));
-    const move = (index: number, by: -1 | 1) =>
+    /** Gives a pet another rank by swapping places with the pet that holds it. */
+    const setRank = (petId: string, rank: number) =>
         setRoster((current) => {
-            const target = index + by;
-            if (target < 0 || target >= current.length) return current;
+            const from = current.findIndex((d) => d.petId === petId);
+            const to = rank - 1;
+            if (from < 0 || to < 0 || to >= current.length || from === to) return current;
             const next = [...current];
-            [next[index], next[target]] = [next[target]!, next[index]!];
+            [next[from], next[to]] = [next[to]!, next[from]!];
             return next;
         });
     const place = (petId: string, col: number, row: number) =>
@@ -86,7 +88,6 @@ const TeamPlan: React.FC = () => {
             col: draft.col,
             row: draft.row,
             tactic: draft.tactic,
-            facts: [rankFact(selectedIndex + 1)],
         };
     })();
 
@@ -114,7 +115,7 @@ const TeamPlan: React.FC = () => {
             )}
             {!plan && <p className={styles.muted}>You have no team saved, so nobody can challenge you in team battles.</p>}
 
-            <div className={styles.row}>
+            <div className={styles.boardRow}>
                 <div className={styles.zoneColumn}>
                     <ZoneGrid
                         label="Your defence zone"
@@ -131,18 +132,14 @@ const TeamPlan: React.FC = () => {
                     onTacticChange={selection ? (tactic) => setTactic(selection.petId, tactic) : undefined}
                     rank={
                         selection
-                            ? {
-                                  up: selectedIndex > 0 ? () => move(selectedIndex, -1) : undefined,
-                                  down: selectedIndex < roster.length - 1 ? () => move(selectedIndex, 1) : undefined,
-                              }
+                            ? { current: selectedIndex + 1, count: roster.length, onPick: (rank) => setRank(selection.petId, rank) }
                             : undefined
                     }
                 />
             </div>
             <p className={styles.muted}>
-                Rank 1 defends in about 83% of battles and rank 5 in about 27%. Tap a pet below to add or
-                remove it. Tap a pet on the zone to see its details, change its tactic or rank it higher
-                or lower. To move it, tap an empty tile, or drag it onto another pet to swap them.
+                Tap a pet below to add or remove it. Tap a pet on the zone to see its details and set its
+                tactic and rank. To move it, tap an empty tile, or drag it onto another pet to swap them.
             </p>
 
             <h4>

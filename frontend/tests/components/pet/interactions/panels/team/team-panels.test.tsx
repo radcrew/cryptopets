@@ -33,10 +33,13 @@ describe('TeamPlan', () => {
         }
         // A full team takes no sixth pet.
         expect(screen.getByRole('button', { name: 'Pet 6, level 10' })).toBeDisabled();
-        // Ranking happens in the details panel, for the pet selected on the zone.
+        // Ranking happens in the details panel: picking rank 1 for Pet 2 swaps it with Pet 1.
         await user.click(screen.getByRole('button', { name: 'Pet 2, front column, top row' }));
-        await user.click(screen.getByRole('button', { name: 'Rank Pet 2 higher' }));
-        expect(screen.getByRole('button', { name: 'Rank Pet 2 higher' })).toBeDisabled();
+        const details = screen.getByRole('complementary', { name: 'Pet details' });
+        const rankOne = within(details).getByRole('button', { name: 'Rank 1, defends in about 83% of battles' });
+        expect(rankOne).toHaveAttribute('aria-pressed', 'false');
+        await user.click(rankOne);
+        expect(rankOne).toHaveAttribute('aria-pressed', 'true');
         await user.click(saveButton);
 
         const vars = saveCall();
@@ -61,7 +64,7 @@ describe('TeamPlan', () => {
 
         await user.click(screen.getByRole('button', { name: 'Pet 1, front column, middle row' }));
         expect(details).toHaveTextContent('Pet 1');
-        expect(details).toHaveTextContent('1 of 5, defends in about 83% of battles');
+        expect(within(details).getByRole('button', { name: 'Rank 1, defends in about 83% of battles' })).toHaveAttribute('aria-pressed', 'true');
         // DNA 1 at rarity 1 and level 10 has every stat gene at 0: HP is 100 + 6 * 10, ATK 10 + 2 * 10.
         expect(within(details).getByRole('list', { name: 'Base stats' })).toHaveTextContent('160HP30ATK');
 
