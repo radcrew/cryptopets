@@ -46,8 +46,13 @@ attacker back 0, mid 1, front 2; defender front 3, mid 4, back 5.
 
 ### A round
 
-- All standing pets act once per round. Order: pets without Shell before Shell pets, then higher
-  Speed, then Swift, then the attacking side, then the lower slot. A knocked-out pet loses its turn.
+- All standing pets act once per round. **Speed is the first factor:** the faster pet always acts
+  first, whatever its skill. On equal Speed, pets without Shell go before Shell pets, then Swift,
+  then the attacking side, then the lower slot. A knocked-out pet loses its turn.
+- Speed-first is part of the Attributes 2.0 rules version. Rulesets before it keep today's order (a
+  Shell pet last, then higher INT, then Swift), which is what lets older battles replay exactly
+  (whitepaper sections 4.2 and 8.4). In the whitepaper's example squads this is visible: Brook, a
+  Shell pet with Speed 59, now acts before Fern at 45.
 - Each strike rolls physical or magic first, then the pet's tactic picks a target among the
   enemies it can reach. Tactics read only the visible state of the fight, so they need no
   randomness and replay identically.
@@ -115,7 +120,7 @@ Each has a recommendation; the phases below assume it unless this section is upd
 
 | | Decision | Recommendation |
 |---|---|---|
-| D1 | **Attributes 2.0.** The rules use Speed, Range and Temperament, which do not exist yet. | Build the team engine with them as inputs, and ship team battles first with neutral values (everyone Melee, equal Speed, no temperament bonus). Attributes 2.0 then fills those inputs under a later ruleset version. The cost is a second re-consent when Attributes 2.0 ships; the benefit is not blocking on genes that need a contract upgrade. |
+| D1 | **Attributes 2.0.** The rules use Speed, Range and Temperament, which do not exist yet. | Build the team engine with them as inputs, and ship team battles first with neutral values (everyone Melee, no temperament bonus, and today's turn order: a Shell pet last, then higher INT). Attributes 2.0 then fills those inputs under a later ruleset version, and that version is also where turn order switches to Speed first. Note that "equal Speed" would not be neutral: it would reduce the order to the tie-breaks and drop INT, so a team battle would order differently from a duel between the same pets. The cost is a second re-consent when Attributes 2.0 ships; the benefit is not blocking on genes that need a contract upgrade. |
 | D2 | **Consent object.** | A new signed object kind, `defensePlan` v1 (roster, ranks, tactics, home tiles, plus today's consent fields). `DefenseAuthorization` v1 stays for duels. |
 | D3 | **Locks.** The three defenders are unknown until the seed. | Lock all five roster pets from acceptance until the battle is computed, then release the two benched pets. |
 | D4 | **Receipt shape.** | `receipt` v2: a team result, per-pet previous-receipt links for the six fighters (benched pets are not linked), and progression for six pets. `combatLog` v2 records actor and target slots and the guard, expose and second-chance events. |
@@ -150,8 +155,9 @@ Each has a recommendation; the phases below assume it unless this section is upd
 ### Phase 1: the team engine in both languages, and its vectors
 
 1. Write the engine spec in `docs/battle-protocol.md`: integer arithmetic and flooring at each
-   step, turn-order tie-breaks, the per-round seed, tactic tie-breaks, the draw, and the 30-round
-   rule.
+   step, turn order (today's, and the Speed-first order that Attributes 2.0 switches to, chosen by
+   ruleset version) with its tie-breaks, the per-round seed, tactic tie-breaks, the draw, and the
+   30-round rule.
 2. Implement it in TypeScript under `protocol/src/combat/` (pure: no clock, no ambient randomness,
    no I/O).
 3. Implement it in Go under `services/indexer-go/internal/combat/`, from the spec rather than from
@@ -174,7 +180,9 @@ Each has a recommendation; the phases below assume it unless this section is upd
    pets with ranks, tiles and tactics, gear for all), ruleset v3 (map, cooperation values, team
    parameters), receipt v2 and combat log v2, each with hashing vectors in
    `contracts/test-vectors/protocol-*.json`.
-2. The public verifier replays team receipts.
+2. The public verifier replays team receipts, and runs `findEquipmentMismatches`
+   (`protocol/src/ruleset/equipmentCheck.ts`) on every loadout in the snapshot, not only the first
+   pet on each side. Replay alone cannot catch a modifier the catalog does not declare.
 
 *Done when:* `pnpm --filter @cryptopets/protocol test` and `pnpm --filter @cryptopets/verifier test`
 pass, and the verifier workflow's existing receipt corpus still verifies.
@@ -196,7 +204,9 @@ test passes.
    battle.
 3. Ledger:
    - accept: consent covers all five, the level band uses the highest level, the daily limit
-     counts once, all three attackers are off cooldown
+     counts once, all three attackers are off cooldown, and `findEquipmentMismatches` passes for
+     all eight snapshotted pets (any of the five roster pets can be drawn, so each loadout must be
+     checked before the seed picks them)
    - lock the five roster pets until computed (D3)
    - snapshot three plus five, with gear
    - compute: draw, then the team engine
@@ -234,6 +244,20 @@ the public verifier.
 Mobile screens, Attributes 2.0 (D1), season maps and special tiles, battle plans (Attack, Guard,
 Break), the relay format, team AI commentary, and balance tuning with a simulation harness.
 
+### Where this plan differs from the whitepaper
+
+The whitepaper describes the finished feature; this plan ships a smaller first version. The
+differences are deliberate, but each one should be either accepted or pulled back in:
+
+- **Attributes 2.0 is deferred** (D1). The whitepaper's battles use Speed, Range and Temperament,
+  and its simulated win rates depend on them.
+- **Mobile screens and pet profiles are deferred.** The whitepaper's roadmap lists both on web and
+  mobile; this plan builds web only.
+- **The leaderboard's skill rating is an open question** (section 7, question 3). The whitepaper
+  lists a rating that rises more for beating stronger squads as planned.
+- **There is no rematch.** The whitepaper's result screen has a Rematch button; Phase 5 has a
+  result screen and replay only.
+
 ## 5. Commands
 
 | Package | Command |
@@ -256,8 +280,12 @@ Break), the relay format, team AI commentary, and balance tuning with a simulati
   in onboarding and make the default plan one tap.
 - **Availability.** Locking five roster pets per accepted challenge (D3) makes defenders busier.
   Watch how often challenges are refused for locks.
-- **Balance.** The whitepaper's simulations show formation matters most, a defensive wall is
-  strong, and Bodyguard is weak. Tune through ruleset values, not code.
+- **Balance.** The whitepaper's simulations (section 8.7, 100,000 battles per setup, Speed first)
+  show that formation matters most: a ranged back line behind one Melee pet wins 82% to 89% against
+  every rival formation, while putting a lone caster in front drops to 7% to 15%. Hunter is the weak
+  tactic (5%), Bodyguard is middling (40%), and Breaker is strongest (90%). Gear swings results
+  from 40% to 100%. These numbers assume Attributes 2.0, so the neutral launch in D1 (everyone
+  Melee) needs its own simulation run before tuning. Tune through ruleset values, not code.
 - **Scope.** Attributes 2.0 and season maps are the obvious creep; both are outside this ticket.
 
 ## 7. Open questions
