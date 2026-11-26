@@ -23,9 +23,10 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	GameDataService_GetPetState_FullMethodName  = "/cryptopets.GameDataService/GetPetState"
-	GameDataService_EstimateWin_FullMethodName  = "/cryptopets.GameDataService/EstimateWin"
-	GameDataService_VerifyBattle_FullMethodName = "/cryptopets.GameDataService/VerifyBattle"
+	GameDataService_GetPetState_FullMethodName      = "/cryptopets.GameDataService/GetPetState"
+	GameDataService_EstimateWin_FullMethodName      = "/cryptopets.GameDataService/EstimateWin"
+	GameDataService_VerifyBattle_FullMethodName     = "/cryptopets.GameDataService/VerifyBattle"
+	GameDataService_VerifyTeamBattle_FullMethodName = "/cryptopets.GameDataService/VerifyTeamBattle"
 )
 
 // GameDataServiceClient is the client API for GameDataService service.
@@ -50,6 +51,12 @@ type GameDataServiceClient interface {
 	// controls both processes (see the architecture doc's "what the Go verifier
 	// is for" section). Never wired to any state-mutating path.
 	VerifyBattle(ctx context.Context, in *VerifyBattleRequest, opts ...grpc.CallOption) (*VerifyBattleResponse, error)
+	// VerifyBattle's job for a three-on-three team battle (docs/battle-protocol.md §F,
+	// "Team battles"): the squad draw from the defender's roster, the fight, and all six
+	// fighters' progression, recomputed by the Go port. The whole five-pet roster is sent,
+	// not the three who fought, so the draw is checked too rather than taken on trust.
+	// Release safety only, exactly as VerifyBattle.
+	VerifyTeamBattle(ctx context.Context, in *VerifyTeamBattleRequest, opts ...grpc.CallOption) (*VerifyTeamBattleResponse, error)
 }
 
 type gameDataServiceClient struct {
@@ -90,6 +97,16 @@ func (c *gameDataServiceClient) VerifyBattle(ctx context.Context, in *VerifyBatt
 	return out, nil
 }
 
+func (c *gameDataServiceClient) VerifyTeamBattle(ctx context.Context, in *VerifyTeamBattleRequest, opts ...grpc.CallOption) (*VerifyTeamBattleResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(VerifyTeamBattleResponse)
+	err := c.cc.Invoke(ctx, GameDataService_VerifyTeamBattle_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // GameDataServiceServer is the server API for GameDataService service.
 // All implementations must embed UnimplementedGameDataServiceServer
 // for forward compatibility.
@@ -112,6 +129,12 @@ type GameDataServiceServer interface {
 	// controls both processes (see the architecture doc's "what the Go verifier
 	// is for" section). Never wired to any state-mutating path.
 	VerifyBattle(context.Context, *VerifyBattleRequest) (*VerifyBattleResponse, error)
+	// VerifyBattle's job for a three-on-three team battle (docs/battle-protocol.md §F,
+	// "Team battles"): the squad draw from the defender's roster, the fight, and all six
+	// fighters' progression, recomputed by the Go port. The whole five-pet roster is sent,
+	// not the three who fought, so the draw is checked too rather than taken on trust.
+	// Release safety only, exactly as VerifyBattle.
+	VerifyTeamBattle(context.Context, *VerifyTeamBattleRequest) (*VerifyTeamBattleResponse, error)
 	mustEmbedUnimplementedGameDataServiceServer()
 }
 
@@ -130,6 +153,9 @@ func (UnimplementedGameDataServiceServer) EstimateWin(context.Context, *WinReque
 }
 func (UnimplementedGameDataServiceServer) VerifyBattle(context.Context, *VerifyBattleRequest) (*VerifyBattleResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method VerifyBattle not implemented")
+}
+func (UnimplementedGameDataServiceServer) VerifyTeamBattle(context.Context, *VerifyTeamBattleRequest) (*VerifyTeamBattleResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method VerifyTeamBattle not implemented")
 }
 func (UnimplementedGameDataServiceServer) mustEmbedUnimplementedGameDataServiceServer() {}
 func (UnimplementedGameDataServiceServer) testEmbeddedByValue()                         {}
@@ -206,6 +232,24 @@ func _GameDataService_VerifyBattle_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
+func _GameDataService_VerifyTeamBattle_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(VerifyTeamBattleRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GameDataServiceServer).VerifyTeamBattle(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GameDataService_VerifyTeamBattle_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GameDataServiceServer).VerifyTeamBattle(ctx, req.(*VerifyTeamBattleRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // GameDataService_ServiceDesc is the grpc.ServiceDesc for GameDataService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -224,6 +268,10 @@ var GameDataService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "VerifyBattle",
 			Handler:    _GameDataService_VerifyBattle_Handler,
+		},
+		{
+			MethodName: "VerifyTeamBattle",
+			Handler:    _GameDataService_VerifyTeamBattle_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

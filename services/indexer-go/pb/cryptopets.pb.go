@@ -1069,6 +1069,560 @@ func (x *VerifyBattleResponse) GetDefender() *VerifyPetProgression {
 	return nil
 }
 
+// One team-battle pet: its frozen inputs and where it stands. Every pet fights neutral at
+// ruleset layout 3 (Melee, no temperament), so neither is sent; Attributes 2.0 adds them.
+type VerifyTeamPet struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Pet           *VerifyPetInputs       `protobuf:"bytes,1,opt,name=pet,proto3" json:"pet,omitempty"`
+	Col           uint32                 `protobuf:"varint,2,opt,name=col,proto3" json:"col,omitempty"` // own zone: 0 back, 1 mid, 2 front
+	Row           uint32                 `protobuf:"varint,3,opt,name=row,proto3" json:"row,omitempty"`
+	Tactic        string                 `protobuf:"bytes,4,opt,name=tactic,proto3" json:"tactic,omitempty"` // "focus" | "breaker" | "hunter" | "bodyguard"
+	Rank          uint32                 `protobuf:"varint,5,opt,name=rank,proto3" json:"rank,omitempty"`    // roster pets only: 1-5, each once. 0 for attackers.
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *VerifyTeamPet) Reset() {
+	*x = VerifyTeamPet{}
+	mi := &file_cryptopets_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *VerifyTeamPet) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*VerifyTeamPet) ProtoMessage() {}
+
+func (x *VerifyTeamPet) ProtoReflect() protoreflect.Message {
+	mi := &file_cryptopets_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use VerifyTeamPet.ProtoReflect.Descriptor instead.
+func (*VerifyTeamPet) Descriptor() ([]byte, []int) {
+	return file_cryptopets_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *VerifyTeamPet) GetPet() *VerifyPetInputs {
+	if x != nil {
+		return x.Pet
+	}
+	return nil
+}
+
+func (x *VerifyTeamPet) GetCol() uint32 {
+	if x != nil {
+		return x.Col
+	}
+	return 0
+}
+
+func (x *VerifyTeamPet) GetRow() uint32 {
+	if x != nil {
+		return x.Row
+	}
+	return 0
+}
+
+func (x *VerifyTeamPet) GetTactic() string {
+	if x != nil {
+		return x.Tactic
+	}
+	return ""
+}
+
+func (x *VerifyTeamPet) GetRank() uint32 {
+	if x != nil {
+		return x.Rank
+	}
+	return 0
+}
+
+// Mirrors protocol's TeamConfig field for field.
+type VerifyTeamConfig struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	TurnOrder      string                 `protobuf:"bytes,1,opt,name=turn_order,json=turnOrder,proto3" json:"turn_order,omitempty"` // "int" until Attributes 2.0
+	ComboStepPct   uint32                 `protobuf:"varint,2,opt,name=combo_step_pct,json=comboStepPct,proto3" json:"combo_step_pct,omitempty"`
+	ExposePct      uint32                 `protobuf:"varint,3,opt,name=expose_pct,json=exposePct,proto3" json:"expose_pct,omitempty"`
+	AuraPct        uint32                 `protobuf:"varint,4,opt,name=aura_pct,json=auraPct,proto3" json:"aura_pct,omitempty"`
+	TailwindBps    uint32                 `protobuf:"varint,5,opt,name=tailwind_bps,json=tailwindBps,proto3" json:"tailwind_bps,omitempty"`
+	LongShotPct    uint32                 `protobuf:"varint,6,opt,name=long_shot_pct,json=longShotPct,proto3" json:"long_shot_pct,omitempty"`
+	TemperamentPct uint32                 `protobuf:"varint,7,opt,name=temperament_pct,json=temperamentPct,proto3" json:"temperament_pct,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *VerifyTeamConfig) Reset() {
+	*x = VerifyTeamConfig{}
+	mi := &file_cryptopets_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *VerifyTeamConfig) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*VerifyTeamConfig) ProtoMessage() {}
+
+func (x *VerifyTeamConfig) ProtoReflect() protoreflect.Message {
+	mi := &file_cryptopets_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use VerifyTeamConfig.ProtoReflect.Descriptor instead.
+func (*VerifyTeamConfig) Descriptor() ([]byte, []int) {
+	return file_cryptopets_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *VerifyTeamConfig) GetTurnOrder() string {
+	if x != nil {
+		return x.TurnOrder
+	}
+	return ""
+}
+
+func (x *VerifyTeamConfig) GetComboStepPct() uint32 {
+	if x != nil {
+		return x.ComboStepPct
+	}
+	return 0
+}
+
+func (x *VerifyTeamConfig) GetExposePct() uint32 {
+	if x != nil {
+		return x.ExposePct
+	}
+	return 0
+}
+
+func (x *VerifyTeamConfig) GetAuraPct() uint32 {
+	if x != nil {
+		return x.AuraPct
+	}
+	return 0
+}
+
+func (x *VerifyTeamConfig) GetTailwindBps() uint32 {
+	if x != nil {
+		return x.TailwindBps
+	}
+	return 0
+}
+
+func (x *VerifyTeamConfig) GetLongShotPct() uint32 {
+	if x != nil {
+		return x.LongShotPct
+	}
+	return 0
+}
+
+func (x *VerifyTeamConfig) GetTemperamentPct() uint32 {
+	if x != nil {
+		return x.TemperamentPct
+	}
+	return 0
+}
+
+type VerifyTeamBattleRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Attackers     []*VerifyTeamPet       `protobuf:"bytes,1,rep,name=attackers,proto3" json:"attackers,omitempty"` // exactly 3, slot order
+	Roster        []*VerifyTeamPet       `protobuf:"bytes,2,rep,name=roster,proto3" json:"roster,omitempty"`       // exactly 5, roster order
+	Seed          []byte                 `protobuf:"bytes,3,opt,name=seed,proto3" json:"seed,omitempty"`           // 32 bytes, big-endian
+	SkillConfig   *VerifySkillConfig     `protobuf:"bytes,4,opt,name=skill_config,json=skillConfig,proto3" json:"skill_config,omitempty"`
+	TeamConfig    *VerifyTeamConfig      `protobuf:"bytes,5,opt,name=team_config,json=teamConfig,proto3" json:"team_config,omitempty"`
+	MaxLevel      uint32                 `protobuf:"varint,6,opt,name=max_level,json=maxLevel,proto3" json:"max_level,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *VerifyTeamBattleRequest) Reset() {
+	*x = VerifyTeamBattleRequest{}
+	mi := &file_cryptopets_proto_msgTypes[12]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *VerifyTeamBattleRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*VerifyTeamBattleRequest) ProtoMessage() {}
+
+func (x *VerifyTeamBattleRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_cryptopets_proto_msgTypes[12]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use VerifyTeamBattleRequest.ProtoReflect.Descriptor instead.
+func (*VerifyTeamBattleRequest) Descriptor() ([]byte, []int) {
+	return file_cryptopets_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *VerifyTeamBattleRequest) GetAttackers() []*VerifyTeamPet {
+	if x != nil {
+		return x.Attackers
+	}
+	return nil
+}
+
+func (x *VerifyTeamBattleRequest) GetRoster() []*VerifyTeamPet {
+	if x != nil {
+		return x.Roster
+	}
+	return nil
+}
+
+func (x *VerifyTeamBattleRequest) GetSeed() []byte {
+	if x != nil {
+		return x.Seed
+	}
+	return nil
+}
+
+func (x *VerifyTeamBattleRequest) GetSkillConfig() *VerifySkillConfig {
+	if x != nil {
+		return x.SkillConfig
+	}
+	return nil
+}
+
+func (x *VerifyTeamBattleRequest) GetTeamConfig() *VerifyTeamConfig {
+	if x != nil {
+		return x.TeamConfig
+	}
+	return nil
+}
+
+func (x *VerifyTeamBattleRequest) GetMaxLevel() uint32 {
+	if x != nil {
+		return x.MaxLevel
+	}
+	return 0
+}
+
+// One resolved team strike. Mirrors protocol's TeamStrikeLogEntry field for field, so the
+// caller can hash it with the canonical encoder; Go never reimplements that encoding.
+type VerifyTeamStrike struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Round         uint32                 `protobuf:"varint,1,opt,name=round,proto3" json:"round,omitempty"`
+	Side          uint32                 `protobuf:"varint,2,opt,name=side,proto3" json:"side,omitempty"` // 0 attackers, 1 defenders
+	Actor         uint32                 `protobuf:"varint,3,opt,name=actor,proto3" json:"actor,omitempty"`
+	Target        uint32                 `protobuf:"varint,4,opt,name=target,proto3" json:"target,omitempty"`
+	Victim        uint32                 `protobuf:"varint,5,opt,name=victim,proto3" json:"victim,omitempty"` // differs from target only when a Tank guarded
+	IsMagic       bool                   `protobuf:"varint,6,opt,name=is_magic,json=isMagic,proto3" json:"is_magic,omitempty"`
+	Crit          bool                   `protobuf:"varint,7,opt,name=crit,proto3" json:"crit,omitempty"`
+	Damage        uint64                 `protobuf:"varint,8,opt,name=damage,proto3" json:"damage,omitempty"`
+	ElementMult   uint32                 `protobuf:"varint,9,opt,name=element_mult,json=elementMult,proto3" json:"element_mult,omitempty"`
+	Combo         uint32                 `protobuf:"varint,10,opt,name=combo,proto3" json:"combo,omitempty"`
+	LongShot      bool                   `protobuf:"varint,11,opt,name=long_shot,json=longShot,proto3" json:"long_shot,omitempty"`
+	FuryTriggered bool                   `protobuf:"varint,12,opt,name=fury_triggered,json=furyTriggered,proto3" json:"fury_triggered,omitempty"`
+	Temperament   bool                   `protobuf:"varint,13,opt,name=temperament,proto3" json:"temperament,omitempty"`
+	Exposed       bool                   `protobuf:"varint,14,opt,name=exposed,proto3" json:"exposed,omitempty"`
+	Guarded       bool                   `protobuf:"varint,15,opt,name=guarded,proto3" json:"guarded,omitempty"`
+	SecondChance  bool                   `protobuf:"varint,16,opt,name=second_chance,json=secondChance,proto3" json:"second_chance,omitempty"`
+	KnockedOut    bool                   `protobuf:"varint,17,opt,name=knocked_out,json=knockedOut,proto3" json:"knocked_out,omitempty"`
+	Heal          uint64                 `protobuf:"varint,18,opt,name=heal,proto3" json:"heal,omitempty"`
+	Healed        int32                  `protobuf:"varint,19,opt,name=healed,proto3" json:"healed,omitempty"` // slot on the striker's side, or -1 when nothing was healed
+	VictimHpAfter uint32                 `protobuf:"varint,20,opt,name=victim_hp_after,json=victimHpAfter,proto3" json:"victim_hp_after,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *VerifyTeamStrike) Reset() {
+	*x = VerifyTeamStrike{}
+	mi := &file_cryptopets_proto_msgTypes[13]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *VerifyTeamStrike) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*VerifyTeamStrike) ProtoMessage() {}
+
+func (x *VerifyTeamStrike) ProtoReflect() protoreflect.Message {
+	mi := &file_cryptopets_proto_msgTypes[13]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use VerifyTeamStrike.ProtoReflect.Descriptor instead.
+func (*VerifyTeamStrike) Descriptor() ([]byte, []int) {
+	return file_cryptopets_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *VerifyTeamStrike) GetRound() uint32 {
+	if x != nil {
+		return x.Round
+	}
+	return 0
+}
+
+func (x *VerifyTeamStrike) GetSide() uint32 {
+	if x != nil {
+		return x.Side
+	}
+	return 0
+}
+
+func (x *VerifyTeamStrike) GetActor() uint32 {
+	if x != nil {
+		return x.Actor
+	}
+	return 0
+}
+
+func (x *VerifyTeamStrike) GetTarget() uint32 {
+	if x != nil {
+		return x.Target
+	}
+	return 0
+}
+
+func (x *VerifyTeamStrike) GetVictim() uint32 {
+	if x != nil {
+		return x.Victim
+	}
+	return 0
+}
+
+func (x *VerifyTeamStrike) GetIsMagic() bool {
+	if x != nil {
+		return x.IsMagic
+	}
+	return false
+}
+
+func (x *VerifyTeamStrike) GetCrit() bool {
+	if x != nil {
+		return x.Crit
+	}
+	return false
+}
+
+func (x *VerifyTeamStrike) GetDamage() uint64 {
+	if x != nil {
+		return x.Damage
+	}
+	return 0
+}
+
+func (x *VerifyTeamStrike) GetElementMult() uint32 {
+	if x != nil {
+		return x.ElementMult
+	}
+	return 0
+}
+
+func (x *VerifyTeamStrike) GetCombo() uint32 {
+	if x != nil {
+		return x.Combo
+	}
+	return 0
+}
+
+func (x *VerifyTeamStrike) GetLongShot() bool {
+	if x != nil {
+		return x.LongShot
+	}
+	return false
+}
+
+func (x *VerifyTeamStrike) GetFuryTriggered() bool {
+	if x != nil {
+		return x.FuryTriggered
+	}
+	return false
+}
+
+func (x *VerifyTeamStrike) GetTemperament() bool {
+	if x != nil {
+		return x.Temperament
+	}
+	return false
+}
+
+func (x *VerifyTeamStrike) GetExposed() bool {
+	if x != nil {
+		return x.Exposed
+	}
+	return false
+}
+
+func (x *VerifyTeamStrike) GetGuarded() bool {
+	if x != nil {
+		return x.Guarded
+	}
+	return false
+}
+
+func (x *VerifyTeamStrike) GetSecondChance() bool {
+	if x != nil {
+		return x.SecondChance
+	}
+	return false
+}
+
+func (x *VerifyTeamStrike) GetKnockedOut() bool {
+	if x != nil {
+		return x.KnockedOut
+	}
+	return false
+}
+
+func (x *VerifyTeamStrike) GetHeal() uint64 {
+	if x != nil {
+		return x.Heal
+	}
+	return 0
+}
+
+func (x *VerifyTeamStrike) GetHealed() int32 {
+	if x != nil {
+		return x.Healed
+	}
+	return 0
+}
+
+func (x *VerifyTeamStrike) GetVictimHpAfter() uint32 {
+	if x != nil {
+		return x.VictimHpAfter
+	}
+	return 0
+}
+
+type VerifyTeamBattleResponse struct {
+	state             protoimpl.MessageState `protogen:"open.v1"`
+	Drawn             []uint32               `protobuf:"varint,1,rep,packed,name=drawn,proto3" json:"drawn,omitempty"` // the defenders' roster indices, in roster order
+	AttackerWins      bool                   `protobuf:"varint,2,opt,name=attacker_wins,json=attackerWins,proto3" json:"attacker_wins,omitempty"`
+	Rounds            uint32                 `protobuf:"varint,3,opt,name=rounds,proto3" json:"rounds,omitempty"`
+	WinnerHpRemaining uint32                 `protobuf:"varint,4,opt,name=winner_hp_remaining,json=winnerHpRemaining,proto3" json:"winner_hp_remaining,omitempty"`
+	AttackerStartHp   []uint32               `protobuf:"varint,5,rep,packed,name=attacker_start_hp,json=attackerStartHp,proto3" json:"attacker_start_hp,omitempty"`
+	DefenderStartHp   []uint32               `protobuf:"varint,6,rep,packed,name=defender_start_hp,json=defenderStartHp,proto3" json:"defender_start_hp,omitempty"`
+	Log               []*VerifyTeamStrike    `protobuf:"bytes,7,rep,name=log,proto3" json:"log,omitempty"`
+	// The six fighters, attackers then drawn defenders, each by slot.
+	Progression   []*VerifyPetProgression `protobuf:"bytes,8,rep,name=progression,proto3" json:"progression,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *VerifyTeamBattleResponse) Reset() {
+	*x = VerifyTeamBattleResponse{}
+	mi := &file_cryptopets_proto_msgTypes[14]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *VerifyTeamBattleResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*VerifyTeamBattleResponse) ProtoMessage() {}
+
+func (x *VerifyTeamBattleResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_cryptopets_proto_msgTypes[14]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use VerifyTeamBattleResponse.ProtoReflect.Descriptor instead.
+func (*VerifyTeamBattleResponse) Descriptor() ([]byte, []int) {
+	return file_cryptopets_proto_rawDescGZIP(), []int{14}
+}
+
+func (x *VerifyTeamBattleResponse) GetDrawn() []uint32 {
+	if x != nil {
+		return x.Drawn
+	}
+	return nil
+}
+
+func (x *VerifyTeamBattleResponse) GetAttackerWins() bool {
+	if x != nil {
+		return x.AttackerWins
+	}
+	return false
+}
+
+func (x *VerifyTeamBattleResponse) GetRounds() uint32 {
+	if x != nil {
+		return x.Rounds
+	}
+	return 0
+}
+
+func (x *VerifyTeamBattleResponse) GetWinnerHpRemaining() uint32 {
+	if x != nil {
+		return x.WinnerHpRemaining
+	}
+	return 0
+}
+
+func (x *VerifyTeamBattleResponse) GetAttackerStartHp() []uint32 {
+	if x != nil {
+		return x.AttackerStartHp
+	}
+	return nil
+}
+
+func (x *VerifyTeamBattleResponse) GetDefenderStartHp() []uint32 {
+	if x != nil {
+		return x.DefenderStartHp
+	}
+	return nil
+}
+
+func (x *VerifyTeamBattleResponse) GetLog() []*VerifyTeamStrike {
+	if x != nil {
+		return x.Log
+	}
+	return nil
+}
+
+func (x *VerifyTeamBattleResponse) GetProgression() []*VerifyPetProgression {
+	if x != nil {
+		return x.Progression
+	}
+	return nil
+}
+
 var File_cryptopets_proto protoreflect.FileDescriptor
 
 const file_cryptopets_proto_rawDesc = "" +
@@ -1185,11 +1739,68 @@ const file_cryptopets_proto_rawDesc = "" +
 	"\tstart_hp2\x18\x05 \x01(\rR\bstartHp2\x122\n" +
 	"\x03log\x18\x06 \x03(\v2 .cryptopets.VerifyStrikeLogEntryR\x03log\x12<\n" +
 	"\battacker\x18\a \x01(\v2 .cryptopets.VerifyPetProgressionR\battacker\x12<\n" +
-	"\bdefender\x18\b \x01(\v2 .cryptopets.VerifyPetProgressionR\bdefender2\xe4\x01\n" +
+	"\bdefender\x18\b \x01(\v2 .cryptopets.VerifyPetProgressionR\bdefender\"\x8e\x01\n" +
+	"\rVerifyTeamPet\x12-\n" +
+	"\x03pet\x18\x01 \x01(\v2\x1b.cryptopets.VerifyPetInputsR\x03pet\x12\x10\n" +
+	"\x03col\x18\x02 \x01(\rR\x03col\x12\x10\n" +
+	"\x03row\x18\x03 \x01(\rR\x03row\x12\x16\n" +
+	"\x06tactic\x18\x04 \x01(\tR\x06tactic\x12\x12\n" +
+	"\x04rank\x18\x05 \x01(\rR\x04rank\"\x81\x02\n" +
+	"\x10VerifyTeamConfig\x12\x1d\n" +
+	"\n" +
+	"turn_order\x18\x01 \x01(\tR\tturnOrder\x12$\n" +
+	"\x0ecombo_step_pct\x18\x02 \x01(\rR\fcomboStepPct\x12\x1d\n" +
+	"\n" +
+	"expose_pct\x18\x03 \x01(\rR\texposePct\x12\x19\n" +
+	"\baura_pct\x18\x04 \x01(\rR\aauraPct\x12!\n" +
+	"\ftailwind_bps\x18\x05 \x01(\rR\vtailwindBps\x12\"\n" +
+	"\rlong_shot_pct\x18\x06 \x01(\rR\vlongShotPct\x12'\n" +
+	"\x0ftemperament_pct\x18\a \x01(\rR\x0etemperamentPct\"\xb7\x02\n" +
+	"\x17VerifyTeamBattleRequest\x127\n" +
+	"\tattackers\x18\x01 \x03(\v2\x19.cryptopets.VerifyTeamPetR\tattackers\x121\n" +
+	"\x06roster\x18\x02 \x03(\v2\x19.cryptopets.VerifyTeamPetR\x06roster\x12\x12\n" +
+	"\x04seed\x18\x03 \x01(\fR\x04seed\x12@\n" +
+	"\fskill_config\x18\x04 \x01(\v2\x1d.cryptopets.VerifySkillConfigR\vskillConfig\x12=\n" +
+	"\vteam_config\x18\x05 \x01(\v2\x1c.cryptopets.VerifyTeamConfigR\n" +
+	"teamConfig\x12\x1b\n" +
+	"\tmax_level\x18\x06 \x01(\rR\bmaxLevel\"\xb6\x04\n" +
+	"\x10VerifyTeamStrike\x12\x14\n" +
+	"\x05round\x18\x01 \x01(\rR\x05round\x12\x12\n" +
+	"\x04side\x18\x02 \x01(\rR\x04side\x12\x14\n" +
+	"\x05actor\x18\x03 \x01(\rR\x05actor\x12\x16\n" +
+	"\x06target\x18\x04 \x01(\rR\x06target\x12\x16\n" +
+	"\x06victim\x18\x05 \x01(\rR\x06victim\x12\x19\n" +
+	"\bis_magic\x18\x06 \x01(\bR\aisMagic\x12\x12\n" +
+	"\x04crit\x18\a \x01(\bR\x04crit\x12\x16\n" +
+	"\x06damage\x18\b \x01(\x04R\x06damage\x12!\n" +
+	"\felement_mult\x18\t \x01(\rR\velementMult\x12\x14\n" +
+	"\x05combo\x18\n" +
+	" \x01(\rR\x05combo\x12\x1b\n" +
+	"\tlong_shot\x18\v \x01(\bR\blongShot\x12%\n" +
+	"\x0efury_triggered\x18\f \x01(\bR\rfuryTriggered\x12 \n" +
+	"\vtemperament\x18\r \x01(\bR\vtemperament\x12\x18\n" +
+	"\aexposed\x18\x0e \x01(\bR\aexposed\x12\x18\n" +
+	"\aguarded\x18\x0f \x01(\bR\aguarded\x12#\n" +
+	"\rsecond_chance\x18\x10 \x01(\bR\fsecondChance\x12\x1f\n" +
+	"\vknocked_out\x18\x11 \x01(\bR\n" +
+	"knockedOut\x12\x12\n" +
+	"\x04heal\x18\x12 \x01(\x04R\x04heal\x12\x16\n" +
+	"\x06healed\x18\x13 \x01(\x05R\x06healed\x12&\n" +
+	"\x0fvictim_hp_after\x18\x14 \x01(\rR\rvictimHpAfter\"\xe9\x02\n" +
+	"\x18VerifyTeamBattleResponse\x12\x14\n" +
+	"\x05drawn\x18\x01 \x03(\rR\x05drawn\x12#\n" +
+	"\rattacker_wins\x18\x02 \x01(\bR\fattackerWins\x12\x16\n" +
+	"\x06rounds\x18\x03 \x01(\rR\x06rounds\x12.\n" +
+	"\x13winner_hp_remaining\x18\x04 \x01(\rR\x11winnerHpRemaining\x12*\n" +
+	"\x11attacker_start_hp\x18\x05 \x03(\rR\x0fattackerStartHp\x12*\n" +
+	"\x11defender_start_hp\x18\x06 \x03(\rR\x0fdefenderStartHp\x12.\n" +
+	"\x03log\x18\a \x03(\v2\x1c.cryptopets.VerifyTeamStrikeR\x03log\x12B\n" +
+	"\vprogression\x18\b \x03(\v2 .cryptopets.VerifyPetProgressionR\vprogression2\xc3\x02\n" +
 	"\x0fGameDataService\x12>\n" +
 	"\vGetPetState\x12\x16.cryptopets.PetRequest\x1a\x17.cryptopets.PetResponse\x12>\n" +
 	"\vEstimateWin\x12\x16.cryptopets.WinRequest\x1a\x17.cryptopets.WinResponse\x12Q\n" +
-	"\fVerifyBattle\x12\x1f.cryptopets.VerifyBattleRequest\x1a .cryptopets.VerifyBattleResponseB7Z5github.com/radcrew/do-not-stop/services/indexer-go/pbb\x06proto3"
+	"\fVerifyBattle\x12\x1f.cryptopets.VerifyBattleRequest\x1a .cryptopets.VerifyBattleResponse\x12]\n" +
+	"\x10VerifyTeamBattle\x12#.cryptopets.VerifyTeamBattleRequest\x1a$.cryptopets.VerifyTeamBattleResponseB7Z5github.com/radcrew/do-not-stop/services/indexer-go/pbb\x06proto3"
 
 var (
 	file_cryptopets_proto_rawDescOnce sync.Once
@@ -1203,37 +1814,51 @@ func file_cryptopets_proto_rawDescGZIP() []byte {
 	return file_cryptopets_proto_rawDescData
 }
 
-var file_cryptopets_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
+var file_cryptopets_proto_msgTypes = make([]protoimpl.MessageInfo, 15)
 var file_cryptopets_proto_goTypes = []any{
-	(*PetRequest)(nil),           // 0: cryptopets.PetRequest
-	(*PetResponse)(nil),          // 1: cryptopets.PetResponse
-	(*WinRequest)(nil),           // 2: cryptopets.WinRequest
-	(*WinResponse)(nil),          // 3: cryptopets.WinResponse
-	(*VerifyPetInputs)(nil),      // 4: cryptopets.VerifyPetInputs
-	(*VerifySkillConfig)(nil),    // 5: cryptopets.VerifySkillConfig
-	(*VerifyBattleRequest)(nil),  // 6: cryptopets.VerifyBattleRequest
-	(*VerifyStrikeLogEntry)(nil), // 7: cryptopets.VerifyStrikeLogEntry
-	(*VerifyPetProgression)(nil), // 8: cryptopets.VerifyPetProgression
-	(*VerifyBattleResponse)(nil), // 9: cryptopets.VerifyBattleResponse
+	(*PetRequest)(nil),               // 0: cryptopets.PetRequest
+	(*PetResponse)(nil),              // 1: cryptopets.PetResponse
+	(*WinRequest)(nil),               // 2: cryptopets.WinRequest
+	(*WinResponse)(nil),              // 3: cryptopets.WinResponse
+	(*VerifyPetInputs)(nil),          // 4: cryptopets.VerifyPetInputs
+	(*VerifySkillConfig)(nil),        // 5: cryptopets.VerifySkillConfig
+	(*VerifyBattleRequest)(nil),      // 6: cryptopets.VerifyBattleRequest
+	(*VerifyStrikeLogEntry)(nil),     // 7: cryptopets.VerifyStrikeLogEntry
+	(*VerifyPetProgression)(nil),     // 8: cryptopets.VerifyPetProgression
+	(*VerifyBattleResponse)(nil),     // 9: cryptopets.VerifyBattleResponse
+	(*VerifyTeamPet)(nil),            // 10: cryptopets.VerifyTeamPet
+	(*VerifyTeamConfig)(nil),         // 11: cryptopets.VerifyTeamConfig
+	(*VerifyTeamBattleRequest)(nil),  // 12: cryptopets.VerifyTeamBattleRequest
+	(*VerifyTeamStrike)(nil),         // 13: cryptopets.VerifyTeamStrike
+	(*VerifyTeamBattleResponse)(nil), // 14: cryptopets.VerifyTeamBattleResponse
 }
 var file_cryptopets_proto_depIdxs = []int32{
-	4, // 0: cryptopets.VerifyBattleRequest.attacker:type_name -> cryptopets.VerifyPetInputs
-	4, // 1: cryptopets.VerifyBattleRequest.defender:type_name -> cryptopets.VerifyPetInputs
-	5, // 2: cryptopets.VerifyBattleRequest.skill_config:type_name -> cryptopets.VerifySkillConfig
-	7, // 3: cryptopets.VerifyBattleResponse.log:type_name -> cryptopets.VerifyStrikeLogEntry
-	8, // 4: cryptopets.VerifyBattleResponse.attacker:type_name -> cryptopets.VerifyPetProgression
-	8, // 5: cryptopets.VerifyBattleResponse.defender:type_name -> cryptopets.VerifyPetProgression
-	0, // 6: cryptopets.GameDataService.GetPetState:input_type -> cryptopets.PetRequest
-	2, // 7: cryptopets.GameDataService.EstimateWin:input_type -> cryptopets.WinRequest
-	6, // 8: cryptopets.GameDataService.VerifyBattle:input_type -> cryptopets.VerifyBattleRequest
-	1, // 9: cryptopets.GameDataService.GetPetState:output_type -> cryptopets.PetResponse
-	3, // 10: cryptopets.GameDataService.EstimateWin:output_type -> cryptopets.WinResponse
-	9, // 11: cryptopets.GameDataService.VerifyBattle:output_type -> cryptopets.VerifyBattleResponse
-	9, // [9:12] is the sub-list for method output_type
-	6, // [6:9] is the sub-list for method input_type
-	6, // [6:6] is the sub-list for extension type_name
-	6, // [6:6] is the sub-list for extension extendee
-	0, // [0:6] is the sub-list for field type_name
+	4,  // 0: cryptopets.VerifyBattleRequest.attacker:type_name -> cryptopets.VerifyPetInputs
+	4,  // 1: cryptopets.VerifyBattleRequest.defender:type_name -> cryptopets.VerifyPetInputs
+	5,  // 2: cryptopets.VerifyBattleRequest.skill_config:type_name -> cryptopets.VerifySkillConfig
+	7,  // 3: cryptopets.VerifyBattleResponse.log:type_name -> cryptopets.VerifyStrikeLogEntry
+	8,  // 4: cryptopets.VerifyBattleResponse.attacker:type_name -> cryptopets.VerifyPetProgression
+	8,  // 5: cryptopets.VerifyBattleResponse.defender:type_name -> cryptopets.VerifyPetProgression
+	4,  // 6: cryptopets.VerifyTeamPet.pet:type_name -> cryptopets.VerifyPetInputs
+	10, // 7: cryptopets.VerifyTeamBattleRequest.attackers:type_name -> cryptopets.VerifyTeamPet
+	10, // 8: cryptopets.VerifyTeamBattleRequest.roster:type_name -> cryptopets.VerifyTeamPet
+	5,  // 9: cryptopets.VerifyTeamBattleRequest.skill_config:type_name -> cryptopets.VerifySkillConfig
+	11, // 10: cryptopets.VerifyTeamBattleRequest.team_config:type_name -> cryptopets.VerifyTeamConfig
+	13, // 11: cryptopets.VerifyTeamBattleResponse.log:type_name -> cryptopets.VerifyTeamStrike
+	8,  // 12: cryptopets.VerifyTeamBattleResponse.progression:type_name -> cryptopets.VerifyPetProgression
+	0,  // 13: cryptopets.GameDataService.GetPetState:input_type -> cryptopets.PetRequest
+	2,  // 14: cryptopets.GameDataService.EstimateWin:input_type -> cryptopets.WinRequest
+	6,  // 15: cryptopets.GameDataService.VerifyBattle:input_type -> cryptopets.VerifyBattleRequest
+	12, // 16: cryptopets.GameDataService.VerifyTeamBattle:input_type -> cryptopets.VerifyTeamBattleRequest
+	1,  // 17: cryptopets.GameDataService.GetPetState:output_type -> cryptopets.PetResponse
+	3,  // 18: cryptopets.GameDataService.EstimateWin:output_type -> cryptopets.WinResponse
+	9,  // 19: cryptopets.GameDataService.VerifyBattle:output_type -> cryptopets.VerifyBattleResponse
+	14, // 20: cryptopets.GameDataService.VerifyTeamBattle:output_type -> cryptopets.VerifyTeamBattleResponse
+	17, // [17:21] is the sub-list for method output_type
+	13, // [13:17] is the sub-list for method input_type
+	13, // [13:13] is the sub-list for extension type_name
+	13, // [13:13] is the sub-list for extension extendee
+	0,  // [0:13] is the sub-list for field type_name
 }
 
 func init() { file_cryptopets_proto_init() }
@@ -1247,7 +1872,7 @@ func file_cryptopets_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_cryptopets_proto_rawDesc), len(file_cryptopets_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   10,
+			NumMessages:   15,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

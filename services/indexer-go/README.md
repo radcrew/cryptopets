@@ -191,6 +191,21 @@ itself, so the only question this check answers is whether the two engines
 computed the same strikes, never whether Go's encoding agrees with TS's (there
 is only one canonical encoding, and it lives in `protocol/`).
 
+Team battles get the same check as `VerifyTeamBattle` (`internal/grpcsrv/verify_team.go`,
+`internal/combat/team_verify.go`). The backend sends the attackers and the defender's whole
+five-pet roster, so Go recomputes the squad draw as well as the fight and all six fighters'
+progression (`ComputeTeamProgression`) rather than trusting which three defended.
+`TestVerifyTeamMatchesProtocolTeamReceipts` replays the team receipts in
+`contracts/test-vectors/protocol-team.json`, which the TypeScript side produced, and
+`TestVerifyTeamBattleMatchesProtocolTeamReceiptsOverGRPC` does the same through the wire.
+
+Regenerating `pb/` needs `buf` and the plugin versions recorded in the generated headers
+(`go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.36.11`,
+`google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.6.2` and
+`github.com/bufbuild/buf/cmd/buf@latest`), then `buf generate ../../proto --template
+buf.gen.yaml` from this directory. The backend needs no regeneration: it loads
+`proto/cryptopets.proto` at runtime.
+
 `TestProgressionMatchesGoldenVectors` in `progression_test.go` consumes
 `contracts/test-vectors/protocol-progression.json`, the same file
 `protocol/tests/progression/vectors.test.ts` consumes, so the composition
@@ -205,6 +220,6 @@ internal/evm/       subgraph watermark adapter (pets)
 internal/solana/    WS push adapter, Borsh decode, reconnect/backfill
 internal/store/     single version-guarded batch writer (pgx)
 internal/combat/    pure Go combat sim + independent verify (cross-chain parity via golden vectors)
-internal/grpcsrv/   GetPetState + EstimateWin + VerifyBattle server
+internal/grpcsrv/   GetPetState + EstimateWin + VerifyBattle + VerifyTeamBattle server
 pb/                 generated stubs (buf generate ../proto)
 ```

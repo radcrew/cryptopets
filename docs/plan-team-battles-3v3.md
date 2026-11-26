@@ -5,7 +5,7 @@ the execution order and the decisions it depends on. Steps are small on purpose:
 a command that passes, so the branch is revertible at any point. The golden-vector and
 schema-version rules in `AGENTS.md` apply throughout.
 
-Branch: `feat/team-battles-3v3`. **Status: Phases 0 to 2 done (same-owner battles blocked, decisions recorded, team engine in both languages with `team.json`, team protocol objects and the public verifier). Phase 3 not started.**
+Branch: `feat/team-battles-3v3`. **Status: Phases 0 to 3 done (same-owner battles blocked, decisions recorded, team engine in both languages with `team.json`, team protocol objects and the public verifier, and `VerifyTeamBattle` in the Go service). Phase 4 not started.**
 
 ## 1. What a team battle is
 
@@ -220,6 +220,17 @@ pass, and the verifier workflow's existing receipt corpus still verifies.
 
 *Done when:* `go vet ./...` and `go test ./...` pass in `services/indexer-go`, and the backend client
 test passes.
+
+*As built:*
+
+- The request carries the whole five-pet roster, not the three who fought, so Go recomputes the
+  draw too. The response returns the draw, the result, the start HP, the full strike log and the
+  six progressions; the backend hashes the log with the canonical encoder, as for duels.
+- Go gained `ComputeTeamProgression`, locked to the TypeScript one by replaying the team
+  receipts in `protocol-team.json`, both directly and over gRPC.
+- The backend client is `callVerifyTeamBattle` in `backend/src/grpc/verifyBattle.ts`, beside
+  `callVerifyBattle` and sharing its client and breaker: both reach one Go process, so if it is
+  down neither call is attempted. Fail-closed like the duel call.
 
 ### Phase 4: backend
 

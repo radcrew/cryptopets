@@ -107,15 +107,92 @@ export interface VerifyBattleWire {
     defender: VerifyPetProgressionWire;
 }
 
-export type VerifyBattleResult =
-    | { ok: true; response: VerifyBattleWire }
-    | { ok: false; reason: 'not-configured' | 'breaker-open' | 'transport-error'; detail: string };
+/** Why verification did not happen. Every one of these is a failure, never a pass. */
+export type VerifyFailure = { ok: false; reason: 'not-configured' | 'breaker-open' | 'transport-error'; detail: string };
+
+export type VerifyBattleResult = { ok: true; response: VerifyBattleWire } | VerifyFailure;
+
+/** One team-battle pet (docs/battle-protocol.md §F, "Team battles"). `rank` is 0 for attackers. */
+export interface VerifyTeamPetWire {
+    pet: VerifyPetInputsWire;
+    col: number;
+    row: number;
+    tactic: 'focus' | 'breaker' | 'hunter' | 'bodyguard';
+    rank: number;
+}
+
+/** Mirrors protocol's TeamConfig. `turnOrder` is 'int' until Attributes 2.0. */
+export interface VerifyTeamConfigWire {
+    turnOrder: 'int';
+    comboStepPct: number;
+    exposePct: number;
+    auraPct: number;
+    tailwindBps: number;
+    longShotPct: number;
+    temperamentPct: number;
+}
+
+export interface VerifyTeamBattleParams {
+    /** Exactly three, in slot order. */
+    attackers: VerifyTeamPetWire[];
+    /** The defender's whole five-pet roster, so Go recomputes the draw rather than trusting it. */
+    roster: VerifyTeamPetWire[];
+    /** 32-byte seed, 0x-hex. */
+    seed: string;
+    skillConfig: VerifySkillConfigWire;
+    teamConfig: VerifyTeamConfigWire;
+    maxLevel: number;
+}
+
+/** One team strike, mirroring protocol's TeamStrikeLogEntry. The 64-bit fields arrive as
+ *  strings (the proto loader's `longs: String`), as in the duel log. */
+export interface VerifyTeamStrikeWire {
+    round: number;
+    side: number;
+    actor: number;
+    target: number;
+    victim: number;
+    isMagic: boolean;
+    crit: boolean;
+    damage: string;
+    elementMult: number;
+    combo: number;
+    longShot: boolean;
+    furyTriggered: boolean;
+    temperament: boolean;
+    exposed: boolean;
+    guarded: boolean;
+    secondChance: boolean;
+    knockedOut: boolean;
+    heal: string;
+    /** Slot on the striker's side, or -1 when nothing was healed. */
+    healed: number;
+    victimHpAfter: number;
+}
+
+export interface VerifyTeamBattleWire {
+    /** The defenders' roster indices, in roster order. */
+    drawn: number[];
+    attackerWins: boolean;
+    rounds: number;
+    winnerHpRemaining: number;
+    attackerStartHp: number[];
+    defenderStartHp: number[];
+    log: VerifyTeamStrikeWire[];
+    /** The six fighters, attackers then drawn defenders, each by slot. */
+    progression: VerifyPetProgressionWire[];
+}
+
+export type VerifyTeamBattleResult = { ok: true; response: VerifyTeamBattleWire } | VerifyFailure;
+
+type Callback<T> = (err: grpc.ServiceError | null, res: T) => void;
 
 type VerifyClient = grpc.Client & {
-    verifyBattle(
+    verifyBattle(request: Record<string, unknown>, options: grpc.CallOptions, callback: Callback<VerifyBattleWire>): void;
+    verifyTeamBattle(
         request: Record<string, unknown>,
         options: grpc.CallOptions,
-        callback: (err: grpc.ServiceError | null, res: VerifyBattleWire) => void,
+        callback: Callback<VerifyTeamBattleWire>,
     ): void;
 };
 
@@ -147,6 +224,37 @@ export function resetVerifyBattleClient(): void {
 }
 
 export function callVerifyBattle(params: VerifyBattleParams): Promise<VerifyBattleResult> {
+    return invoke<VerifyBattleWire>('verifyBattle', {
+        attacker: params.attacker,
+        defender: params.defender,
+        seed: Buffer.from(params.seed.replace(/^0x/, ''), 'hex'),
+        skillConfig: params.skillConfig,
+        maxLevel: params.maxLevel,
+    });
+}
+
+/**
+ * VerifyTeamBattle: the Go recomputation of a team battle's draw, fight and six
+ * progressions. Fail-closed for the same reason as `callVerifyBattle`, and on the same
+ * client and breaker: both calls reach one Go process, so if it is down neither should be
+ * attempted.
+ */
+export function callVerifyTeamBattle(params: VerifyTeamBattleParams): Promise<VerifyTeamBattleResult> {
+    return invoke<VerifyTeamBattleWire>('verifyTeamBattle', {
+        attackers: params.attackers,
+        roster: params.roster,
+        seed: Buffer.from(params.seed.replace(/^0x/, ''), 'hex'),
+        skillConfig: params.skillConfig,
+        teamConfig: params.teamConfig,
+        maxLevel: params.maxLevel,
+    });
+}
+
+/** The fail-closed call both verifications share. */
+function invoke<T>(
+    method: 'verifyBattle' | 'verifyTeamBattle',
+    request: Record<string, unknown>,
+): Promise<{ ok: true; response: T } | VerifyFailure> {
     if (!env.indexerGrpc.addr) {
         return Promise.resolve({
             ok: false,
@@ -168,14 +276,13 @@ export function callVerifyBattle(params: VerifyBattleParams): Promise<VerifyBatt
 
     return new Promise((resolve) => {
         const deadline = new Date(Date.now() + DEADLINE_MS);
-        verifyClient.verifyBattle(
-            {
-                attacker: params.attacker,
-                defender: params.defender,
-                seed: Buffer.from(params.seed.replace(/^0x/, ''), 'hex'),
-                skillConfig: params.skillConfig,
-                maxLevel: params.maxLevel,
-            },
+        const call = verifyClient[method].bind(verifyClient) as (
+            request: Record<string, unknown>,
+            options: grpc.CallOptions,
+            callback: Callback<T>,
+        ) => void;
+        call(
+            request,
             { deadline },
             (err, res) => {
                 if (err) {
