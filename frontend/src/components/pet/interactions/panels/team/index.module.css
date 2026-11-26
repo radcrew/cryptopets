@@ -59,21 +59,32 @@
     margin: 0 auto;
 }
 
+/* The same square whether a tile is empty or holds a pet, and whether it is a div or a button.
+   Border-box, because the page has no global reset and a button defaults to it while a div
+   does not; a zero minimum height, so a pet's art and caption cannot stretch the square; and a
+   size container, so everything inside is sized in proportion to the tile and always fits. */
 .tile {
+    box-sizing: border-box;
     aspect-ratio: 1;
     min-width: 0;
+    min-height: 0;
+    margin: 0;
+    overflow: hidden;
+    container-type: inline-size;
     border-radius: 8px;
     border: 1px dashed rgba(255, 255, 255, 0.18);
     background: rgba(255, 255, 255, 0.03);
     color: inherit;
     font: inherit;
     font-size: 0.75rem;
-    padding: 0.25rem;
+    line-height: 1.15;
+    /* Fixed, not in cqi: an element's own container units measure its ancestor, not itself. */
+    padding: 3px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 2px;
+    gap: 1px;
 }
 
 button.tile {
@@ -113,11 +124,13 @@ button.tile:focus-visible {
 
 /* PetArt draws at 1em, so font-size is what sizes the art. Clicks and drags pass through to the
    tile, so dragging a pet moves the pet rather than its image. */
+/* Sized in container units of the tile (cqi), so the art and both caption lines take the same
+   share of any tile, from a phone-sized battle map to a full-width zone. */
 .tokenArt {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 2.2rem;
+    font-size: 40cqi;
     line-height: 1;
     pointer-events: none;
 }
@@ -126,13 +139,9 @@ button.tile:focus-visible {
     border-radius: 6px;
 }
 
-.board .tokenArt {
-    font-size: clamp(1.3rem, 4.5vw, 2.2rem);
-}
-
 .tokenName {
     font-weight: 600;
-    font-size: 0.7rem;
+    font-size: clamp(8px, 13cqi, 12px);
     max-width: 100%;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -144,7 +153,7 @@ button.tile:focus-visible {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    font-size: 0.65rem;
+    font-size: clamp(7.5px, 11.5cqi, 11px);
     opacity: 0.75;
 }
 
