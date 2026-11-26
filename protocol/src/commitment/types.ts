@@ -1,7 +1,7 @@
 import { assertProtocolDomain, type ProtocolDomain } from '../domain/deployment';
 import { type Hex, hexToBytes } from '../encoding/bytes';
 import { latestRoundAt, resolveDrandChain, roundTime } from '../randomness/drand';
-import { assertBattleSnapshot, type BattleSnapshot } from '../snapshot/types';
+import { type AnyBattleSnapshot, assertAnyBattleSnapshot } from '../snapshot/team';
 
 /**
  * Our signed statement, made before the dice land, of which future beacon round a
@@ -25,10 +25,15 @@ export interface BattleCommitment {
     battleId: string;
     /** The wallet-signed intent that authorized it. */
     intentHash: Hex;
-    /** The defender's standing authorization this battle relied on. */
+    /**
+     * The defender's consent this battle relied on: a defence authorization's hash for a
+     * duel, a defence plan's for a team battle. One field for both, because the layout only
+     * carries the hash, and each kind's hash names what it is.
+     */
     defenseAuthorizationHash: Hex;
-    /** Both pets, frozen. `snapshotHash` is derived from this rather than supplied. */
-    snapshot: BattleSnapshot;
+    /** Every pet, frozen: a duel's two or a team battle's eight. `snapshotHash` is derived
+     *  from this rather than supplied. */
+    snapshot: AnyBattleSnapshot;
     rulesetVersion: number;
     rulesetHash: Hex;
     /** Which drand chain. Must be one this build pins. */
@@ -68,7 +73,7 @@ export function assertBattleCommitment(commitment: BattleCommitment): BattleComm
         assertHash(commitment.previousCommitmentHash, 'previousCommitmentHash');
     }
 
-    const snapshot = assertBattleSnapshot(commitment.snapshot);
+    const snapshot = assertAnyBattleSnapshot(commitment.snapshot);
 
     if (!Number.isSafeInteger(commitment.rulesetVersion) || commitment.rulesetVersion < 1) {
         throw new Error(`rulesetVersion must be a positive integer, got ${commitment.rulesetVersion}`);

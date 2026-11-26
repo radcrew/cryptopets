@@ -26,6 +26,8 @@ export const DOMAIN_TAGS = {
     INTENT: 'CRYPTOPETS_INTENT_V1',
     /** Standing defence authorization (§D). */
     DEFENSE_AUTHORIZATION: 'CRYPTOPETS_DEFENSE_AUTH_V1',
+    /** A team battle's defence plan: roster, ranks, tiles, tactics, and consent (§F). */
+    DEFENSE_PLAN: 'CRYPTOPETS_DEFENSE_PLAN_V1',
     /** Wallet-signed delegation of battle-intent signing to a client-held key (§D). */
     SESSION_DELEGATION: 'CRYPTOPETS_SESSION_V1',
     /** Frozen pet snapshot pair (§C, §F). */

@@ -7,6 +7,20 @@ export {
     verifyReceiptChain,
 } from './chain';
 export { encodeCombatLog, hashCombatLog } from './combatLog';
+export {
+    type AnyBattleReceipt,
+    assertAnyBattleReceipt,
+    assertTeamBattleReceipt,
+    encodeTeamBattleReceipt,
+    hashAnyBattleReceipt,
+    hashTeamBattleReceipt,
+    isTeamBattleReceipt,
+    type TeamBattleReceipt,
+    teamFighterIds,
+    teamReceiptFromWire,
+    type WireTeamBattleReceipt,
+} from './team';
+export { encodeTeamCombatLog, hashTeamCombatLog } from './teamCombatLog';
 export { encodeBattleReceipt, hashBattleReceipt } from './hash';
 export {
     assertBattleReceipt,
@@ -21,6 +35,7 @@ export {
     verifyReceiptBeacon,
     verifyReceiptConsistency,
     verifyReceiptProgression,
+    verifyTeamReceiptProgression,
 } from './verify';
 export {
     receiptFromWire,

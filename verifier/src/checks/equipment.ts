@@ -1,4 +1,11 @@
-import { bonusFromEquipment, type BattleReceipt, findEquipmentMismatches, type Ruleset } from '@cryptopets/protocol';
+import {
+    type AnyBattleReceipt,
+    bonusFromEquipment,
+    type EquipmentBearer,
+    findEquipmentMismatches,
+    isTeamBattleReceipt,
+    type Ruleset,
+} from '@cryptopets/protocol';
 
 import type { CheckResult } from './types';
 
@@ -19,15 +26,20 @@ import type { CheckResult } from './types';
  * the recorded version itself; this narrows the remaining trust to exactly that one
  * question.
  */
-export function checkEquipment(receipt: BattleReceipt, ruleset: Ruleset): CheckResult {
+export function checkEquipment(receipt: AnyBattleReceipt, ruleset: Ruleset): CheckResult {
     const check = 'equipment';
-    const mismatches = findEquipmentMismatches(
-        [
-            { role: 'attacker', equipment: receipt.snapshot.attacker.equipment },
-            { role: 'defender', equipment: receipt.snapshot.defender.equipment },
-        ],
-        ruleset,
-    );
+    // A team battle checks every loadout it froze, all eight, benched roster pets included:
+    // any of the five could have been drawn, so each one's gear is a claim the receipt makes.
+    const bearers: EquipmentBearer[] = isTeamBattleReceipt(receipt)
+        ? [
+              ...receipt.snapshot.attackers.map((m, i) => ({ role: `attackers[${i}]`, equipment: m.pet.equipment })),
+              ...receipt.snapshot.roster.map((m, i) => ({ role: `roster[${i}]`, equipment: m.pet.equipment })),
+          ]
+        : [
+              { role: 'attacker', equipment: receipt.snapshot.attacker.equipment },
+              { role: 'defender', equipment: receipt.snapshot.defender.equipment },
+          ];
+    const mismatches = findEquipmentMismatches(bearers, ruleset);
 
     return mismatches.length === 0 ? { check, ok: true } : { check, ok: false, detail: mismatches.join('; ') };
 }

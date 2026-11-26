@@ -1,5 +1,5 @@
 import type { SimOutcome, StrikeLogEntry } from '../combat/sim';
-import { currentSchemaVersion } from '../domain/schemaVersions';
+import { DUEL_SCHEMA_VERSIONS } from '../domain/schemaVersions';
 import type { Hex } from '../encoding/bytes';
 import { DOMAIN_TAGS } from '../encoding/domain';
 import { keccak256Hex } from '../encoding/hash';
@@ -21,7 +21,7 @@ import { CanonicalWriter } from '../encoding/writer';
  */
 export function encodeCombatLog(outcome: SimOutcome): Uint8Array {
     const writer = CanonicalWriter.withDomain(DOMAIN_TAGS.COMBAT_LOG)
-        .u16(currentSchemaVersion('combatLog'))
+        .u16(DUEL_SCHEMA_VERSIONS.combatLog)
         .u256(outcome.startHp1)
         .u256(outcome.startHp2);
     return writer.array(outcome.log, (w, entry) => writeStrike(w, entry)).build();

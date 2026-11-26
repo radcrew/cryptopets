@@ -1,4 +1,14 @@
-import { type BattleReceipt, hashCombatLog, type Ruleset, simulate } from '@cryptopets/protocol';
+import {
+    type AnyBattleReceipt,
+    type BattleReceipt,
+    hashCombatLog,
+    hashTeamCombatLog,
+    isTeamBattleReceipt,
+    replayTeamBattle,
+    type Ruleset,
+    simulate,
+    type TeamBattleReceipt,
+} from '@cryptopets/protocol';
 
 import { equipmentBonus } from './equipment';
 import type { CheckResult } from './types';
@@ -21,7 +31,45 @@ import type { CheckResult } from './types';
  * The `ruleset` must be the bundle the receipt names — the caller resolves it by hash, so
  * a mismatched bundle is not something this function can be handed.
  */
-export function checkCombatReplay(receipt: BattleReceipt, ruleset: Ruleset): CheckResult {
+export function checkCombatReplay(receipt: AnyBattleReceipt, ruleset: Ruleset): CheckResult {
+    return isTeamBattleReceipt(receipt) ? checkTeamReplay(receipt, ruleset) : checkDuelReplay(receipt, ruleset);
+}
+
+/**
+ * A team battle's replay: the draw, then the fight, from the same function the backend
+ * computes it with. Everything the duel replay compares, plus who the draw picked, since a
+ * receipt naming the wrong three defenders is a different battle even if its result matches.
+ */
+function checkTeamReplay(receipt: TeamBattleReceipt, ruleset: Ruleset): CheckResult {
+    const check = 'combat-replay';
+    let replay: ReturnType<typeof replayTeamBattle>;
+    try {
+        replay = replayTeamBattle(receipt.snapshot, receipt.seed, ruleset);
+    } catch (error) {
+        return { check, ok: false, detail: `replay could not run: ${(error as Error).message}` };
+    }
+    const { drawn, outcome } = replay;
+    const mismatches: string[] = [];
+    if (drawn.join(',') !== receipt.drawn.join(',')) {
+        mismatches.push(`drawn: replay=${drawn.join(',')} receipt=${receipt.drawn.join(',')}`);
+    }
+    if (outcome.result.attackerWins !== receipt.result.attackerWon) {
+        mismatches.push(`attackerWon: replay=${outcome.result.attackerWins} receipt=${receipt.result.attackerWon}`);
+    }
+    if (outcome.result.rounds !== receipt.result.rounds) {
+        mismatches.push(`rounds: replay=${outcome.result.rounds} receipt=${receipt.result.rounds}`);
+    }
+    if (outcome.result.winnerHpRemaining !== receipt.result.winnerHpRemaining) {
+        mismatches.push(`winnerHpRemaining: replay=${outcome.result.winnerHpRemaining} receipt=${receipt.result.winnerHpRemaining}`);
+    }
+    const replayedLogHash = hashTeamCombatLog(outcome);
+    if (replayedLogHash.toLowerCase() !== receipt.combatLogHash.toLowerCase()) {
+        mismatches.push(`combatLogHash: replay=${replayedLogHash} receipt=${receipt.combatLogHash}`);
+    }
+    return mismatches.length === 0 ? { check, ok: true } : { check, ok: false, detail: mismatches.join('; ') };
+}
+
+function checkDuelReplay(receipt: BattleReceipt, ruleset: Ruleset): CheckResult {
     const check = 'combat-replay';
     const { attacker, defender } = receipt.snapshot;
 

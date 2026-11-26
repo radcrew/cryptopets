@@ -59,6 +59,11 @@ export interface BattleReceipt {
     defenderPreviousReceiptHash: Hex | null;
     createdAt: number;
     signingKeyId: string;
+    /**
+     * Absent or 1: a duel's receipt, the only layout before team battles. A team battle's
+     * receipt is version 2 and a different type (`TeamBattleReceipt`).
+     */
+    schemaVersion?: 1;
 }
 
 /** The beacon proof carried by a receipt, so the randomness is checkable, not asserted. */
@@ -98,6 +103,10 @@ const SAFE_ID_PATTERN = /^[A-Za-z0-9._:-]{1,64}$/;
  * receipt is hashed.
  */
 export function assertBattleReceipt(receipt: BattleReceipt): BattleReceipt {
+    const version: number = receipt.schemaVersion ?? 1;
+    if (version !== 1) {
+        throw new Error(`receipt schema version ${version} is not a duel receipt`);
+    }
     const domain = assertProtocolDomain(receipt.domain);
     assertId(receipt.battleId, 'battleId');
     assertId(receipt.signingKeyId, 'signingKeyId');
@@ -183,7 +192,8 @@ export function assertBattleReceipt(receipt: BattleReceipt): BattleReceipt {
     };
 }
 
-function assertReceiptBeacon(beacon: ReceiptBeacon): ReceiptBeacon {
+/** Shared with the team receipt. */
+export function assertReceiptBeacon(beacon: ReceiptBeacon): ReceiptBeacon {
     const chain = resolveDrandChain(beacon.chainHash);
     if (!Number.isSafeInteger(beacon.round) || beacon.round < 1) {
         throw new Error(`beacon round must be a positive integer, got ${beacon.round}`);
@@ -209,7 +219,8 @@ function assertReceiptBeacon(beacon: ReceiptBeacon): ReceiptBeacon {
     };
 }
 
-function assertResult(result: BattleResult): void {
+/** Shared with the team receipt. */
+export function assertResult(result: BattleResult): void {
     if (typeof result?.attackerWon !== 'boolean') {
         throw new Error('result.attackerWon must be a boolean');
     }
@@ -225,19 +236,22 @@ function assertResult(result: BattleResult): void {
     }
 }
 
-function assertId(value: string, field: string): void {
+/** Shared with the team receipt. */
+export function assertId(value: string, field: string): void {
     if (typeof value !== 'string' || !SAFE_ID_PATTERN.test(value)) {
         throw new Error(`${field} is not a valid id: ${JSON.stringify(value)}`);
     }
 }
 
-function assertHash(value: Hex, field: string): void {
+/** Shared with the team receipt. */
+export function assertHash(value: Hex, field: string): void {
     if (hexToBytes(value).length !== 32) {
         throw new Error(`${field} must be a 32-byte hash`);
     }
 }
 
-function assertOptionalHash(value: Hex | null, field: string): void {
+/** Shared with the team receipt. */
+export function assertOptionalHash(value: Hex | null, field: string): void {
     if (value !== null) {
         assertHash(value, field);
     }

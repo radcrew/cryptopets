@@ -1,4 +1,4 @@
-import type { WireBattleReceipt } from '@cryptopets/protocol';
+import type { WireBattleReceipt, WireTeamBattleReceipt } from '@cryptopets/protocol';
 
 import { readJsonFrom } from './source';
 import type { SignedReceiptEnvelope } from './types';
@@ -47,6 +47,6 @@ function normalizeOne(value: unknown): SignedReceiptEnvelope {
         receiptHash,
         signature,
         signingKeyId,
-        payload: value.payload as WireBattleReceipt,
+        payload: value.payload as WireBattleReceipt | WireTeamBattleReceipt,
     };
 }

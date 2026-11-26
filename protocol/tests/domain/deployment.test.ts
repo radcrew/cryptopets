@@ -40,7 +40,9 @@ describe('replay separation', () => {
 describe('writeHeader', () => {
     it('writes schema version, then chain id, then deployment id', () => {
         const writer = CanonicalWriter.withDomain(DOMAIN_TAGS.INTENT);
-        writeHeader(writer, 'intent', LIVE);
+        // Version 1 explicitly: a duel's intent. The default is the highest version, which for
+        // the intent is now the team layout.
+        writeHeader(writer, 'intent', LIVE, 1);
         const hex = bytesToHex(writer.build());
         const tagPrefix = bytesToHex(CanonicalWriter.withDomain(DOMAIN_TAGS.INTENT).build());
         const body = hex.slice(tagPrefix.length);

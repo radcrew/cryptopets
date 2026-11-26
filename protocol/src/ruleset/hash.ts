@@ -3,7 +3,7 @@ import { DOMAIN_TAGS } from '../encoding/domain';
 import { keccak256Hex } from '../encoding/hash';
 import { CanonicalWriter } from '../encoding/writer';
 
-import { assertRuleset, type Ruleset, SKILL_CONFIG_FIELDS } from './types';
+import { assertRuleset, type Ruleset, SKILL_CONFIG_FIELDS, TEAM_CONFIG_FIELDS, TURN_ORDER_CODES } from './types';
 
 /**
  * Canonical encoding of a ruleset.
@@ -50,6 +50,20 @@ export function encodeRuleset(ruleset: Ruleset): Uint8Array {
             .u16(item.int)
             .u16(item.mdef);
     });
+    if (version < 3) {
+        return writer.build();
+    }
+
+    // Layout 3 appends the team rules after the catalog, so layouts 1 and 2 stay prefixes of
+    // it and nothing published before team battles hashes differently.
+    const team = checked.teamConfig;
+    if (!team) {
+        throw new Error('ruleset schema version 3 requires teamConfig'); // unreachable after assertRuleset
+    }
+    writer.u8(TURN_ORDER_CODES[team.turnOrder]);
+    for (const field of TEAM_CONFIG_FIELDS) {
+        writer.u32(team[field]);
+    }
     return writer.build();
 }
 

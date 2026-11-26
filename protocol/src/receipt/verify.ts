@@ -1,6 +1,8 @@
 import { computeProgression, type PetProgression, type ProgressionParams } from '../progression/progression';
+import { computeTeamProgression } from '../progression/team';
 import { resolveDrandChain, verifyBeacon } from '../randomness/drand';
 
+import { type AnyBattleReceipt, assertAnyBattleReceipt, assertTeamBattleReceipt, type TeamBattleReceipt } from './team';
 import { assertBattleReceipt, type BattleReceipt } from './types';
 
 /**
@@ -54,9 +56,21 @@ export function verifyReceiptConsistency(receipt: BattleReceipt, params: Progres
  * randomness was real, and reporting "we could not check the beacon" in that case would be
  * a worse answer than the one available.
  */
-export function verifyReceiptBeacon(receipt: BattleReceipt): ReceiptVerification {
+export function verifyReceiptBeacon(receipt: AnyBattleReceipt): ReceiptVerification {
     const failures = beaconFailures(receipt);
     return failures.length === 0 ? { ok: true } : { ok: false, failures };
+}
+
+/**
+ * Recomputes a team battle's six progressions and compares them with the receipt's. The team
+ * counterpart of `verifyReceiptProgression`, needing the same thing from the ruleset: the
+ * level cap.
+ */
+export function verifyTeamReceiptProgression(receipt: TeamBattleReceipt, params: ProgressionParams): ReceiptVerification {
+    const checked = assertTeamBattleReceipt(receipt);
+    const recomputed = computeTeamProgression(checked.snapshot, checked.drawn, checked.result.attackerWon, params);
+    const mismatches = recomputed.flatMap((expected, i) => compareProgression(`fighter ${i}`, expected, checked.progression[i]));
+    return mismatches.length === 0 ? { ok: true } : { ok: false, failures: [{ check: 'progression', detail: mismatches.join('; ') }] };
 }
 
 /** The progression half on its own. Needs the level cap from the ruleset the receipt names. */
@@ -65,8 +79,8 @@ export function verifyReceiptProgression(receipt: BattleReceipt, params: Progres
     return failures.length === 0 ? { ok: true } : { ok: false, failures };
 }
 
-function beaconFailures(receipt: BattleReceipt): ReceiptCheckFailure[] {
-    const checked = assertBattleReceipt(receipt);
+function beaconFailures(receipt: AnyBattleReceipt): ReceiptCheckFailure[] {
+    const checked = assertAnyBattleReceipt(receipt);
     const chain = resolveDrandChain(checked.beacon.chainHash);
     if (verifyBeacon(chain, { round: checked.beacon.round, signature: checked.beacon.signature })) {
         return [];

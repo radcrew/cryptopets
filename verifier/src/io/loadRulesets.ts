@@ -1,4 +1,4 @@
-import { hashRuleset, parseRulesetBundle, type Ruleset, SOURCE_DEFAULT_RULESET } from '@cryptopets/protocol';
+import { hashRuleset, parseRulesetBundle, type Ruleset, SOURCE_DEFAULT_RULESET, TEAM_SOURCE_DEFAULT_RULESET } from '@cryptopets/protocol';
 
 import { readJsonFrom } from './source';
 import { isRecord } from './util';
@@ -22,7 +22,9 @@ export type RulesetRegistry = ReadonlyMap<string, Ruleset>;
  * with `loadRulesets`.
  */
 export function builtInRulesets(): Map<string, Ruleset> {
-    return new Map([[hashRuleset(SOURCE_DEFAULT_RULESET).toLowerCase(), SOURCE_DEFAULT_RULESET]]);
+    return new Map(
+        [SOURCE_DEFAULT_RULESET, TEAM_SOURCE_DEFAULT_RULESET].map((ruleset) => [hashRuleset(ruleset).toLowerCase(), ruleset]),
+    );
 }
 
 /**

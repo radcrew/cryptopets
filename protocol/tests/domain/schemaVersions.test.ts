@@ -23,6 +23,7 @@ describe('schema versions', () => {
         expect(KINDS).toEqual([
             'intent',
             'defenseAuthorization',
+            'defensePlan',
             // Hashed and versioned like the rest, though uniquely among these it reaches no
             // receipt: it authorizes who may sign an intent, which public replay never
             // checks. Registered anyway, because "hashed" is the bar here — an object with
@@ -47,7 +48,7 @@ describe('schema versions', () => {
 
 describe('assertSupportedSchemaVersion', () => {
     it('rejects a future version rather than guessing at its layout', () => {
-        expect(() => assertSupportedSchemaVersion('receipt', 2)).toThrow(/unsupported receipt schema version 2/);
+        expect(() => assertSupportedSchemaVersion('receipt', 3)).toThrow(/unsupported receipt schema version 3/);
     });
 
     it.each([0, -1, 1.5])('rejects %s as a version', (version) => {

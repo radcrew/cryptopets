@@ -16,6 +16,7 @@
         "vectors": "pnpm exec tsx scripts/gen-vectors.ts",
         "vectors:equipment": "pnpm exec tsx scripts/gen-equipment-vectors.ts",
         "vectors:team": "pnpm exec tsx scripts/gen-team-vectors.ts",
+        "vectors:protocol-team": "pnpm exec tsx scripts/gen-team-protocol-vectors.ts",
         "test": "vitest run",
         "test:watch": "vitest",
         "test:coverage": "vitest run --coverage"

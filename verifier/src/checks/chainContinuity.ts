@@ -1,4 +1,4 @@
-import { type BattleReceipt, type Hex, verifyReceiptChain } from '@cryptopets/protocol';
+import { type AnyBattleReceipt, type Hex, verifyReceiptChain } from '@cryptopets/protocol';
 
 import type { CheckResult } from './types';
 
@@ -14,7 +14,7 @@ import type { CheckResult } from './types';
  * `expectedAnchor` is `null` to assert the run starts at the key's very first receipt, a hash to
  * continue an earlier window, or omitted to check only the run's own internal continuity.
  */
-export function checkChainContinuity(receipts: readonly BattleReceipt[], expectedAnchor?: Hex | null): CheckResult {
+export function checkChainContinuity(receipts: readonly AnyBattleReceipt[], expectedAnchor?: Hex | null): CheckResult {
     const check = 'chain-continuity';
     const result = verifyReceiptChain(receipts, expectedAnchor);
     if (result.ok) {

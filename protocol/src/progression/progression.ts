@@ -95,7 +95,8 @@ export function computeProgression(
     };
 }
 
-function petProgression(
+/** One pet's progression from its award. Shared with team battles. */
+export function petProgression(
     pet: PetSnapshot,
     history: { lastOpponentId: bigint; streak: number; decayShift: number },
     won: boolean,

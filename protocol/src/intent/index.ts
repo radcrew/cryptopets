@@ -9,4 +9,14 @@ export {
     EIP712_INTENT_TYPES,
     SOLANA_INTENT_MESSAGE_HEADER,
 } from './signing';
+export {
+    assertTeamBattleIntent,
+    type AttackerPlacement,
+    EIP712_TEAM_INTENT_TYPES,
+    encodeTeamBattleIntent,
+    hashTeamBattleIntent,
+    type TeamBattleIntent,
+    type TeamBattleIntentTypedData,
+    teamBattleIntentTypedData,
+} from './team';
 export { assertBattleIntent, type BattleIntent, isExpired } from './types';

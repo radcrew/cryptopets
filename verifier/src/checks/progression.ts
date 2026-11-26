@@ -1,4 +1,10 @@
-import { type BattleReceipt, type Ruleset, verifyReceiptProgression } from '@cryptopets/protocol';
+import {
+    type AnyBattleReceipt,
+    isTeamBattleReceipt,
+    type Ruleset,
+    verifyReceiptProgression,
+    verifyTeamReceiptProgression,
+} from '@cryptopets/protocol';
 
 import type { CheckResult } from './types';
 
@@ -17,11 +23,14 @@ import type { CheckResult } from './types';
  * passing the wrong cap produces a mismatch, which is the correct outcome rather than a
  * false pass.
  */
-export function checkProgression(receipt: BattleReceipt, ruleset: Ruleset): CheckResult {
+export function checkProgression(receipt: AnyBattleReceipt, ruleset: Ruleset): CheckResult {
     const check = 'progression';
     let result: ReturnType<typeof verifyReceiptProgression>;
     try {
-        result = verifyReceiptProgression(receipt, { maxLevel: ruleset.maxLevel });
+        const params = { maxLevel: ruleset.maxLevel };
+        result = isTeamBattleReceipt(receipt)
+            ? verifyTeamReceiptProgression(receipt, params)
+            : verifyReceiptProgression(receipt, params);
     } catch (error) {
         return { check, ok: false, detail: (error as Error).message };
     }

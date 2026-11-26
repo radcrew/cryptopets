@@ -1,4 +1,5 @@
 import { writeHeader } from '../domain/deployment';
+import { DUEL_SCHEMA_VERSIONS } from '../domain/schemaVersions';
 import type { Hex } from '../encoding/bytes';
 import { DOMAIN_TAGS } from '../encoding/domain';
 import { keccak256Hex } from '../encoding/hash';
@@ -27,7 +28,7 @@ import { assertBattleReceipt, type BattleReceipt } from './types';
 export function encodeBattleReceipt(receipt: BattleReceipt): Uint8Array {
     const checked = assertBattleReceipt(receipt);
     const writer = CanonicalWriter.withDomain(DOMAIN_TAGS.RECEIPT);
-    writeHeader(writer, 'receipt', checked.domain)
+    writeHeader(writer, 'receipt', checked.domain, DUEL_SCHEMA_VERSIONS.receipt)
         .text(checked.battleId)
         .hash(checked.intentHash)
         .hash(checked.commitmentHash)
@@ -68,7 +69,8 @@ function writeProgression(writer: CanonicalWriter, progression: ProgressionDelta
     writePetProgression(writer, progression.defender);
 }
 
-function writePetProgression(writer: CanonicalWriter, pet: PetProgression): void {
+/** Shared with the team receipt, which writes six of these. */
+export function writePetProgression(writer: CanonicalWriter, pet: PetProgression): void {
     writer
         .u256(pet.petId)
         .bool(pet.won)

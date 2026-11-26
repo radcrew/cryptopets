@@ -1,5 +1,5 @@
 import { chainFamily, evmChainIdNumber } from '../domain/chainId';
-import { currentSchemaVersion } from '../domain/schemaVersions';
+import { DUEL_SCHEMA_VERSIONS } from '../domain/schemaVersions';
 import { utf8ToBytes } from '../encoding/bytes';
 
 import { assertBattleIntent, type BattleIntent } from './types';
@@ -90,7 +90,7 @@ export function battleIntentTypedData(intent: BattleIntent): BattleIntentTypedDa
         types: EIP712_INTENT_TYPES,
         primaryType: 'BattleIntent',
         message: {
-            schemaVersion: currentSchemaVersion('intent'),
+            schemaVersion: DUEL_SCHEMA_VERSIONS.intent,
             chainId: checked.domain.chainId,
             deploymentId: checked.domain.deploymentId,
             attackerOwner: checked.attackerOwner,
@@ -126,7 +126,7 @@ export function battleIntentSolanaMessage(intent: BattleIntent): string {
     }
     return [
         SOLANA_INTENT_MESSAGE_HEADER,
-        `schema: ${currentSchemaVersion('intent')}`,
+        `schema: ${DUEL_SCHEMA_VERSIONS.intent}`,
         `chain: ${checked.domain.chainId}`,
         `deployment: ${checked.domain.deploymentId}`,
         `attacker: ${checked.attackerOwner}`,

@@ -5,7 +5,7 @@ the execution order and the decisions it depends on. Steps are small on purpose:
 a command that passes, so the branch is revertible at any point. The golden-vector and
 schema-version rules in `AGENTS.md` apply throughout.
 
-Branch: `feat/team-battles-3v3`. **Status: Phases 0 and 1 done (same-owner battles blocked, decisions recorded, team engine in both languages with `team.json`). Phase 2 not started.**
+Branch: `feat/team-battles-3v3`. **Status: Phases 0 to 2 done (same-owner battles blocked, decisions recorded, team engine in both languages with `team.json`, team protocol objects and the public verifier). Phase 3 not started.**
 
 ## 1. What a team battle is
 
@@ -191,6 +191,26 @@ these, so if one is reopened, change it here first.
 
 *Done when:* `pnpm --filter @cryptopets/protocol test` and `pnpm --filter @cryptopets/verifier test`
 pass, and the verifier workflow's existing receipt corpus still verifies.
+
+*As built:*
+
+- New versions of the existing kinds, as planned, which means four kinds now have a duel layout
+  and a team layout live at once. Every producer names `DUEL_SCHEMA_VERSIONS` or
+  `TEAM_SCHEMA_VERSIONS`; the existing `protocol-*.json` vectors prove no duel byte moved.
+- The commitment stays at version 1 for both: it carries the snapshot and the consent only as
+  hashes, and each hash names its own kind and version. For a team battle its
+  `defenseAuthorizationHash` field holds the defence plan's hash.
+- `SOURCE_DEFAULT_RULESET`, which the backend serves, stays at layout 2 until Phase 6, so no
+  duel consent is cancelled early. `TEAM_SOURCE_DEFAULT_RULESET` is the layout 3 ruleset,
+  built in and pinned in the verifier. `ENGINE_VERSION` stays 2: duels are unchanged, and
+  ruleset layout 3 already identifies the team rules.
+- The receipt states `drawn` (checked against the seed) and links only the six fighters;
+  benched roster pets are not part of the battle's history.
+- At layout 3 every pet fights neutral (Melee, no temperament, `int` order), enforced by
+  `replayTeamBattle`, the one place a team snapshot becomes engine inputs.
+- EIP-712 signing payloads only, for Base (D6). No Solana messages yet.
+- Vectors: `contracts/test-vectors/protocol-team.json`, from
+  `protocol/scripts/gen-team-protocol-vectors.ts`.
 
 ### Phase 3: the Go verifier service
 

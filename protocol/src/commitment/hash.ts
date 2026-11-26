@@ -3,7 +3,7 @@ import type { Hex } from '../encoding/bytes';
 import { DOMAIN_TAGS } from '../encoding/domain';
 import { keccak256Hex } from '../encoding/hash';
 import { CanonicalWriter } from '../encoding/writer';
-import { hashBattleSnapshot } from '../snapshot/hash';
+import { hashAnyBattleSnapshot } from '../snapshot/team';
 
 import { assertBattleCommitment, type BattleCommitment } from './types';
 
@@ -23,7 +23,7 @@ export function encodeBattleCommitment(commitment: BattleCommitment): Uint8Array
         .text(checked.battleId)
         .hash(checked.intentHash)
         .hash(checked.defenseAuthorizationHash)
-        .hash(hashBattleSnapshot(checked.snapshot))
+        .hash(hashAnyBattleSnapshot(checked.snapshot))
         .u32(checked.rulesetVersion)
         .hash(checked.rulesetHash)
         .hash(checked.drandChainHash)
