@@ -19,6 +19,22 @@ export type { StrikeOutcome } from './strike';
 export { addHeal, strike } from './strike';
 export { MAX_ROUNDS, simulate, type SimOutcome, type SimResult, type StrikeLogEntry } from './sim';
 export {
+    DEFAULT_TEAM_CONFIG,
+    MAX_TEAM_SIZE,
+    type Range,
+    type Side,
+    simulateTeam,
+    type Tactic,
+    type TeamConfig,
+    type TeamFighter,
+    type TeamOutcome,
+    type TeamResult,
+    type TeamStrikeLogEntry,
+    type Temperament,
+    type TurnOrder,
+} from './team';
+export { drawDefenders, ROSTER_SIZE, SQUAD_SIZE } from './teamDraw';
+export {
     applyDecayShift,
     applyXp,
     BASE_XP_LOSS,

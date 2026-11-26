@@ -8,13 +8,18 @@ name: Combat parity
 #
 #   protocol          tests/combat/goldenVectors.test.ts    (the canonical TS engine)
 #   protocol          tests/combat/equipmentVectors.test.ts (gear, roadmap §4)
+#   protocol          tests/combat/teamVectors.test.ts      (team battles, team.json)
+#   protocol          tests/combat/teamReduction.test.ts    (a 1v1 team battle is a duel)
 #   services/indexer-go  internal/combat/combat_golden_test.go    (the independent Go port)
 #   services/indexer-go  internal/combat/equipment_golden_test.go (gear, the same file)
+#   services/indexer-go  internal/combat/team_golden_test.go      (team battles, both checks)
 #   contracts/ethereum test/XpFormula.test.ts                (the XP fixture)
 #
 # `equipment.json` is read by the two live ports only — the frozen Solana port predates
 # equipment and never applies it, so it is not a witness to that file. Its first case
 # reproduces a `battle.json` row, which is how an ungeared fight is proven unchanged.
+# `team.json` is the same: read by the two live ports only, and both also replay every
+# `battle.json` and `equipment.json` case as a one-on-one team battle.
 #
 # §F's circuit breaker only has value while the TS and Go ports are independent and both
 # match the vectors. A drift that CI never runs is a circuit breaker nobody armed.

@@ -5,7 +5,7 @@ the execution order and the decisions it depends on. Steps are small on purpose:
 a command that passes, so the branch is revertible at any point. The golden-vector and
 schema-version rules in `AGENTS.md` apply throughout.
 
-Branch: `feat/team-battles-3v3`. **Status: Phase 0 done (same-owner battles blocked, decisions recorded). Phase 1 not started.**
+Branch: `feat/team-battles-3v3`. **Status: Phases 0 and 1 done (same-owner battles blocked, decisions recorded, team engine in both languages with `team.json`). Phase 2 not started.**
 
 ## 1. What a team battle is
 
@@ -21,7 +21,7 @@ Branch: `feat/team-battles-3v3`. **Status: Phase 0 done (same-owner battles bloc
 
   ```text
   weight_i = 6 − rank_i
-  roll_k   = keccak256(seed ‖ "SQUAD_DRAW" ‖ k) mod Σ weight(remaining),  k = 1, 2, 3
+  roll_k   = keccak256("CRYPTOPETS_SQUAD_DRAW_V1" ‖ seed ‖ k) mod Σ weight(remaining),  k = 1, 2, 3
   ```
 
   | Rank | Weight | Chance of defending |
@@ -112,7 +112,8 @@ attacker back 0, mid 1, front 2; defender front 3, mid 4, back 5.
 With one pet on each side, face to face, every team and map rule switches itself off: no teammates,
 no neighbours, and the only enemy is always in reach. Under today's attributes, turn order, rolls
 and the win check must then reduce **exactly** to today's engine. This is a requirement, not a hope:
-the first cases in the new vector file replay every `battle.json` fight in this layout (Phase 1).
+both ports replay every `battle.json` and `equipment.json` fight in this layout, strike for strike
+(Phase 1).
 
 ## 2. Decisions
 
@@ -165,7 +166,9 @@ these, so if one is reopened, change it here first.
 3. Implement it in Go under `services/indexer-go/internal/combat/`, from the spec rather than from
    the TS code.
 4. Add `contracts/test-vectors/team.json`:
-   - every `battle.json` case as a one-on-one, face-to-face fight, which must match exactly
+   - one anchor case reproducing a `battle.json` row. The rest of `battle.json` and all of
+     `equipment.json` are replayed as one-on-one team battles by tests that read those files
+     directly, comparing every strike with the duel engine, so no case is copied into a second file
    - hand-checked small cases for each rule: reach and front-line collapse, neighbours, combo,
      expose, guard, auras, tailwind, rally, lifelink, second chance, the 30-round HP share and the
      defender's tie

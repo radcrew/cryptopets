@@ -532,6 +532,133 @@ During migration, freeze Solidity and Rust combat as the legacy on-chain ruleset
 mechanics require parity between the canonical TypeScript engine, the Go verifier, and client
 replay. The existing four-port rule stays in force until the legacy path retires (§K).
 
+### Team battles: the three-on-three engine
+
+This is the specification both live ports implement (`protocol/src/combat/team.ts` and
+`services/indexer-go/internal/combat/team.go`), and `contracts/test-vectors/team.json` holds them
+to it. Each port is written from this text rather than from the other port. The design and its
+reasons are in `docs/plan-team-battles-3v3.md`; this section is only the arithmetic. All values are
+unsigned integers, and every division rounds down.
+
+**Inputs.** Two sides, the attacker (side 0) and the defender (side 1), each with one to three
+fighters. A fighter's **slot** is its index in its side's list: the attacker's in the order the
+intent lists them, the defender's in roster order after the draw. Each fighter carries:
+
+- `dna`, `rarity`, `level`, `skill` and an equipment bonus, exactly as in a duel
+- a tile in its own 3×3 zone: `col` 0 (back), 1 (mid) or 2 (front), and `row` 0 to 2. Two
+  fighters on one side never share a tile.
+- a tactic: Focus, Breaker, Hunter or Bodyguard
+- a range: Melee, Reach or Ranged
+- a temperament: none, Brave, Clever, Wild, Steady or Loyal
+- a speed, read only under the Speed turn order
+
+Plus the 32-byte battle seed, the duel's skill configuration, and the team configuration:
+
+| Value | Default | Meaning |
+|---|---|---|
+| `turnOrder` | `int` | `int` (today's rules) or `speed` (Attributes 2.0) |
+| `comboStepPct` | 10 | Combo bonus per earlier teammate hit |
+| `exposePct` | 120 | Expose multiplier |
+| `auraPct` | 110 | Shell and Sage aura multiplier |
+| `tailwindBps` | 200 | Crit chance per neighbouring Swift |
+| `longShotPct` | 85 | Ranged physical strike beyond the front line |
+| `temperamentPct` | 105 | The tactic suits the temperament |
+
+**Stats.** Each fighter's stats are computed exactly as in a duel: `extract`, then the equipment
+bonus, then Tank's HP, Shell's DEF and Sage's MDEF multipliers. Its starting HP is the result.
+`share(u) = u.hp · 10000 / u.startHp`.
+
+**Geometry.** Board column `x = col` on side 0 and `x = 5 − col` on side 1, so the columns run
+attacker back 0 to defender back 5. Two fighters are **neighbours** when they are on the same
+side and `|Δx| + |Δrow| = 1`. Only standing fighters count as neighbours.
+
+**Rounds.** For `r` from 0 while `r < 30` and both sides have a standing fighter:
+
+1. `rs = roundSeed(seed, r)`, as in a duel.
+2. The turn order is every fighter standing at the start of the round, sorted:
+   - `int` order: non-Shell before Shell, then higher INT, then Swift before non-Swift, then
+     side 0 before side 1, then lower slot.
+   - `speed` order: higher speed, then the same keys as the `int` order from non-Shell onwards.
+3. Each fighter in that order, at position `p` (counting from 0, and fixed for the round), strikes
+   once. A fighter knocked out before its turn skips it, and the positions of the others do not
+   change. The battle ends at once when a side has no standing fighter.
+
+**A strike by `u` at position `p`.**
+
+1. **Physical or magic.** `magic` when `strikeRoll(rs, 2p) < 10000 · INT / (ATK + INT)`.
+2. **Who it can reach.** The candidates are the standing enemies. The **front line** is their
+   column nearest the middle: the smallest `x` when side 0 strikes, the largest when side 1 does.
+   The column **behind** it is one step further from the middle. A magic strike reaches every
+   candidate. A physical strike reaches: Melee, the front line; Reach, the front line and the
+   column behind; Ranged, every candidate.
+3. **The target `t`.** Ties always go to the lower slot.
+   - Focus: the lowest `share`.
+   - Breaker: the highest INT.
+   - Hunter: Focus among the reachable enemies `u` has the element advantage over
+     (`elementMod = 115`), or Focus among all reachable enemies when there are none.
+   - Bodyguard: let `w` be the standing fighter on `u`'s side, `u` included, with the lowest
+     `share`. If the last fighter to damage `w` is reachable, target it; otherwise Focus.
+4. **Damage `d`,** in this order, each step rounding down:
+   1. `DEF` is `t`'s DEF, multiplied by `auraPct / 100` once for each standing Shell neighbour of
+      `t`. `MDEF` likewise, once for each standing Sage neighbour.
+   2. `d = INT · 100 / (100 + MDEF)` for magic, `ATK · 100 / (100 + DEF)` for physical, and at
+      least 1.
+   3. Element: `d · e / 100`, with `e = elementMod(u, t)`, raised to 100 for a Sage's magic
+      strike when it is below 100.
+   4. Long shot: `d · longShotPct / 100` for a Ranged physical strike on a target off the front
+      line.
+   5. Fury: `d · furyDmgMult / 100` when `u` is Fury and either `share(u) < furyHpThreshold` or a
+      teammate of `u` has been knocked out earlier in the battle (Rally).
+   6. Temperament: `d · temperamentPct / 100` when the tactic suits it: Brave and Focus, Clever and
+      Breaker, Wild and Hunter, Steady and Bodyguard. Loyal and none suit no tactic.
+   7. Combo: `d · (100 + comboStepPct · n) / 100`, where `n` counts the earlier hits this round
+      by `u`'s side on `t`.
+   8. Expose: `d · exposePct / 100` when `t` carries a mark from a fighter on `u`'s side other
+      than `u`. The mark is removed.
+   9. Critical: `d · 150 / 100` when `strikeRoll(rs, 2p + 1)` is below
+      `min(500 + swiftCritBonus (u is Swift) + tailwindBps · s + 25 · INT, cap)`, where `s` is the
+      number of standing Swift neighbours of `u` and `cap` is `cunningCritCap` for Cunning, 3000
+      otherwise.
+   10. At least 1.
+5. **Bookkeeping.** `u`'s side has now hit `t` once more this round. If `u` is Cunning and the
+   strike was critical, `t` carries `u`'s mark, replacing any earlier mark.
+6. **Guard.** When `t.hp ≤ d`, the lowest-slot standing Tank on `t`'s side that is a neighbour of
+   `t` and has not guarded yet takes the hit instead, and has now guarded. The fighter that takes
+   the hit is the **victim** `v`; without a guard, `v = t`. Everything in step 4 still describes
+   `t`.
+7. `v.hp = max(v.hp − d, 0)`. `u` is now the last fighter to damage `v`.
+8. **Lifelink.** For a Bloodlust physical strike, `heal = d · bloodlustBps / 10000`. When it is
+   above 0, it goes to the lowest `share` among `u` and its standing neighbours, `u` first on a
+   tie and then the lower slot, and cannot raise that fighter above its starting HP.
+9. **Second chance.** When `v.hp = 0`, the lowest-slot Rebirth fighter on `v`'s side that has
+   not spent its second chance (`v` itself included) spends it, and `v.hp = 1`.
+10. **Knockout.** When `v.hp` is still 0, `v` is knocked out, and every Fury fighter on its side
+    is rallied for the rest of the battle.
+
+**Winning.** A side with no standing fighters loses. When both sides still stand after round 30,
+compare `Σhp · 10000 / ΣstartHp` per side: side 0 wins only when its value is higher, so an exact
+tie goes to the defender. `rounds` counts the rounds that started, and `winnerHpRemaining` is the
+winning side's total HP, capped at 65535.
+
+**The draw.** A defence plan lists five pets with ranks 1 to 5, each rank used once. Each pet
+weighs `6 − rank`. For `k` = 1, 2, 3:
+
+```text
+roll_k = uint256(keccak256("CRYPTOPETS_SQUAD_DRAW_V1" ‖ seed ‖ uint8(k))) mod Σ weight(remaining)
+```
+
+Walk the remaining pets in roster order, adding up their weights, and draw the first pet whose
+running total exceeds `roll_k`. The three drawn pets become the defender's fighters, in roster
+order. The tag is the protocol's usual domain separation, so a draw roll can never equal a
+combat roll.
+
+**Duels are the special case.** With one fighter a side, the `int` order, no temperament and the
+default team configuration, every rule above that involves a teammate, a neighbour or a second
+enemy has nothing to act on. What remains is today's duel strike for strike: the two strikers use
+roll slots 0 and 1, then 2 and 3, in today's initiative order, with today's damage steps and
+today's win rule. Both ports prove it by replaying every `battle.json` and `equipment.json` case
+as a one-on-one team battle.
+
 ## §G. Signed battle receipt
 
 > **In plain words:** the permanent record. It holds every input, so anyone can redo the fight, and

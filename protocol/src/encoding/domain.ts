@@ -47,6 +47,9 @@ export const DOMAIN_TAGS = {
      *  extension of `MERKLE_LEAF`, so a receipt leaf can never be presented as a claim
      *  on a reward, or the reverse. */
     MERKLE_REWARD_LEAF: 'CRYPTOPETS_MERKLE_REWARD_LEAF_V1',
+    /** Drawing a team battle's three defenders from a five-pet roster (§F, team battles). Its
+     *  own tag so a draw roll can never coincide with a combat roll from the same seed. */
+    SQUAD_DRAW: 'CRYPTOPETS_SQUAD_DRAW_V1',
 } as const;
 
 /** One of the protocol's domain tags. */
