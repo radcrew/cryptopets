@@ -25,6 +25,8 @@ import {
     signerBackendError,
     SignerRefusedError,
 } from '@features/battle/signer';
+// Straight from its module rather than the barrel: a pure check, so module mocks never hide it.
+import { assertDuel } from '@features/battle/ledger/kind';
 import { recordBattleDrops } from '@features/inventory';
 import { recordBattleFromReceipt } from '@repositories/history.repository';
 import { notifyBattleRoomIfPresent } from '@ws/battleRoomSocket';
@@ -47,11 +49,12 @@ import { notifyBattleRoomIfPresent } from '@ws/battleRoomSocket';
  * the next global chain position.
  */
 export async function processSignMessage(message: ClaimedMessage, nowSeconds: number): Promise<void> {
-    const battle = await prisma.battleLedger.findUnique({ where: { battleId: message.battleId } });
-    if (!battle) {
+    const row = await prisma.battleLedger.findUnique({ where: { battleId: message.battleId } });
+    if (!row) {
         await completeOutbox(message.id, new Date(nowSeconds * 1000));
         return;
     }
+    const battle = assertDuel(row);
     if (battle.state !== BattleState.verified) {
         await completeOutbox(message.id, new Date(nowSeconds * 1000));
         return;
@@ -138,7 +141,7 @@ export async function processSignMessage(message: ClaimedMessage, nowSeconds: nu
             battleId: battle.battleId,
             intentHash: battle.intentHash as Hex,
             commitmentHash: (await commitmentHashFor(battle.battleId)) as Hex,
-            defenseAuthorizationHash: battle.authorizationHash as Hex,
+            defenseAuthorizationHash: duelAuthorizationHash(battle),
             snapshot,
             beacon: {
                 chainHash: battle.drandChainHash as Hex,
@@ -356,6 +359,12 @@ async function applyProgression(
             lastReceiptHash: receiptHash,
         },
     });
+}
+
+/** A duel's consent. The ledger's CHECK constraint keeps it filled on every duel row. */
+function duelAuthorizationHash(battle: { battleId: string; authorizationHash: string | null }): Hex {
+    if (!battle.authorizationHash) throw new Error(`duel ${battle.battleId} has no defence authorization`);
+    return battle.authorizationHash as Hex;
 }
 
 async function failSigning(battleId: string, roomId: string | null, reason: string): Promise<void> {

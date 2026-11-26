@@ -88,7 +88,19 @@ export {
     toProtocolDelegation,
     verifyDelegationSignature,
 } from './session.service';
-export { backendBattleModeEnabled, requireBackendBattleMode } from './mode';
+export { assertDuel, BATTLE_KIND, type BattleKind, type DuelColumns } from './kind';
+export { backendBattleModeEnabled, requireBackendBattleMode, requireTeamBattles, teamBattlesEnabled } from './mode';
+export { deleteDefensePlans, getDefensePlan, postDefensePlan } from './defensePlan.controller';
+export {
+    consumePlanDailyBudget,
+    type DefensePlanSummary,
+    type DefensePlanWire,
+    getLiveDefensePlan,
+    type PlanRejection,
+    revokeDefensePlans,
+    submitDefensePlan,
+    toProtocolPlan,
+} from './defensePlan.service';
 export { postBattleIntent } from './intent.controller';
 export {
     type BattleIntentWire,

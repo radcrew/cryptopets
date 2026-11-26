@@ -2,7 +2,9 @@ import express, { Router } from 'express';
 
 import {
     deleteDefenseAuthorizations,
+    deleteDefensePlans,
     getDefenseAuthorizations,
+    getDefensePlan,
     getBattleCombatLog,
     getBattleCommitment,
     getBattleConfigHandler,
@@ -15,9 +17,11 @@ import {
     postBattleIntent,
     deleteSessionDelegations,
     postDefenseAuthorization,
+    postDefensePlan,
     postSessionDelegation,
     postVerifyReceipt,
     requireBackendBattleMode,
+    requireTeamBattles,
 } from '@features/battle/ledger';
 import { asyncRoute } from '@middleware/asyncRoute';
 import { verifyToken } from '@middleware/auth';
@@ -57,6 +61,13 @@ router.get('/authorizations', verifyToken, asyncRoute(getDefenseAuthorizations))
 // withdrawing authority must keep working whatever else is switched off.
 router.post('/sessions', requireBackendBattleMode, verifyToken, battleRoomRateLimit, asyncRoute(postSessionDelegation));
 router.delete('/sessions', verifyToken, asyncRoute(deleteSessionDelegations));
+
+// Team-battle defence plans: a defender's five-pet roster and their consent to be challenged
+// with it. Saving is gated on team battles; revoking and reading are not, for the same reasons
+// as consent above. Declared before `/:battleId`, which would otherwise match this path.
+router.post('/defense-plans', requireTeamBattles, verifyToken, battleRoomRateLimit, asyncRoute(postDefensePlan));
+router.delete('/defense-plans', verifyToken, asyncRoute(deleteDefensePlans));
+router.get('/defense-plans', verifyToken, asyncRoute(getDefensePlan));
 
 // Authoritative, re-fetchable reads (§J). No auth: every value here is either already
 // public on chain or is itself a signed artifact anyone is meant to check, so gating

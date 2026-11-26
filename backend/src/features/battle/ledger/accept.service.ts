@@ -27,6 +27,7 @@ import { chooseCommitmentRound, roundPublishTime } from '../randomness';
 import { type ConsentFailure, consumeDailyBudget, findCoveringAuthorization } from './consent.service';
 import { servedDeploymentId } from './domain';
 import { BATTLE_REFUSALS, CONSENT_REFUSALS, OPEN_BATTLE_REFUSALS, OUTBOX_TOPICS } from './constants';
+import { assertDuel } from './kind';
 import { buildPetSnapshot } from './snapshot.builder';
 import { servedRuleset, servedRulesetHash } from './ruleset.builder';
 import { applyTransition, type ExpectedProgress, openBattle } from './transitions';
@@ -442,12 +443,13 @@ async function freezeFighters(
     intent: BattleIntentRow,
     nowSeconds: number,
 ): Promise<Step<{ attacker: PetSnapshot; defender: PetSnapshot }>> {
+    const { attackerPetId, defenderPetId } = assertDuel(intent);
     let attacker: Awaited<ReturnType<typeof buildPetSnapshot>>;
     let defender: Awaited<ReturnType<typeof buildPetSnapshot>>;
     try {
         [attacker, defender] = await Promise.all([
-            buildPetSnapshot(chainId, intent.attackerPetId),
-            buildPetSnapshot(chainId, intent.defenderPetId),
+            buildPetSnapshot(chainId, attackerPetId),
+            buildPetSnapshot(chainId, defenderPetId),
         ]);
     } catch (error) {
         return { ok: false, refusal: catalogRejection(error) };

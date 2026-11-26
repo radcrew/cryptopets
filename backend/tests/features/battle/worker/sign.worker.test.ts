@@ -191,6 +191,7 @@ function buildFixture(gear?: { attacker?: StoredGear[]; defender?: StoredGear[] 
         chainId: 'eip155:84532',
         deploymentId: 'base-sepolia-live',
         state: 'verified',
+        kind: 'duel',
         intentHash: `0x${'aa'.repeat(32)}`,
         authorizationHash: `0x${'bb'.repeat(32)}`,
         attackerPetId: '1',

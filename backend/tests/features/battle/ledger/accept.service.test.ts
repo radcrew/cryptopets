@@ -99,6 +99,7 @@ const INTENT = {
     intentHash: '0xaa'.padEnd(66, '1'),
     chainId: 'eip155:84532',
     deploymentId: 'base-sepolia-live',
+    kind: 'duel',
     attackerPetId: '1',
     defenderPetId: '2',
     consumedAt: null as Date | null,

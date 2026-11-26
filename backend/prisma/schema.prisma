@@ -286,10 +286,17 @@ model BattleIntent {
   intentHash      String    @id @map("intent_hash")
   chainId         String    @map("chain_id") // protocol chain id, e.g. 'eip155:84532'
   deploymentId    String    @map("deployment_id")
+  /// 'duel' | 'team'. A team intent (intent schema 2) names three placed attackers and a
+  /// defence plan instead of one pet a side, so the duel pet columns are null on it.
+  kind            String    @default("duel")
   attackerOwner   String    @map("attacker_owner")
-  attackerPetId   String    @map("attacker_pet_id")
+  attackerPetId   String?   @map("attacker_pet_id")
   defenderOwner   String    @map("defender_owner")
-  defenderPetId   String    @map("defender_pet_id")
+  defenderPetId   String?   @map("defender_pet_id")
+  /// Team only: the three attackers as signed, `[{ petId, col, row, tactic }]` in slot order.
+  attackers       Json?
+  /// Team only: the defence plan the attacker challenged.
+  defensePlanHash String?   @map("defense_plan_hash")
   challengeId     String?   @map("challenge_id")
   /// Wallet-chosen idempotency nonce, consumed once (see the unique index below).
   clientNonce     String    @map("client_nonce")
@@ -386,6 +393,53 @@ model DefenseAuthorization {
   @@map("defense_authorization")
 }
 
+/// A defender's signed team-battle roster and consent (docs/battle-protocol.md §F). The team
+/// counterpart of DefenseAuthorization: five pets with ranks, home tiles and tactics, bound to
+/// a ruleset. Saving a new plan revokes the owner's earlier ones, so a defender has at most
+/// one live plan.
+model DefensePlan {
+  /// `hashDefensePlan` from @cryptopets/protocol.
+  planHash         String    @id @map("plan_hash")
+  chainId          String    @map("chain_id")
+  deploymentId     String    @map("deployment_id")
+  defenderOwner    String    @map("defender_owner")
+  /// The five roster pets in slot order, `[{ petId, rank, col, row, tactic }]`, as signed.
+  roster           Json
+  rulesetHash      String    @map("ruleset_hash")
+  /// Inclusive band for the attacking squad's highest level.
+  minLevel         Int       @map("min_level")
+  maxLevel         Int       @map("max_level")
+  maxBattlesPerDay Int       @map("max_battles_per_day")
+  notBefore        BigInt    @map("not_before") // unix seconds
+  expiresAt        BigInt    @map("expires_at")
+  revocationNonce  Int       @map("revocation_nonce")
+  signature        String
+  signatureFormat  String    @map("signature_format")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  /// Kept rather than deleted, because receipts reference this hash.
+  revokedAt        DateTime? @map("revoked_at")
+
+  ledger BattleLedger[]
+  usage  DefensePlanUsage[]
+
+  @@index([chainId, deploymentId, defenderOwner])
+  @@index([chainId, deploymentId, rulesetHash])
+  @@map("defense_plan")
+}
+
+/// Team battles used against one plan on one UTC epoch day, enforcing `maxBattlesPerDay`. A
+/// team battle counts once, however many of the plan's pets it drew.
+model DefensePlanUsage {
+  planHash  String      @map("plan_hash")
+  plan      DefensePlan @relation(fields: [planHash], references: [planHash], onDelete: Cascade)
+  dayBucket Int         @map("day_bucket")
+  count     Int         @default(0)
+  updatedAt DateTime    @updatedAt @map("updated_at")
+
+  @@id([planHash, dayBucket])
+  @@map("defense_plan_usage")
+}
+
 /// Battles used against one authorization on one day, enforcing `maxBattlesPerDay` (§D).
 ///
 /// The bucket is a UTC epoch day (`floor(unixSeconds / 86400)`) rather than a calendar date
@@ -417,15 +471,26 @@ model BattleLedger {
   /// Set on a failure transition, so `verification_failed` says what mismatched.
   failureReason String?     @map("failure_reason")
 
-  intentHash        String               @unique @map("intent_hash")
-  intent            BattleIntent         @relation(fields: [intentHash], references: [intentHash])
-  authorizationHash String               @map("authorization_hash")
-  authorization     DefenseAuthorization @relation(fields: [authorizationHash], references: [authorizationHash])
+  /// 'duel' | 'team'. Both run the same state machine, outbox and workers; a team battle
+  /// differs in its consent (a defence plan), its pets (eight frozen, six fighting) and its
+  /// receipt (schema 2). The duel-only columns below are null on a team battle.
+  kind String @default("duel")
 
-  attackerPetId String @map("attacker_pet_id")
-  attackerOwner String @map("attacker_owner")
-  defenderPetId String @map("defender_pet_id")
-  defenderOwner String @map("defender_owner")
+  intentHash        String                @unique @map("intent_hash")
+  intent            BattleIntent          @relation(fields: [intentHash], references: [intentHash])
+  /// Duel only. A team battle's consent is `defensePlanHash`.
+  authorizationHash String?               @map("authorization_hash")
+  /// Restrict, as before this was optional: receipts name these hashes, so the row must outlive any attempt to delete it.
+  authorization     DefenseAuthorization? @relation(fields: [authorizationHash], references: [authorizationHash], onDelete: Restrict, onUpdate: Cascade)
+  defensePlanHash   String?               @map("defense_plan_hash")
+  defensePlan       DefensePlan?          @relation(fields: [defensePlanHash], references: [planHash], onDelete: Restrict, onUpdate: Cascade)
+
+  attackerPetId String? @map("attacker_pet_id")
+  attackerOwner String  @map("attacker_owner")
+  defenderPetId String? @map("defender_pet_id")
+  defenderOwner String  @map("defender_owner")
+  /// Team only: the defenders' roster indices, in roster order, once the seed has drawn them.
+  drawn         Json?
 
   /// The frozen photo, persisted before any randomness for this battle exists (§J).
   snapshot       Json
@@ -480,6 +545,7 @@ model BattleLedger {
   @@index([chainId, attackerPetId])
   @@index([chainId, defenderPetId])
   @@index([drandChainHash, drandRound])
+  @@index([defensePlanHash])
   @@map("battle_ledger")
 }
 
@@ -537,8 +603,9 @@ model BattleReceipt {
   deploymentId  String @map("deployment_id")
   /// Denormalized from the payload so the per-pet corpus and the per-pet chain walk are
   /// indexed lookups rather than JSON scans.
-  attackerPetId String @map("attacker_pet_id")
-  defenderPetId String @map("defender_pet_id")
+  /// Duel only. A team receipt's six fighters are in `battle_receipt_fighter`.
+  attackerPetId String? @map("attacker_pet_id")
+  defenderPetId String? @map("defender_pet_id")
 
   signingKeyId                String  @map("signing_key_id")
   sequence                    BigInt
@@ -557,11 +624,30 @@ model BattleReceipt {
   batchId String?      @map("batch_id")
   batch   BattleBatch? @relation(fields: [batchId], references: [id])
 
+  fighters BattleReceiptFighter[]
+
   @@unique([signingKeyId, sequence], name: "battle_receipt_chain_position")
   @@index([chainId, attackerPetId])
   @@index([chainId, defenderPetId])
   @@index([batchId])
   @@map("battle_receipt")
+}
+
+/// One of a team receipt's six fighters, denormalized like a duel receipt's two pet columns so
+/// a pet's corpus and chain walk stay indexed lookups. Benched roster pets have no row: the
+/// battle is not part of their history.
+model BattleReceiptFighter {
+  receiptHash         String        @map("receipt_hash")
+  receipt             BattleReceipt @relation(fields: [receiptHash], references: [receiptHash], onDelete: Cascade)
+  /// 0-5: the attackers by slot, then the drawn defenders by slot, as in the receipt.
+  position            Int
+  chainId             String        @map("chain_id")
+  petId               String        @map("pet_id")
+  previousReceiptHash String?       @map("previous_receipt_hash")
+
+  @@id([receiptHash, position])
+  @@index([chainId, petId])
+  @@map("battle_receipt_fighter")
 }
 
 /// A Merkle batch over receipts, and its on-chain anchor (§I).
