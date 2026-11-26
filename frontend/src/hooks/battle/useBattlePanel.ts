@@ -81,7 +81,7 @@ export const useBattlePanel = ({ isStandaloneView }: UseBattlePanelArgs): UseBat
     // three have to agree, and duplicating it in state is how they stop agreeing.
     const { roomId = null } = useParams<{ roomId?: string }>();
     const capabilities = useChainCapabilities();
-    const { pets, refetch } = usePetList();
+    const { pets, isLoading: petsLoading, refetch } = usePetList();
     // Pre-select the pet the player clicked "Battle" on from its gallery card
     // (navigate(BATTLE_PATH, { state: { petId } })) — falls back to unselected
     // for the generic nav entry, which carries no state. Only read once, on
@@ -558,6 +558,7 @@ export const useBattlePanel = ({ isStandaloneView }: UseBattlePanelArgs): UseBat
         randomMatchDisabled,
         onRandomMatch: handleRandomMatch,
         readyPets,
+        petsLoading: petsLoading && pets.length === 0,
         selectedPet1,
         onSelectFighter: setSelectedPet1,
         sortedOpponents,

@@ -14,6 +14,8 @@ export interface TeamPetGridProps {
     onToggle: (petId: string) => void;
     /** Shows resting pets but refuses them, for a squad that has to fight now. */
     blockResting?: boolean;
+    /** The pets are still being read, so an empty list means "not yet" rather than "none". */
+    loading?: boolean;
     label: string;
 }
 
@@ -22,7 +24,14 @@ export interface TeamPetGridProps {
  * again to take it out. Toggle buttons rather than `PetPicker`'s radio group, because a team
  * holds several pets at once; the tiles follow `PetPicker`'s look so the two choosers match.
  */
-const TeamPetGrid: React.FC<TeamPetGridProps> = ({ pets, selected, max, onToggle, blockResting = false, label }) => {
+const TeamPetGrid: React.FC<TeamPetGridProps> = ({ pets, selected, max, onToggle, blockResting = false, loading = false, label }) => {
+    if (loading && pets.length === 0) {
+        return (
+            <p className={styles.muted} role="status">
+                Loading your pets…
+            </p>
+        );
+    }
     const nowSeconds = Math.floor(Date.now() / 1000);
     const full = selected.length >= max;
     return (

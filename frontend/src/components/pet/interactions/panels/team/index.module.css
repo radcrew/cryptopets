@@ -158,15 +158,10 @@ button.tile:focus-visible {
    It also has one width for everything on it, so the board, the details card, the actions and
    the pet row share their edges: the actions are right-aligned, and they line up with the card
    only while the card reaches the same edge. The width is what sizes the card, which fills
-   whatever the zones leave. One zone (the defence plan) leaves about 37rem; two zones (a
-   challenge, and its playback) need the wider screen to leave about 36rem. */
+   whatever the zones leave: one zone, the defence plan, leaves about 37rem. */
 .arena {
     container-type: inline-size;
     max-width: 52rem;
-}
-
-.arenaWide {
-    max-width: 66rem;
 }
 
 /* The zones and the selected pet's details, side by side. Each column is a heading and a box,
@@ -520,40 +515,9 @@ button.tile:focus-visible {
     background: var(--cp-cyan, #7dd6ff);
 }
 
-/* The battle map and its result, side by side. */
-.playRow {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.75rem;
-}
-
-.playBoard {
-    flex: 1 1 24rem;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
-
-.playSide {
-    flex: 0 1 20rem;
-    min-width: 16rem;
-}
-
-.result {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
-
-.result h4 {
-    margin: 0;
-}
-
-/* Too narrow for side by side: the details and the result go below, at their natural height. */
+/* Too narrow for side by side: the details go below, at their natural height. */
 @container (max-width: 46rem) {
-    .boardRow,
-    .playRow {
+    .boardRow {
         flex-wrap: wrap;
     }
 
@@ -561,8 +525,7 @@ button.tile:focus-visible {
         flex: 1 1 13rem;
     }
 
-    .detailsColumn,
-    .playSide {
+    .detailsColumn {
         flex-basis: 100%;
     }
 
@@ -596,7 +559,7 @@ button.tile:focus-visible {
     font-size: 0.95rem;
 }
 
-/* Small inline art: a rival's roster in the opponent list, a fighter in the result table. */
+/* Small inline art: a fighter in the battle result table. */
 .miniArt {
     display: inline-flex;
     align-items: center;
@@ -607,22 +570,6 @@ button.tile:focus-visible {
 
 .miniArt img {
     border-radius: 6px;
-}
-
-.rosterStrip {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    flex: 1 1 14rem;
-    min-width: 0;
-}
-
-.rosterPet {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 3.6rem;
-    font-size: 0.65rem;
 }
 
 /* The pet chooser, following PetPicker's tiles so the two choosers read as one control. */
@@ -755,32 +702,6 @@ button.tile:focus-visible {
     transition: width 0.3s ease;
 }
 
-.list {
-    display: flex;
-    flex-direction: column;
-    gap: 0.4rem;
-    max-height: 18rem;
-    overflow-y: auto;
-}
-
-.listItem {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.45rem 0.6rem;
-    border-radius: 8px;
-    background: rgba(255, 255, 255, 0.04);
-}
-
-.captions {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-    font-size: 0.85rem;
-    min-height: 5.5rem;
-}
-
 .table {
     border-collapse: collapse;
     font-size: 0.85rem;
@@ -797,10 +718,490 @@ button.tile:focus-visible {
     text-align: right;
 }
 
-.victory {
+
+/* ── Team challenge: the duel's showdown, three a side ─────────────────────────
+   The columns, labels, picker buttons, spine and action row are the duel's own classes,
+   so the two battles read as one arena. What a team adds is a bay holding a lineup beside
+   a zone: the two zones face each other across the spine as they meet on the battle map. */
+.teamSetup {
+    gap: 8px;
+}
+
+/* The pet row keeps its height: on a short screen the page scrolls rather than clip the tiles. */
+.teamSetup .petGrid {
+    flex-shrink: 0;
+}
+
+.teamShowdown {
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    margin-bottom: 0;
+}
+
+/* The squad's count and level, standing where the rival's picker stands, so both bays start
+   level. */
+.squadBar {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    box-sizing: border-box;
+    min-height: 32px;
+    padding: 0 10px;
+    border: 1px solid var(--bay-soft);
+    border-radius: 7px;
+    background: rgb(5 13 30 / 70%);
+    font-size: 12px;
+    color: rgb(195 210 255 / 75%);
+}
+
+.squadBar strong {
+    color: var(--bay);
+}
+
+.squadBar > :last-child {
+    margin-left: auto;
+}
+
+.teamSelect {
+    box-sizing: border-box;
+    min-height: 32px;
+}
+
+.bay {
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    flex: 1 1 auto;
+    gap: 12px;
+    box-sizing: border-box;
+    padding: 10px;
+    border: 1px solid var(--bay-soft);
+    border-radius: 10px;
+    background: linear-gradient(180deg, rgb(10 16 32 / 92%), rgb(5 9 20 / 96%));
+    box-shadow: inset 0 0 28px var(--bay-wash);
+}
+
+.bay .zone {
+    flex: 0 0 11rem;
+    width: 11rem;
+}
+
+.bay .lineup {
+    flex: 1 1 14rem;
+    min-width: 0;
+}
+
+/* No rival yet: the duel's empty arena, waiting for a team to stand in it. */
+.bayEmpty {
+    justify-content: center;
+    overflow: hidden;
+}
+
+.bayPlaceholder {
+    position: relative;
+    margin: 0;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--bay);
+    opacity: 0.8;
+}
+
+/* A side's pets as rows: who it is, its stats, when it acts and its tactic, on one line while
+   the bay is wide enough, so the lineup never stands taller than the zone beside it. */
+.lineup {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.lineupRow {
+    display: grid;
+    grid-template-columns: minmax(7rem, auto) minmax(0, 1fr) auto auto;
+    grid-template-areas: 'who stats order tactic';
+    align-items: center;
+    gap: 2px 10px;
+    box-sizing: border-box;
+    min-height: 3.3rem;
+    padding: 4px 8px;
+    border: 1px solid rgb(255 255 255 / 7%);
+    border-radius: 8px;
+    background: rgb(255 255 255 / 3%);
+    text-align: left;
+}
+
+.lineupSelected {
+    border-color: var(--bay);
+    box-shadow: inset 0 0 0 1px var(--bay);
+}
+
+.lineupEmpty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-style: dashed;
+    color: rgb(195 210 255 / 35%);
+    font-size: 12px;
+}
+
+/* A defender the attacker may not see yet: a pet row, a zone tile, or the map's rival half. */
+.lineupConcealed {
+    justify-content: flex-start;
+    gap: 10px;
+    border-style: solid;
+    border-color: rgb(255 123 203 / 16%);
+    color: rgb(255 190 230 / 60%);
+}
+
+.lineupUnknown {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    width: 2rem;
+    height: 2rem;
+    border: 1px dashed rgb(255 123 203 / 40%);
+    border-radius: 6px;
+    font-family: var(--cp-title-font);
+    font-weight: 800;
+    color: rgb(255 123 203 / 80%);
+}
+
+.concealed {
+    border-style: solid;
+    border-color: rgb(255 123 203 / 28%);
+    background: repeating-linear-gradient(135deg, rgb(255 123 203 / 7%) 0 6px, transparent 6px 12px);
+}
+
+/* Sized against the tile, which is a size container, like a pet's art. */
+.unknownMark {
+    font-family: var(--cp-title-font);
+    font-size: 36cqi;
+    font-weight: 800;
+    line-height: 1;
+    color: rgb(255 123 203 / 70%);
+}
+
+.lineupWho {
+    grid-area: who;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+}
+
+button.lineupWho {
+    cursor: pointer;
+}
+
+button.lineupWho:focus-visible {
+    outline: 2px solid var(--bay);
+    outline-offset: 2px;
+}
+
+.lineupArt {
+    flex: 0 0 auto;
+    display: flex;
+    font-size: 2rem;
+    line-height: 1;
+}
+
+.lineupArt img {
+    border-radius: 6px;
+}
+
+.lineupText {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.lineupName {
+    overflow: hidden;
+    font-size: 13px;
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.lineupMeta {
+    font-size: 11px;
+    color: rgb(195 210 255 / 60%);
+}
+
+.lineupOrder {
+    grid-area: order;
+    padding: 1px 7px;
+    border: 1px solid var(--bay-soft);
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--bay);
+}
+
+.lineupTactic {
+    grid-area: tactic;
+    width: auto;
+    padding: 3px 6px;
+    font-size: 12px;
+}
+
+.lineupTacticChip {
+    grid-area: tactic;
+    padding: 2px 9px;
+    border-radius: 999px;
+    background: rgb(255 255 255 / 6%);
+    font-size: 11px;
+}
+
+.lineupStats {
+    grid-area: stats;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1px 9px;
+    font-size: 10.5px;
+    font-variant-numeric: tabular-nums;
+    color: rgb(195 210 255 / 55%);
+}
+
+/* The spine: your squad in the order it acts among itself, where the duel's win-rate rail
+   stands. The defenders are unknown until the battle, so the order across both teams is too. */
+.teamVs {
+    width: 64px;
+    padding-top: 10px;
+}
+
+.turnRail {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.turnPip {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    width: 36px;
+    height: 36px;
+    border: 2px solid var(--cp-cyan);
+    border-radius: 50%;
+    background: rgb(5 13 30 / 85%);
+    box-shadow: 0 0 10px rgb(125 214 255 / 30%);
+}
+
+.turnPipArt {
+    display: flex;
+    overflow: hidden;
+    border-radius: 50%;
+    font-size: 24px;
+    line-height: 1;
+}
+
+.turnPipNum {
+    position: absolute;
+    right: -6px;
+    bottom: -4px;
+    box-sizing: border-box;
+    min-width: 16px;
+    height: 16px;
+    border: 1px solid currentcolor;
+    border-radius: 8px;
+    background: #0b1124;
+    font-size: 9px;
+    font-weight: 800;
+    line-height: 14px;
+    text-align: center;
+    color: var(--cp-cyan);
+}
+
+.srOnly {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
+
+/* Why the battle cannot start yet, under the button it explains. */
+.startHint {
+    margin: -6px 0 0;
+    font-size: 12px;
+    text-align: center;
     color: var(--color-success, #4cd6a3);
 }
 
-.defeat {
+.startHintBlocked {
+    color: rgb(195 210 255 / 55%);
+}
+
+.linkButton {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--cp-cyan, #7dd6ff);
+    font: inherit;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+@media (max-width: 760px) {
+    .teamShowdown {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .teamVs {
+        width: auto;
+        padding-top: 0;
+    }
+
+    .turnRail {
+        flex-direction: row;
+    }
+}
+
+/* ── The team battle scene ───────────────────────────────────────────────────
+   The duel scene's frame, banner, log and result card, with the battle map in the middle
+   and one HP gauge per side where the duel has its fighter plates. */
+.sceneHud {
+    flex-shrink: 0;
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 4px 24px 0;
+}
+
+.scenePlate {
+    --plate: var(--cp-cyan);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 6px 12px;
+    width: min(44%, 22rem);
+    padding: 8px 12px;
+    border: 1px solid rgb(125 214 255 / 30%);
+    border-radius: 6px;
+    background: rgb(5 13 30 / 78%);
+}
+
+.scenePlateRival {
+    --plate: var(--cp-magenta);
+    border-color: rgb(255 123 203 / 30%);
+}
+
+.scenePlateName {
+    overflow: hidden;
+    font-size: 13px;
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--plate);
+}
+
+.scenePlateHp {
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+    color: rgb(195 210 255 / 70%);
+}
+
+.scenePlateTrack {
+    grid-column: 1 / -1;
+    display: flex;
+    height: 6px;
+    overflow: hidden;
+    border-radius: 3px;
+    background: rgb(255 255 255 / 10%);
+}
+
+/* The rival's gauge drains toward the centre, mirroring yours. */
+.scenePlateRival .scenePlateTrack {
+    justify-content: flex-end;
+}
+
+.scenePlateFill {
+    height: 100%;
+    background: var(--plate);
+    box-shadow: 0 0 10px var(--plate);
+    transition: width 0.3s ease;
+}
+
+/* The map as large as the screen allows: as wide as it can be while its three rows still fit
+   between the HUD above and the log below. */
+.sceneBoard {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 24px;
+}
+
+.sceneBoard .board {
+    width: min(100%, 50rem, calc((100vh - 26rem) * 2));
+}
+
+.sceneControls {
+    flex-shrink: 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 0 24px 14px;
+}
+
+.sceneFailed {
     color: var(--color-danger, #ff6b8a);
+}
+
+.sceneTitle {
+    margin: 0;
+}
+
+.sceneTable {
+    width: min(100%, 34rem);
+    border-radius: 10px;
+    background: rgb(5 9 20 / 72%);
+}
+
+.sceneTable th {
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: rgb(195 210 255 / 55%);
+}
+
+.sceneRowRival td {
+    color: rgb(255 190 230 / 85%);
+}
+
+.sceneTable .miniArt {
+    vertical-align: middle;
+}
+
+/* A round's first strike in the battle log. */
+.logRound {
+    margin: 6px 0 0;
+    padding: 0 16px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: rgb(255 214 125 / 55%);
 }

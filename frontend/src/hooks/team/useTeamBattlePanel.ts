@@ -44,7 +44,7 @@ const FAILED_STATES = new Set(['rejected', 'forfeited', 'verification_failed', '
 
 export function useTeamBattlePanel() {
     const opponents = useTeamOpponents();
-    const { pets } = usePetList();
+    const { pets, isLoading: petsLoading } = usePetList();
     const challenge = useSubmitTeamChallenge();
 
     const [opponent, setOpponent] = useState<TeamOpponent | null>(null);
@@ -126,9 +126,17 @@ export function useTeamBattlePanel() {
         [petsById, squad],
     );
 
+    // The backend counts a squad as its highest-level pet against the defender's level band.
+    const squadLevel =
+        squad.length > 0 ? Math.max(...squad.map((m) => petsById.get(m.petId)?.level ?? 1)) : null;
+    const inBand = (o: TeamOpponent) =>
+        squadLevel === null || (squadLevel >= o.minLevel && squadLevel <= o.maxLevel);
+    const levelInBand = !opponent || inBand(opponent);
+
     const nowSeconds = Math.floor(Date.now() / 1000);
     const squadReady = squad.every((m) => (petsById.get(m.petId)?.readyAt ?? 0) <= nowSeconds);
-    const canStart = Boolean(opponent?.ready) && squad.length === SQUAD_SIZE && squadReady && !challenge.isPending;
+    const canStart =
+        Boolean(opponent?.ready) && squad.length === SQUAD_SIZE && squadReady && levelInBand && !challenge.isPending;
 
     const start = useCallback(async () => {
         if (!opponent || squad.length !== SQUAD_SIZE) return;
@@ -146,24 +154,46 @@ export function useTeamBattlePanel() {
         setBattleId(null);
     }, []);
 
+    /** Clears the rival and the squad, for starting over. */
+    const cancel = useCallback(() => {
+        reset();
+        setSquad([]);
+    }, [reset]);
+
+    /** A ready team the squad's level qualifies for, other than the current one where possible. */
+    const chooseRandomOpponent = () => {
+        const fits = (opponents.data ?? []).filter((o) => o.ready && inBand(o));
+        const others = fits.filter((o) => o.planHash !== opponent?.planHash);
+        const pool = others.length > 0 ? others : fits;
+        if (pool.length > 0) chooseOpponent(pool[Math.floor(Math.random() * pool.length)]!);
+    };
+
     return {
         phase,
         opponents: opponents.data ?? [],
         opponentsLoading: opponents.isLoading,
+        opponentsFetching: opponents.isFetching,
+        refreshOpponents: () => void opponents.refetch(),
         opponent,
         chooseOpponent,
+        chooseRandomOpponent,
         pets,
+        petsLoading: petsLoading && pets.length === 0,
         squad,
         addPet,
         removePet,
         placePet,
         setTactic,
         turnOrder,
+        squadLevel,
+        levelInBand,
         squadReady,
         canStart,
         start,
         reset,
+        cancel,
         error: challenge.error ?? (result.error as Error | null) ?? null,
+        battleId,
         battleState: state ?? null,
         failureReason: battle.data?.failureReason ?? null,
         result: result.data ?? null,

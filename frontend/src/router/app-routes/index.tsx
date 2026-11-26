@@ -9,6 +9,7 @@ import RouteLayout from '@components/layout/route-layout';
 const HomePage = lazy(() => import('@pages/home'));
 const BreedPage = lazy(() => import('@pages/breed'));
 const BattlePage = lazy(() => import('@pages/battle'));
+const TeamBattlePage = lazy(() => import('@pages/team-battle'));
 const LevelUpPage = lazy(() => import('@pages/level-up'));
 const TrainPage = lazy(() => import('@pages/train'));
 const MarriagePage = lazy(() => import('@pages/marriage'));
@@ -37,6 +38,7 @@ const AppRoutes: React.FC = () => {
                     {/* :roomId is optional — set once Start Battle mints a room id
                         (see useBattlePanel's handleBattle), same page either way. */}
                     <Route path="/battle/:roomId?" element={<BattlePage />} />
+                    <Route path="/team-battle" element={<TeamBattlePage />} />
                     <Route path="/levelup" element={<LevelUpPage />} />
                     <Route path="/train" element={<TrainPage />} />
                     <Route path="/marriage" element={<MarriagePage />} />

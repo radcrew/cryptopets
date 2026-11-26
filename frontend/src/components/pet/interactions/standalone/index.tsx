@@ -12,12 +12,19 @@ import '@components/pet/interactions/interactions.css';
 export type InteractionStandaloneProps = {
     action: InteractionAction;
     minPets: number;
+    /**
+     * Draw the page while the pet list is still loading, instead of a full-page spinner. The
+     * list is read from the chain through a public RPC and can take seconds, so a page whose
+     * panels show their own loading state opens at once and fills in its pickers when it lands.
+     */
+    showWhileLoading?: boolean;
     children: React.ReactNode;
 };
 
 const InteractionStandalone: React.FC<InteractionStandaloneProps> = ({
     action,
     minPets,
+    showWhileLoading = false,
     children,
 }) => {
     const navigate = useNavigate();
@@ -45,7 +52,9 @@ const InteractionStandalone: React.FC<InteractionStandaloneProps> = ({
         );
     }
 
-    if (isLoading && pets.length === 0) {
+    const loading = isLoading && pets.length === 0;
+
+    if (loading && !showWhileLoading) {
         return (
             <DashboardPanel
                 className={`pet-interactions ${viewClass}`}
@@ -65,7 +74,8 @@ const InteractionStandalone: React.FC<InteractionStandaloneProps> = ({
         );
     }
 
-    if (pets.length === 0) {
+    // Only once loading is over: an empty list mid-load is not "no pets".
+    if (!loading && pets.length === 0) {
         return (
             <StateCard
                 containerClassName={viewClass}
@@ -82,7 +92,7 @@ const InteractionStandalone: React.FC<InteractionStandaloneProps> = ({
         );
     }
 
-    if (minPets > 1 && pets.length < minPets) {
+    if (!loading && minPets > 1 && pets.length < minPets) {
         return (
             <StateCard
                 containerClassName={viewClass}

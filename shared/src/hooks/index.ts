@@ -69,6 +69,7 @@ export {
     type UseSpousePetOptions,
     type SpousePetResult,
 } from './pets/useSpousePet';
+export { usePetNames } from './pets/usePetNames';
 export { useIncomingProposals, type IncomingProposal } from './marriage/useIncomingProposals';
 export { useWinEstimate, type WinEstimateResult } from './battle/useWinEstimate';
 // Leaderboards. Ranked server-side over the merged battle record, so a page arrives
@@ -171,7 +172,7 @@ export {
     type SaveDefensePlanVars,
     useDefensePlan,
 } from './battle/useDefensePlan';
-export { type TeamOpponent, type TeamOpponentPet, useTeamOpponents } from './battle/useTeamOpponents';
+export { type TeamOpponent, useTeamOpponents } from './battle/useTeamOpponents';
 export { type SubmitTeamChallengeVars, useSubmitTeamChallenge } from './battle/useSubmitTeamChallenge';
 export { type TeamBattleResult, useTeamBattleResult } from './battle/useTeamBattleResult';
 export {

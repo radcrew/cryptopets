@@ -18,7 +18,8 @@ export type InteractionAction =
     | 'marriage'
     | 'changename'
     | 'defense'
-    | 'equip';
+    | 'equip'
+    | 'teambattle';
 
 export type StandaloneInteractionHeader = {
     Icon: ComponentType<{ size?: number | string }>;
@@ -56,6 +57,7 @@ export const STANDALONE_INTERACTION_HEADERS: Record<
         label: 'Equipment',
         sub: 'Fit your pet with gear it carries into battle',
     },
+    teambattle: { Icon: BattleIcon, label: 'Team Battle' },
 };
 
 /** Dashboard home (idle gallery). */
@@ -64,6 +66,8 @@ export const DASHBOARD_HOME = '/main';
 /** Top-level interaction routes (e.g. /breed) — interaction UI only. */
 export const BREED_PATH = '/breed';
 export const BATTLE_PATH = '/battle';
+/** Three-on-three team battles (docs/plan-team-battles-3v3.md). */
+export const TEAM_BATTLE_PATH = '/team-battle';
 export const LEVELUP_PATH = '/levelup';
 export const TRAIN_PATH = '/train';
 export const MARRIAGE_PATH = '/marriage';

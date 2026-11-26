@@ -9,10 +9,12 @@ import {
     MESSAGES_PATH,
     MARRIAGE_PATH,
     RENAME_PATH,
+    TEAM_BATTLE_PATH,
     TRAIN_PATH,
 } from '@constants/interactionRoutes';
 import galleryIcon from '@assets/nav-icons/gallery.svg';
 import battleIcon from '@assets/nav-icons/battle.svg';
+import teamBattleIcon from '@assets/nav-icons/team-battle.svg';
 import breedIcon from '@assets/nav-icons/breed.svg';
 import levelupIcon from '@assets/nav-icons/levelup.svg';
 import trainIcon from '@assets/nav-icons/train.svg';
@@ -39,6 +41,8 @@ export type NavItem = {
      * behind it (crates, marketplace, quests) and the sidebar already knows how to draw one.
      */
     deferred?: boolean;
+    /** Shown only while the backend accepts team battles, so a switched-off feature has no door. */
+    requiresTeamBattles?: boolean;
 };
 
 /**
@@ -49,6 +53,14 @@ export type NavItem = {
 export const NAV_ITEMS: readonly NavItem[] = [
     { id: 'gallery', label: 'Gallery', iconSrc: galleryIcon, tone: 'cyan', path: DASHBOARD_HOME },
     { id: 'battle', label: 'Battle Arena', iconSrc: battleIcon, tone: 'magenta', path: BATTLE_PATH },
+    {
+        id: 'team-battle',
+        label: 'Team Battle',
+        iconSrc: teamBattleIcon,
+        tone: 'violet',
+        path: TEAM_BATTLE_PATH,
+        requiresTeamBattles: true,
+    },
     { id: 'breed', label: 'Breeding Lab', iconSrc: breedIcon, tone: 'amber', path: BREED_PATH },
     { id: 'levelup', label: 'Level Up', iconSrc: levelupIcon, tone: 'violet', path: LEVELUP_PATH },
     { id: 'train', label: 'Training Ground', iconSrc: trainIcon, tone: 'cyan', path: TRAIN_PATH },

@@ -21,7 +21,7 @@ const TeamPanel: React.FC = () => {
     const [tab, setTab] = useState<TabId>('challenge');
     return (
         <>
-            <TabSwitch options={TABS} value={tab} onChange={setTab} label="Team battles" tone="violet" />
+            <TabSwitch options={TABS} value={tab} onChange={setTab} label="Team battles" tone="magenta" />
             {tab === 'challenge' ? <TeamChallenge /> : <TeamPlan />}
         </>
     );

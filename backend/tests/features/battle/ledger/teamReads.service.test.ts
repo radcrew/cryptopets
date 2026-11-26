@@ -52,15 +52,32 @@ describe('listTeamOpponents', () => {
         expect(prisma.petRoster.findMany).not.toHaveBeenCalled();
     });
 
-    it('lists each plan with its pets, in one roster read, with progression merged', async () => {
+    it('offers each plan by its owner, band and readiness, and never serves the defending pets', async () => {
         vi.mocked(prisma.defensePlan.findMany).mockResolvedValue([plan('0xp1', ['21', '22', '23'])] as never);
         vi.mocked(prisma.petRoster.findMany).mockResolvedValue(['21', '22', '23'].map((id) => rosterRow(id)) as never);
 
         const [opponent] = await list();
         expect(prisma.petRoster.findMany).toHaveBeenCalledTimes(1);
-        expect(opponent).toMatchObject({ planHash: '0xp1', defenderOwner: DEFENDER, ready: true });
-        expect(opponent?.roster).toHaveLength(3);
-        expect(opponent?.roster[0]).toMatchObject({ petId: '21', col: 0, row: 1, name: 'Pet 21', level: 15 });
+        expect(opponent).toEqual({
+            planHash: '0xp1',
+            defenderOwner: DEFENDER,
+            minLevel: 1,
+            maxLevel: 30,
+            expiresAt: NOW + 3600,
+            ready: true,
+        });
+        // Which pets defend, where and how, is what an attacker would counter-build from.
+        expect(JSON.stringify(opponent)).not.toMatch(/Pet 2\d|"petId"|"tactic"|"col"/);
+    });
+
+    it('counts a team as resting while a pet is on its backend cooldown, after progression is merged', async () => {
+        vi.mocked(prisma.defensePlan.findMany).mockResolvedValue([plan('0xp1', ['21', '22', '23'])] as never);
+        vi.mocked(prisma.petRoster.findMany).mockResolvedValue(['21', '22', '23'].map((id) => rosterRow(id)) as never);
+        const { withBattleProgress } = await import('@repositories/battleProgress.overlay');
+        vi.mocked(withBattleProgress).mockImplementationOnce(async (_chain, pets) =>
+            pets.map((pet) => (pet.petId === '22' ? { ...pet, readyAt: BigInt(NOW + 300) } : pet)) as never,
+        );
+        expect((await list())[0]?.ready).toBe(false);
     });
 
     it('leaves out a plan whose pet changed hands or is no longer indexed, since acceptance would refuse it', async () => {

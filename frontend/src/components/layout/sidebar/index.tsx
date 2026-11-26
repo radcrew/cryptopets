@@ -2,7 +2,7 @@ import React from 'react';
 import clsx from 'clsx';
 import { useLocation, useNavigate } from 'react-router-dom';
 
-import { useChainCapabilities, usePlayerRank } from '@shared/core';
+import { useBattleConfig, useChainCapabilities, usePlayerRank } from '@shared/core';
 
 import Icon, { PinFilledIcon, PinIcon } from '@components/ui/icon';
 import { DASHBOARD_HOME } from '@constants/interactionRoutes';
@@ -60,6 +60,8 @@ const Sidebar: React.FC = () => {
     const location = useLocation();
     const currentPath = location.pathname.replace(/\/$/, '') || '/';
     const { pinned, toggle } = useSidebarPin();
+    const { data: battleConfig } = useBattleConfig();
+    const teamBattles = Boolean(battleConfig?.team?.enabled);
 
     return (
         <nav
@@ -91,7 +93,7 @@ const Sidebar: React.FC = () => {
             </div>
 
             <div className={styles.nav}>
-                {NAV_ITEMS.map((item) => {
+                {NAV_ITEMS.filter((item) => teamBattles || !item.requiresTeamBattles).map((item) => {
                     const isActive = item.path != null && currentPath === item.path;
                     return (
                         <button

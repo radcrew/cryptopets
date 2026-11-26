@@ -59,6 +59,7 @@ const baseProps = (over: Partial<BattleSetupProps> = {}): BattleSetupProps => ({
     randomMatchDisabled: false,
     onRandomMatch: vi.fn(),
     readyPets: [readyPet('1', 'Alpha')],
+    petsLoading: false,
     selectedPet1: '',
     onSelectFighter: vi.fn(),
     sortedOpponents: [opp('o1')],
@@ -120,6 +121,12 @@ describe('BattleSetup (fighter-vs-rival showdown)', () => {
         // Appears both as the control's placeholder and the empty card label.
         expect(screen.getAllByText('No ready fighters').length).toBeGreaterThan(0);
         expect(screen.getByRole('combobox', { name: 'Choose your fighter' })).toBeDisabled();
+    });
+
+    it('says the pets are loading rather than that there are none, while they load', () => {
+        render(<BattleSetup {...baseProps({ readyPets: [], petsLoading: true })} />);
+        expect(screen.getAllByText('Loading your pets…').length).toBeGreaterThan(0);
+        expect(screen.queryByText('No ready fighters')).toBeNull();
     });
 
     it('renders the selected fighter and opponent cards', () => {

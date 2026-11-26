@@ -1,4 +1,3 @@
-import type { Tactic } from '@cryptopets/protocol';
 import { useQuery } from '@tanstack/react-query';
 
 import { useApiClient } from '../../contexts/ApiClientContext';
@@ -6,27 +5,17 @@ import { useActiveChain } from '../session/useActiveChain';
 import { chainIdFor } from './chainIdFor';
 import { useBattleConfig } from './useBattleConfig';
 
-/** One defending pet of a defence plan, as the opponent list serves it. */
-export interface TeamOpponentPet {
-    petId: string;
-    col: number;
-    row: number;
-    tactic: Tactic;
-    name: string;
-    level: number;
-    rarity: number;
-    dna: string;
-    speciesId: number;
-    readyAt: number;
-}
-
+/**
+ * A defence plan as the opponent list offers it: who defends and which squads may challenge, but
+ * not the defending pets. Their identities, tiles and tactics are what an attacker would
+ * counter-build from, so the backend does not serve them and the battle reveals them.
+ */
 export interface TeamOpponent {
     planHash: string;
     defenderOwner: string;
     minLevel: number;
     maxLevel: number;
     expiresAt: number;
-    roster: TeamOpponentPet[];
     /** All three pets are off cooldown, which a challenge needs. */
     ready: boolean;
 }

@@ -1,4 +1,4 @@
-import { chainFamily, type ChainId, normalizeAccount, type Tactic } from '@cryptopets/protocol';
+import { chainFamily, type ChainId, normalizeAccount, type Placement } from '@cryptopets/protocol';
 
 import { prisma } from '@config/prisma';
 import { withBattleProgress } from '@repositories/battleProgress.overlay';
@@ -15,31 +15,22 @@ import { servedDeploymentId } from './domain';
  * plan failing any of those would only be refused at acceptance, after the attacker had placed a
  * squad and signed, so it is left off the list rather than offered.
  *
- * Levels are merged with backend progression, as every other served pet is
- * (`battleProgress.overlay.ts`): the roster's own level froze when battles left the chain.
+ * The defending pets are not served. Which three a defender chose, where they stand and how they
+ * fight is what an attacker would build a counter from, so a team is offered by its owner, its
+ * level band and whether it is ready, and the pets are revealed by the battle itself. They are
+ * still read here, to drop a plan whose pets changed hands and to tell whether the team is
+ * resting. Readiness uses levels and cooldowns merged with backend progression, as every other
+ * served pet is (`battleProgress.overlay.ts`).
+ *
+ * Hidden here is not hidden everywhere. Each receipt is public (§H), so a plan's roster is
+ * readable from the first battle it defends, until the defender saves a new one.
  */
-export interface TeamOpponentPet {
-    petId: string;
-    col: number;
-    row: number;
-    tactic: Tactic;
-    name: string;
-    level: number;
-    rarity: number;
-    dna: string;
-    speciesId: number;
-    /** Unix seconds this pet is next ready to battle. */
-    readyAt: number;
-}
-
 export interface TeamOpponent {
     planHash: string;
     defenderOwner: string;
     minLevel: number;
     maxLevel: number;
     expiresAt: number;
-    /** The three defending pets, in slot order. */
-    roster: TeamOpponentPet[];
     /** Every defending pet is off cooldown, which acceptance requires. */
     ready: boolean;
 }
@@ -71,7 +62,7 @@ export async function listTeamOpponents(params: {
 
     // One read for every listed pet, then one for their progression, rather than one per pet.
     const family = chainFamily(params.chainId as ChainId);
-    const rosters = plans.map((plan) => plan.roster as unknown as Omit<TeamOpponentPet, 'name' | 'level' | 'rarity' | 'dna' | 'speciesId' | 'readyAt'>[]);
+    const rosters = plans.map((plan) => plan.roster as unknown as (Placement & { petId: string })[]);
     const ids = [...new Set(rosters.flat().map((entry) => entry.petId))];
     const rows = await prisma.petRoster.findMany({ where: { chain: family, petId: { in: ids } } });
     const pets = await withBattleProgress(family, rows.map(mapRosterRowToRosterPet));
@@ -79,22 +70,11 @@ export async function listTeamOpponents(params: {
 
     const opponents: TeamOpponent[] = [];
     plans.forEach((plan, i) => {
-        const roster: TeamOpponentPet[] = [];
+        const defenders: RosterPet[] = [];
         for (const entry of rosters[i] ?? []) {
             const pet = byId.get(entry.petId);
             if (!pet || normalizeAccount(pet.owner) !== plan.defenderOwner) return; // stale plan: skip it
-            roster.push({
-                petId: entry.petId,
-                col: entry.col,
-                row: entry.row,
-                tactic: entry.tactic,
-                name: pet.name,
-                level: pet.level,
-                rarity: pet.rarity,
-                dna: pet.dna,
-                speciesId: pet.speciesId,
-                readyAt: Number(pet.readyAt),
-            });
+            defenders.push(pet);
         }
         opponents.push({
             planHash: plan.planHash,
@@ -102,8 +82,7 @@ export async function listTeamOpponents(params: {
             minLevel: plan.minLevel,
             maxLevel: plan.maxLevel,
             expiresAt: Number(plan.expiresAt),
-            roster,
-            ready: roster.every((pet) => pet.readyAt <= params.nowSeconds),
+            ready: defenders.every((pet) => Number(pet.readyAt) <= params.nowSeconds),
         });
     });
     return opponents;

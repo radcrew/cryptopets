@@ -26,7 +26,7 @@ export type DefensePanelProps = {
  */
 const DefensePanel: React.FC<DefensePanelProps> = ({ isStandaloneView = true }) => {
     const { isConnected } = useChainCapabilities();
-    const { pets } = usePetList();
+    const { pets, isLoading: petsLoading } = usePetList();
     const notifyError = useNotifyError();
     const { grant, revoke, isPending, error } = useDefenseAuthorization();
     // What the panel could not say before: whether consent exists, and whether it still
@@ -162,7 +162,11 @@ const DefensePanel: React.FC<DefensePanelProps> = ({ isStandaloneView = true }) 
                                     {' '}{pet.name} (Level {pet.level})
                                 </label>
                             ))}
-                            {pets.length === 0 && <p className={styles.empty}>No pets to authorize yet.</p>}
+                            {pets.length === 0 && (
+                                <p className={styles.empty}>
+                                    {petsLoading ? 'Loading your pets…' : 'No pets to authorize yet.'}
+                                </p>
+                            )}
                         </div>
                     )}
                 </div>

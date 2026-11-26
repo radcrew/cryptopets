@@ -93,7 +93,7 @@ export { backendBattleModeEnabled, requireBackendBattleMode, requireTeamBattles,
 export { deleteDefensePlans, getDefensePlan, postDefensePlan } from './defensePlan.controller';
 export { acceptChallenge, acceptTeamBattle } from './teamAccept.service';
 export { getTeamOpponents } from './teamReads.controller';
-export { listTeamOpponents, type TeamOpponent, type TeamOpponentPet } from './teamReads.service';
+export { listTeamOpponents, type TeamOpponent } from './teamReads.service';
 export { postTeamBattleIntent } from './teamIntent.controller';
 export {
     submitTeamBattleIntent,

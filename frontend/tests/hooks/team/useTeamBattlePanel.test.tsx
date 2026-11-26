@@ -12,8 +12,8 @@ const state = {
 
 vi.mock('@shared/core', async () => ({
     ...(await vi.importActual<object>('@shared/core')),
-    useTeamOpponents: () => ({ data: state.opponents, isLoading: false }),
-    usePetList: () => ({ pets: state.pets }),
+    useTeamOpponents: () => ({ data: state.opponents, isLoading: false, isFetching: false, refetch: vi.fn() }),
+    usePetList: () => ({ pets: state.pets, isLoading: false }),
     useSubmitTeamChallenge: () => ({ submit, isPending: state.pending, error: null }),
     useBackendBattle: (battleId: string | null) => ({ data: battleId ? state.battle : undefined }),
     useTeamBattleResult: () => state.result,
@@ -22,7 +22,7 @@ vi.mock('@shared/core', async () => ({
 import { useTeamBattlePanel } from '@hooks/team/useTeamBattlePanel';
 
 const pet = (id: string, level = 10) => ({ id, name: `Pet ${id}`, dna: 1234567890123456n + BigInt(id), level, rarity: 2, readyAt: 0, speciesId: 3 });
-const OPPONENT = { planHash: '0xplan', defenderOwner: '0xdef', minLevel: 1, maxLevel: 30, expiresAt: 0, roster: [], ready: true };
+const OPPONENT = { planHash: '0xplan', defenderOwner: '0xdef', minLevel: 1, maxLevel: 30, expiresAt: 0, ready: true };
 
 beforeEach(() => {
     vi.clearAllMocks();
@@ -72,6 +72,51 @@ describe('building a squad', () => {
         act(() => result.current.addPet('3'));
         expect(result.current.canStart).toBe(true);
         expect(result.current.turnOrder).toHaveLength(3);
+    });
+});
+
+describe('the challenge screen', () => {
+    it("counts the squad as its highest-level pet, and will not start against a team whose range leaves it out", () => {
+        state.pets = [pet('1', 5), pet('2', 8), pet('3', 20)];
+        const narrow = { ...OPPONENT, minLevel: 1, maxLevel: 15 };
+        const { result } = renderHook(() => useTeamBattlePanel());
+        act(() => {
+            result.current.chooseOpponent(narrow as never);
+            result.current.addPet('1');
+            result.current.addPet('2');
+            result.current.addPet('3');
+        });
+        expect(result.current.squadLevel).toBe(20);
+        expect(result.current.levelInBand).toBe(false);
+        expect(result.current.canStart).toBe(false);
+
+        act(() => result.current.removePet('3'));
+        act(() => result.current.addPet('1'));
+        expect(result.current.squadLevel).toBe(8);
+    });
+
+    it('picks a random team only among ready ones the squad qualifies for', () => {
+        const fits = { ...OPPONENT, planHash: '0xfits' };
+        state.opponents = [
+            { ...OPPONENT, planHash: '0xresting', ready: false },
+            { ...OPPONENT, planHash: '0xtoohigh', minLevel: 50, maxLevel: 60 },
+            fits,
+        ];
+        const { result } = renderHook(() => useTeamBattlePanel());
+        act(() => result.current.addPet('1'));
+        act(() => result.current.chooseRandomOpponent());
+        expect(result.current.opponent?.planHash).toBe('0xfits');
+    });
+
+    it('clears the rival and the squad on cancel', () => {
+        const { result } = renderHook(() => useTeamBattlePanel());
+        act(() => {
+            result.current.chooseOpponent(OPPONENT as never);
+            result.current.addPet('1');
+        });
+        act(() => result.current.cancel());
+        expect(result.current.opponent).toBeNull();
+        expect(result.current.squad).toEqual([]);
     });
 });
 

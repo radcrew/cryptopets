@@ -32,6 +32,8 @@ export interface ZoneGridProps {
     /** A pet dragged onto a tile. Dropped onto another pet, the two swap. */
     onDropPet?: (petId: string, col: number, row: number) => void;
     label: string;
+    /** Draws every tile as unknown, for a defender's zone the attacker may not see. */
+    concealed?: boolean;
 }
 
 /**
@@ -40,8 +42,19 @@ export interface ZoneGridProps {
  * so selecting a pet to read its details cannot rearrange the zone by accident. Every
  * interactive tile is a button with a spoken position, so all of it works from a keyboard.
  */
-export const ZoneGrid: React.FC<ZoneGridProps> = ({ members, side, selectedPetId, onPetClick, onEmptyClick, onDropPet, label }) => {
+export const ZoneGrid: React.FC<ZoneGridProps> = ({ members, side, selectedPetId, onPetClick, onEmptyClick, onDropPet, label, concealed = false }) => {
     const columns = side === 0 ? [0, 1, 2] : [2, 1, 0];
+    if (concealed) {
+        return (
+            <div className={styles.zone} role="img" aria-label={label}>
+                {Array.from({ length: 9 }, (_, i) => (
+                    <div key={i} className={[styles.tile, styles.concealed].join(' ')} aria-hidden>
+                        <span className={styles.unknownMark}>?</span>
+                    </div>
+                ))}
+            </div>
+        );
+    }
     return (
         <div className={styles.zone} role="group" aria-label={label}>
             {[0, 1, 2].map((row) =>
@@ -115,23 +128,34 @@ export interface BoardFighter {
     name: string;
     hp: number;
     startHp: number;
+    /** Shown in place of the HP readout, for a fighter whose HP is not known yet. */
+    note?: string;
 }
 
 export interface BattleBoardProps {
     fighters: BoardFighter[];
     actor?: { side: 0 | 1; slot: number } | null;
     victim?: { side: 0 | 1; slot: number } | null;
+    /** A side whose half is drawn as unknown, for defenders not yet revealed. */
+    concealedSide?: 0 | 1;
 }
 
 /**
  * The 6×3 battle map, read-only: the attackers' zone on the left (front at the centre line),
  * the defenders' on the right. Columns are board columns, 0 to 5.
  */
-export const BattleBoard: React.FC<BattleBoardProps> = ({ fighters, actor, victim }) => (
+export const BattleBoard: React.FC<BattleBoardProps> = ({ fighters, actor, victim, concealedSide }) => (
     <div className={styles.board} role="img" aria-label="Battle map">
         {[0, 1, 2].map((row) =>
             [0, 1, 2, -1, 3, 4, 5].map((x) => {
                 if (x === -1) return <div key={`d-${row}`} className={styles.divider} />;
+                if (concealedSide !== undefined && (x < 3 ? 0 : 1) === concealedSide) {
+                    return (
+                        <div key={`${x}-${row}`} className={[styles.tile, styles.concealed].join(' ')} aria-hidden>
+                            <span className={styles.unknownMark}>?</span>
+                        </div>
+                    );
+                }
                 const f = fighters.find((p) => p.x === x && p.row === row);
                 if (!f) return <div key={`${x}-${row}`} className={styles.tile} />;
                 const is = (who?: { side: 0 | 1; slot: number } | null) => who?.side === f.side && who.slot === f.slot;
@@ -147,12 +171,12 @@ export const BattleBoard: React.FC<BattleBoardProps> = ({ fighters, actor, victi
                     .join(' ');
                 const pct = f.startHp > 0 ? Math.max(0, Math.round((f.hp / f.startHp) * 100)) : 0;
                 return (
-                    <div key={`${x}-${row}`} className={className} title={`${f.name}: ${f.hp}/${f.startHp} HP`}>
+                    <div key={`${x}-${row}`} className={className} title={f.note ? f.name : `${f.name}: ${f.hp}/${f.startHp} HP`}>
                         <span className={styles.tokenArt}>
                             <PetArt pet={f.art} />
                         </span>
                         <span className={styles.tokenName}>{f.name}</span>
-                        <span className={styles.tokenSub}>{f.hp > 0 ? `${f.hp} HP` : 'Out'}</span>
+                        <span className={styles.tokenSub}>{f.note ?? (f.hp > 0 ? `${f.hp} HP` : 'Out')}</span>
                         <div className={styles.hpTrack}>
                             <div className={styles.hpFill} style={{ width: `${pct}%` }} />
                         </div>

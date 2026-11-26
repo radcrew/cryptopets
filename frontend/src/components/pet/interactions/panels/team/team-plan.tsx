@@ -39,7 +39,8 @@ const TILE_ORDER: readonly [number, number][] = [
  * like the other single-action panels. Saving signs the plan and replaces the previous one.
  */
 const TeamPlan: React.FC = () => {
-    const { pets } = usePetList();
+    const { pets, isLoading } = usePetList();
+    const petsLoading = isLoading && pets.length === 0;
     const { plan, save, revoke, isPending, error } = useDefensePlan();
     const [roster, setRoster] = useState<PlanRosterEntry[]>([]);
     const [selected, setSelected] = useState<string | null>(null);
@@ -200,13 +201,14 @@ const TeamPlan: React.FC = () => {
                     </div>
                 </div>
                 <TeamPetGrid
+                    loading={petsLoading}
                     label="Your pets"
                     pets={pets}
                     selected={rosterIds}
                     max={SQUAD_SIZE}
                     onToggle={(petId) => (rosterIds.includes(petId) ? remove(petId) : add(petId))}
                 />
-                {pets.length < SQUAD_SIZE && (
+                {!petsLoading && pets.length < SQUAD_SIZE && (
                     <p className={styles.muted}>A team needs three pets.</p>
                 )}
                 {error && <p className={styles.error}>{error.message}</p>}

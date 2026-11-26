@@ -1,18 +1,19 @@
 import clsx from 'clsx';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
+import { AuthActionButton } from '@components/common';
 import PetArt from '@components/pet/pet-art';
 import InfoTooltip from '@components/ui/info-tooltip';
-import NeonButton from '@components/ui/neon-button';
 import { SQUAD_SIZE, useTeamBattlePanel } from '@hooks/team/useTeamBattlePanel';
-import type { Tactic } from '@shared/core';
+import { shortAddress, type Tactic, type TeamOpponent, useChainCapabilities, usePetNames } from '@shared/core';
 
+import duel from '../battle/index.module.css';
 import { type ArtPet, teamPetArt } from './art';
 import { tacticShort } from './tactics';
-import { ZoneGrid } from './team-board';
-import TeamPetDetails, { type PetSelection } from './team-pet-details';
+import TeamBattleScene, { type ScenePhase } from './team-battle-scene';
+import { type BoardFighter, ZoneGrid } from './team-board';
+import TeamLineup, { type LineupPet, ORDINALS } from './team-lineup';
 import TeamPetGrid from './team-pet-grid';
-import TeamPlayback from './team-playback';
 import styles from './index.module.css';
 
 const STATE_LABELS: Record<string, string> = {
@@ -23,210 +24,306 @@ const STATE_LABELS: Record<string, string> = {
     verified: 'Verified. Signing the receipt…',
 };
 
-const ORDINALS = ['1st', '2nd', '3rd'] as const;
+const teamLabel = (o: TeamOpponent) => `${shortAddress(o.defenderOwner)}'s team`;
 
 /**
- * The team challenge flow, a view over `useTeamBattlePanel`: pick a defender, build and place a
- * squad of three, sign, then watch the verified battle.
+ * The team challenge screen, a view over `useTeamBattlePanel`, laid out like the duel's: your
+ * squad on the left, the rival team on the right, and between them the order your squad acts in.
+ * Each side is a lineup beside its zone, and the two zones face each other across the centre the
+ * way they meet on the battle map.
+ *
+ * The rival side stays unknown. A defender's pets, tiles and tactics are not served before the
+ * battle (they are what an attacker would counter-build from), so the screen shows only the
+ * team's owner and level band, and the battle scene reveals the defenders with the result.
  */
 const TeamChallenge: React.FC = () => {
     const panel = useTeamBattlePanel();
-    // The pet whose details are shown: one of the player's, which can then be moved, or a rival's.
-    const [inspected, setInspected] = useState<{ side: 0 | 1; petId: string } | null>(null);
-    const toggleInspected = (side: 0 | 1, petId: string) =>
-        setInspected((current) => (current?.side === side && current.petId === petId ? null : { side, petId }));
+    const { activeKind } = useChainCapabilities();
+    // The squad pet picked up to move, and a battle whose scene the player closed.
+    const [moving, setMoving] = useState<string | null>(null);
+    const [hiddenBattle, setHiddenBattle] = useState<string | null>(null);
+
     const ownPet = useCallback((petId: string) => panel.pets.find((p) => p.id === petId), [panel.pets]);
     const petName = useCallback((petId: string) => ownPet(petId)?.name ?? `Pet ${petId}`, [ownPet]);
     const ownArt = (petId: string): ArtPet => ownPet(petId) ?? teamPetArt(petId, 0n, petName(petId));
+    const opponent = panel.opponent;
+
+    // The defenders are named only once the verified result has revealed who they were.
+    const rivalIds = useMemo(
+        () => (panel.result?.playback.fighters[1] ?? []).map((f) => f.petId),
+        [panel.result],
+    );
+    const rivalNames = usePetNames(activeKind === 'evm' || activeKind === 'solana' ? activeKind : null, rivalIds);
     const fighterName = useCallback(
         (side: 0 | 1, slot: number) => {
-            const view = panel.result?.playback.fighters[side][slot];
-            if (!view) return side === 0 ? `Your pet ${slot + 1}` : `Rival ${slot + 1}`;
-            if (side === 0) return petName(view.petId);
-            return panel.opponent?.roster.find((p) => p.petId === view.petId)?.name ?? `Pet ${view.petId}`;
+            const petId = panel.result?.playback.fighters[side][slot]?.petId ?? (side === 0 ? panel.squad[slot]?.petId : undefined);
+            if (!petId) return side === 0 ? `Your pet ${slot + 1}` : `Rival ${slot + 1}`;
+            return side === 0 ? petName(petId) : (rivalNames.get(petId) ?? `Pet ${petId}`);
         },
-        [panel.opponent, panel.result, petName],
+        [panel.result, panel.squad, petName, rivalNames],
     );
 
-    if (panel.phase === 'result' && panel.result) {
-        return <TeamPlayback result={panel.result} name={fighterName} onDone={panel.reset} />;
-    }
-
-    if (panel.phase === 'running' || panel.phase === 'submitting') {
-        return (
-            <div className={styles.panel}>
-                <p className={styles.status} role="status">
-                    {panel.phase === 'submitting'
-                        ? 'Confirm the challenge in your wallet…'
-                        : (STATE_LABELS[panel.battleState ?? 'accepted'] ?? 'Battle in progress…')}
-                </p>
-            </div>
-        );
-    }
-
-    if (panel.phase === 'failed') {
-        return (
-            <div className={styles.panel}>
-                <p className={styles.error} role="alert">
-                    This battle did not finish: {panel.failureReason ?? panel.error?.message ?? 'unknown reason'}.
-                </p>
-                <NeonButton tone="azure" onClick={panel.reset}>
-                    Back to opponents
-                </NeonButton>
-            </div>
-        );
-    }
-
-    if (panel.phase === 'choose-opponent' || !panel.opponent) {
-        return (
-            <div className={styles.panel}>
-                <p className={styles.muted}>Each defender sets three pets, who meet your squad of three on the battle map.</p>
-                {panel.opponentsLoading && <p className={styles.muted}>Loading teams…</p>}
-                {!panel.opponentsLoading && panel.opponents.length === 0 && (
-                    <p className={styles.muted}>No teams are open to challenges right now.</p>
-                )}
-                <div className={styles.list}>
-                    {panel.opponents.map((o) => (
-                        <div key={o.planHash} className={styles.listItem}>
-                            <div className={styles.rosterStrip}>
-                                {o.roster.map((p) => (
-                                    <span key={p.petId} className={styles.rosterPet} title={`${p.name}, level ${p.level}`}>
-                                        <span className={styles.miniArt} aria-hidden>
-                                            <PetArt pet={teamPetArt(p.petId, p.dna, p.name)} />
-                                        </span>
-                                        <span className={styles.tokenName}>{p.name}</span>
-                                        <span className={styles.tokenSub}>Lv {p.level}</span>
-                                    </span>
-                                ))}
-                            </div>
-                            <span className={styles.muted}>{o.ready ? `Levels ${o.minLevel}–${o.maxLevel}` : 'Resting'}</span>
-                            <NeonButton size="sm" tone="magenta" disabled={!o.ready} onClick={() => panel.chooseOpponent(o)}>
-                                Challenge
-                            </NeonButton>
-                        </div>
-                    ))}
-                </div>
-            </div>
-        );
-    }
-
-    const opponent = panel.opponent;
-    const squadIds = panel.squad.map((m) => m.petId);
-    const movingPetId = inspected?.side === 0 ? inspected.petId : null;
-    const selection = ((): PetSelection | null => {
-        if (inspected?.side === 0) {
-            const slot = panel.squad.findIndex((m) => m.petId === inspected.petId);
-            const member = panel.squad[slot];
-            const pet = ownPet(inspected.petId);
-            if (!member || !pet) return null;
-            const order = panel.turnOrder.indexOf(slot);
-            return {
-                petId: pet.id,
-                side: 0,
-                pet: { art: pet, name: pet.name, level: pet.level, rarity: pet.rarity, dna: pet.dna, speciesId: pet.speciesId, readyAt: pet.readyAt },
-                col: member.col,
-                row: member.row,
-                tactic: member.tactic,
-                facts: order >= 0 ? [`Acts ${ORDINALS[order] ?? order + 1} in your squad`] : [],
-            };
-        }
-        if (inspected?.side === 1) {
-            const p = opponent.roster.find((r) => r.petId === inspected.petId);
-            if (!p) return null;
-            return {
-                petId: p.petId,
-                side: 1,
-                pet: { art: teamPetArt(p.petId, p.dna, p.name), name: p.name, level: p.level, rarity: p.rarity, dna: BigInt(p.dna), speciesId: p.speciesId, readyAt: p.readyAt },
-                col: p.col,
-                row: p.row,
-                tactic: p.tactic,
-            };
-        }
-        return null;
-    })();
-    // Each squad pet's tile says when it acts and how, so the order and tactics read at a glance.
-    const ownSub = (slot: number, tactic: Tactic) => {
-        const order = panel.turnOrder.indexOf(slot);
-        return order >= 0 ? `${ORDINALS[order] ?? order + 1} · ${tacticShort(tactic)}` : tacticShort(tactic);
+    const orderOf = (slot: number) => {
+        const i = panel.turnOrder.indexOf(slot);
+        return i >= 0 ? i : undefined;
     };
+    // A zone tile says when its pet acts and how, so the order and tactics read at a glance.
+    const tileSub = (slot: number, tactic: Tactic) => {
+        const order = orderOf(slot);
+        return order !== undefined ? `${ORDINALS[order]} · ${tacticShort(tactic)}` : tacticShort(tactic);
+    };
+
+    const ownLineup: LineupPet[] = panel.squad.map((m, slot) => {
+        const pet = ownPet(m.petId);
+        return {
+            petId: m.petId,
+            art: ownArt(m.petId),
+            name: petName(m.petId),
+            level: pet?.level ?? 1,
+            rarity: pet?.rarity ?? 1,
+            dna: pet?.dna ?? 0n,
+            speciesId: pet?.speciesId,
+            tactic: m.tactic,
+            order: orderOf(slot),
+        };
+    });
+    const railEntries = panel.turnOrder.map((slot) => ({ slot, pet: ownLineup[slot] }));
+
+    const selectPet = (petId: string) => setMoving((current) => (current === petId ? null : petId));
+
+    // Why the battle cannot start yet, or that it can.
+    const hint = panel.petsLoading
+        ? 'Loading your pets…'
+        : !opponent
+          ? 'Choose a team to challenge.'
+          : !opponent.ready
+            ? 'This team is resting. Choose another.'
+            : panel.squad.length < SQUAD_SIZE
+              ? `Add ${SQUAD_SIZE - panel.squad.length} more pet${SQUAD_SIZE - panel.squad.length === 1 ? '' : 's'} to your squad.`
+              : !panel.levelInBand
+                ? `This team takes challengers from level ${opponent.minLevel} to ${opponent.maxLevel}, and your squad counts as level ${panel.squadLevel}.`
+                : !panel.squadReady
+                  ? 'One of your pets is still resting.'
+                  : 'Ready to fight.';
+    const blocked = hint !== 'Ready to fight.';
+
+    const opponentEmpty = panel.opponentsLoading
+        ? 'Finding teams…'
+        : panel.opponents.length === 0
+          ? 'No teams are open right now'
+          : 'Choose a team';
+
+    // The battle scene, from signing to the result. A running battle can be put away and
+    // reopened; the result and a failure stay until the player moves on.
+    const inBattle = panel.phase === 'submitting' || panel.phase === 'running' || panel.phase === 'result' || panel.phase === 'failed';
+    const sceneOpen = inBattle && (panel.battleId === null || hiddenBattle !== panel.battleId);
+    // Your squad as it lines up; the defenders' half of the map stays unknown until the result.
+    const lineup: BoardFighter[] = panel.squad.map((m, slot) => ({
+        side: 0,
+        slot,
+        x: m.col,
+        row: m.row,
+        art: ownArt(m.petId),
+        name: petName(m.petId),
+        hp: 1,
+        startHp: 1,
+        note: tacticShort(m.tactic),
+    }));
+    const status =
+        panel.phase === 'submitting'
+            ? 'Confirm the challenge in your wallet…'
+            : panel.phase === 'failed'
+              ? `This battle did not finish: ${panel.failureReason ?? panel.error?.message ?? 'unknown reason'}.`
+              : panel.phase === 'running'
+                ? (STATE_LABELS[panel.battleState ?? 'accepted'] ?? 'Battle in progress…')
+                : null;
+
     return (
-        <div className={clsx(styles.panel, styles.arena, styles.arenaWide)}>
-            <div className={styles.boardRow}>
-                <div className={styles.zoneColumn}>
-                    <h4 className={styles.columnHeading}>Your squad</h4>
-                    <ZoneGrid
-                        label="Your zone"
-                        side={0}
-                        members={panel.squad.map((m, slot) => ({
-                            petId: m.petId,
-                            col: m.col,
-                            row: m.row,
-                            art: ownArt(m.petId),
-                            label: petName(m.petId),
-                            sub: ownSub(slot, m.tactic),
-                        }))}
-                        selectedPetId={movingPetId}
-                        onPetClick={(petId) => toggleInspected(0, petId)}
-                        onEmptyClick={movingPetId ? (col, row) => panel.placePet(movingPetId, col, row) : undefined}
-                        onDropPet={panel.placePet}
-                    />
+        <>
+            {inBattle && !sceneOpen && (
+                <p className={styles.status} role="status">
+                    Your team battle is still running.{' '}
+                    <button type="button" className={styles.linkButton} onClick={() => setHiddenBattle(null)}>
+                        Watch it
+                    </button>
+                </p>
+            )}
+
+            <div className={clsx('interface', duel.battleSetup, styles.teamSetup)}>
+                <div className={clsx(duel.showdown, styles.teamShowdown)}>
+                    {/* Your squad */}
+                    <div className={clsx(duel.combatantCol, duel.combatantColFighter)}>
+                        <div className={duel.combatantColLabel}>Your Squad</div>
+                        <div className={styles.squadBar}>
+                            <span>
+                                <strong>
+                                    {panel.squad.length}/{SQUAD_SIZE}
+                                </strong>{' '}
+                                pets
+                            </span>
+                            {panel.squadLevel !== null && <span>Counts as level {panel.squadLevel}</span>}
+                            <InfoTooltip subject="Building your squad">
+                                Pick three pets from your list below. Select one of yours, then tap an empty tile to move
+                                it, or drag it onto another pet to swap them. Melee pets can only reach the enemy front
+                                line, the column nearest the centre. A squad counts as its highest-level pet against a
+                                team&apos;s level range.
+                            </InfoTooltip>
+                        </div>
+                        <div className={styles.bay}>
+                            <TeamLineup
+                                label="Your squad"
+                                slots={SQUAD_SIZE}
+                                pets={ownLineup}
+                                selectedPetId={moving}
+                                onSelect={selectPet}
+                                onTacticChange={panel.setTactic}
+                            />
+                            <ZoneGrid
+                                label="Your zone"
+                                side={0}
+                                members={panel.squad.map((m, slot) => ({
+                                    petId: m.petId,
+                                    col: m.col,
+                                    row: m.row,
+                                    art: ownArt(m.petId),
+                                    label: petName(m.petId),
+                                    sub: tileSub(slot, m.tactic),
+                                }))}
+                                selectedPetId={moving}
+                                onPetClick={selectPet}
+                                onEmptyClick={moving ? (col, row) => panel.placePet(moving, col, row) : undefined}
+                                onDropPet={panel.placePet}
+                            />
+                        </div>
+                    </div>
+
+                    {/* The spine: the order your squad acts in among itself. */}
+                    <div className={clsx(duel.vs, styles.teamVs)}>
+                        <div className={duel.vsMark}>VS</div>
+                        <ol className={styles.turnRail} aria-label="Your squad's turn order">
+                            {railEntries.map((e, i) => (
+                                <li key={e.slot} className={styles.turnPip} title={`${ORDINALS[i]}: ${e.pet?.name ?? ''}`}>
+                                    <span className={styles.turnPipArt} aria-hidden>
+                                        {e.pet && <PetArt pet={e.pet.art} />}
+                                    </span>
+                                    <span className={styles.turnPipNum}>{i + 1}</span>
+                                    <span className={styles.srOnly}>{`${ORDINALS[i]}: ${e.pet?.name ?? ''}`}</span>
+                                </li>
+                            ))}
+                        </ol>
+                        {railEntries.length > 0 && <div className={duel.vsWinrateLabel}>Your order</div>}
+                    </div>
+
+                    {/* The rival team: who and which levels, never which pets. */}
+                    <div className={clsx(duel.combatantCol, duel.combatantColRival)}>
+                        <div className={duel.combatantColLabel}>Rival Team</div>
+                        <div className={duel.combatantSelect}>
+                            <div className={duel.combatantSelectField}>
+                                <select
+                                    className={clsx(styles.select, styles.teamSelect)}
+                                    aria-label="Choose a team to challenge"
+                                    value={opponent?.planHash ?? ''}
+                                    disabled={panel.opponents.length === 0}
+                                    onChange={(e) =>
+                                        panel.chooseOpponent(panel.opponents.find((o) => o.planHash === e.target.value) ?? null)
+                                    }
+                                >
+                                    <option value="">{opponentEmpty}</option>
+                                    {panel.opponents.map((o) => (
+                                        <option key={o.planHash} value={o.planHash} disabled={!o.ready}>
+                                            {`${teamLabel(o)} · Lv ${o.minLevel}–${o.maxLevel}${o.ready ? '' : ' · resting'}`}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                            <button
+                                type="button"
+                                className={duel.combatantSelectBtn}
+                                onClick={panel.chooseRandomOpponent}
+                                disabled={panel.opponents.length === 0}
+                                title="Pick a random ready team your squad's level qualifies for"
+                            >
+                                🎲 Random
+                            </button>
+                            <button
+                                type="button"
+                                className={duel.combatantSelectBtn}
+                                onClick={panel.refreshOpponents}
+                                disabled={panel.opponentsFetching}
+                            >
+                                {panel.opponentsFetching ? '…' : 'Refresh'}
+                            </button>
+                        </div>
+                        {opponent ? (
+                            <div className={styles.bay}>
+                                <ZoneGrid label="Rival zone, hidden until the battle" side={1} members={[]} concealed />
+                                <TeamLineup label="Rival team" slots={SQUAD_SIZE} pets={[]} concealed />
+                            </div>
+                        ) : (
+                            <div className={clsx(styles.bay, styles.bayEmpty)}>
+                                <div className={duel.combatantCardArena} aria-hidden>
+                                    <div className={duel.combatantCardArenaGrid} />
+                                    <div className={duel.combatantCardArenaPlinth} />
+                                    <div className={duel.combatantCardArenaSweep} />
+                                </div>
+                                <p className={styles.bayPlaceholder}>{opponentEmpty}</p>
+                            </div>
+                        )}
+                    </div>
                 </div>
-                <div className={styles.zoneColumn}>
-                    <h4 className={styles.columnHeading}>Their team</h4>
-                    <ZoneGrid
-                        label="Rival zone"
-                        side={1}
-                        selectedPetId={inspected?.side === 1 ? inspected.petId : null}
-                        onPetClick={(petId) => toggleInspected(1, petId)}
-                        members={opponent.roster.map((p) => ({
-                            petId: p.petId,
-                            col: p.col,
-                            row: p.row,
-                            art: teamPetArt(p.petId, p.dna, p.name),
-                            label: p.name,
-                            sub: tacticShort(p.tactic),
-                        }))}
-                    />
+
+                <div className={duel.actions}>
+                    <AuthActionButton tone="magenta" onClick={() => void panel.start()} disabled={!panel.canStart}>
+                        ⚔ Start Team Battle
+                    </AuthActionButton>
+                    <button
+                        type="button"
+                        onClick={() => {
+                            setMoving(null);
+                            panel.cancel();
+                        }}
+                        className="cancel-button"
+                    >
+                        Cancel
+                    </button>
                 </div>
-                <div className={styles.detailsColumn}>
-                    <h4 className={styles.columnHeading}>Pet details</h4>
-                    <TeamPetDetails
-                        selection={selection}
-                        onTacticChange={selection?.side === 0 ? (tactic) => panel.setTactic(selection.petId, tactic) : undefined}
-                    />
-                </div>
+                <p className={clsx(styles.startHint, blocked && styles.startHintBlocked)} role="status">
+                    {hint}
+                </p>
+                {panel.error && !inBattle && <p className={styles.error}>{panel.error.message}</p>}
+
+                <TeamPetGrid
+                    label="Your pets"
+                    pets={panel.pets}
+                    loading={panel.petsLoading}
+                    selected={panel.squad.map((m) => m.petId)}
+                    max={SQUAD_SIZE}
+                    blockResting
+                    onToggle={(petId) => {
+                        if (panel.squad.some((m) => m.petId === petId)) {
+                            if (moving === petId) setMoving(null);
+                            panel.removePet(petId);
+                        } else {
+                            panel.addPet(petId);
+                        }
+                    }}
+                />
             </div>
 
-            <div className={styles.sectionHead}>
-                <h4 className={styles.columnHeading}>
-                    Choose your squad ({panel.squad.length}/{SQUAD_SIZE})
-                    <InfoTooltip subject="Building your squad">
-                        Tap a pet to add or remove it. Tap a pet on either zone to see its details and set
-                        your pets&apos; tactics. To move one of yours, select it and tap an empty tile, or drag it
-                        onto another pet to swap them. Melee pets can only reach the enemy front line.
-                    </InfoTooltip>
-                </h4>
-                <div className={styles.row}>
-                    <NeonButton size="sm" tone="magenta" disabled={!panel.canStart} onClick={() => void panel.start()}>
-                        Start team battle
-                    </NeonButton>
-                    <NeonButton size="sm" tone="azure" onClick={() => panel.chooseOpponent(null)}>
-                        Pick another team
-                    </NeonButton>
-                </div>
-            </div>
-            <TeamPetGrid
-                label="Your pets"
-                pets={panel.pets}
-                selected={squadIds}
-                max={SQUAD_SIZE}
-                blockResting
-                onToggle={(petId) => (squadIds.includes(petId) ? panel.removePet(petId) : panel.addPet(petId))}
-            />
-
-            {!panel.squadReady && <p className={styles.error}>One of your pets is still resting.</p>}
-            {panel.error && <p className={styles.error}>{panel.error.message}</p>}
-        </div>
+            {sceneOpen && (
+                <TeamBattleScene
+                    key={panel.battleId ?? 'pending'}
+                    phase={panel.phase as ScenePhase}
+                    status={status}
+                    lineup={lineup}
+                    result={panel.phase === 'result' ? panel.result : null}
+                    name={fighterName}
+                    rivalLabel={opponent ? teamLabel(opponent) : 'the rival team'}
+                    onDone={panel.reset}
+                    onHide={() => setHiddenBattle(panel.battleId)}
+                />
+            )}
+        </>
     );
 };
 

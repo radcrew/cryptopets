@@ -14,7 +14,7 @@ vi.mock('@shared/core', async () => ({
 
 import TeamPetGrid from '@components/pet/interactions/panels/team/team-pet-grid';
 import TeamPlan from '@components/pet/interactions/panels/team/team-plan';
-import TeamPlayback from '@components/pet/interactions/panels/team/team-playback';
+import TeamBattleScene from '@components/pet/interactions/panels/team/team-battle-scene';
 
 beforeEach(() => {
     vi.clearAllMocks();
@@ -139,7 +139,7 @@ function saveCall() {
     return save.mock.calls[0]![0] as { roster: { petId: string }[]; minLevel: number; maxLevel: number; maxBattlesPerDay: number; days: number };
 }
 
-describe('TeamPlayback', () => {
+describe('TeamBattleScene', () => {
     const fighter = (side: 0 | 1, slot: number) => ({
         side, slot, petId: `${side}${slot}`, owner: '0x', dna: '1', level: 10, rarity: 1, skill: 99, tactic: 'focus' as const,
         col: 2, row: slot, x: side === 0 ? 2 : 3, startHp: 100,
@@ -157,19 +157,53 @@ describe('TeamPlayback', () => {
     } as never;
     const name = (side: 0 | 1, slot: number) => (side === 0 ? `Mine ${slot}` : `Theirs ${slot}`);
 
-    it('shows the map, then the verified result with the MVP and each fighter XP', async () => {
+    it('plays the fight on the map, then shows the verified result with the MVP and each fighter XP', async () => {
         const user = userEvent.setup();
         const onDone = vi.fn();
-        render(<TeamPlayback result={result} name={name} onDone={onDone} stepMs={60000} />);
+        render(
+            <TeamBattleScene
+                phase="result"
+                status={null}
+                lineup={[]}
+                result={result}
+                name={name}
+                rivalLabel="Their team"
+                onDone={onDone}
+                stepMs={60000}
+            />,
+        );
         expect(screen.getByRole('img', { name: 'Battle map' })).toBeInTheDocument();
+        expect(screen.getByText(/first blow/)).toBeInTheDocument();
 
         await user.click(screen.getByRole('button', { name: 'Skip to result' }));
-        expect(screen.getByRole('heading', { name: /Victory in 1 round/ })).toBeInTheDocument();
+        expect(screen.getByRole('heading', { name: 'VICTORY!' })).toBeInTheDocument();
+        expect(screen.getByText('Your squad won in 1 round.')).toBeInTheDocument();
         expect(screen.getByText(/Mine 1.*MVP/)).toBeInTheDocument();
         expect(screen.getByText('+41')).toBeInTheDocument();
-        expect(screen.getByText(/Mine 1 hits Theirs 0 for 100\. Theirs 0 is knocked out\./)).toBeInTheDocument();
+        expect(screen.getByText('Round 1')).toBeInTheDocument();
+        expect(screen.getByText('Mine 1 hits Theirs 0 for 100. Theirs 0 is knocked out.')).toBeInTheDocument();
 
-        await user.click(screen.getByRole('button', { name: 'New challenge' }));
+        await user.click(screen.getByRole('button', { name: /New Challenge/ }));
         expect(onDone).toHaveBeenCalled();
+    });
+
+    it('shows your squad lined up and the defenders hidden while the battle is not yet fought', () => {
+        const art = { id: '1', chain: 'evm' as const, dna: 1n, name: 'Mine 0' };
+        const lineup = [{ side: 0 as const, slot: 0, x: 2, row: 1, art, name: 'Mine 0', hp: 1, startHp: 1, note: 'Focus' }];
+        render(
+            <TeamBattleScene
+                phase="running"
+                status="Fighting…"
+                lineup={lineup}
+                result={null}
+                name={name}
+                rivalLabel="Their team"
+                onDone={vi.fn()}
+            />,
+        );
+        expect(screen.getByRole('status')).toHaveTextContent('Fighting…');
+        expect(screen.getByText('Focus')).toBeInTheDocument();
+        expect(screen.getByText('Full health')).toBeInTheDocument();
+        expect(screen.getByText('Hidden')).toBeInTheDocument();
     });
 });

@@ -14,12 +14,13 @@ Branch: `feat/team-battles-3v3`. **Status: Phases 0 to 5 done (same-owner battle
 - **Defence plan.** A defender saves three pets, each with a tactic and a home tile in their 3×3
   zone. These three defend in every battle against the plan. The plan is signed, and it doubles as
   their consent to be challenged.
-- **Challenge.** The attacker sees the three rival pets on their home tiles, then picks three of
-  their own pets, places them in their own zone, chooses a tactic for each, and signs.
+- **Challenge.** The attacker sees a rival team's owner, level band and readiness, not its pets
+  (D9). They pick three of their own pets, place them in their own zone, choose a tactic for each,
+  and sign. The defenders, their tiles and their tactics are revealed by the battle.
 
 The first design drew the three defenders from a five-pet roster, weighted by rank, so an attacker
-could not know the lineup in advance. It was dropped before launch for this simpler one (D8): the
-attacker now sees exactly who they will fight.
+could not know the lineup in advance. It was dropped before launch for this simpler one (D8), and
+the lineup is now kept from the attacker by not serving it (D9) rather than by a draw.
 
 ### The map
 
@@ -120,6 +121,7 @@ these, so if one is reopened, change it here first.
 | D6 | **Chains.** | Base first. Solana battles are paused, and the frozen Solana port is not touched. |
 | D7 | **Same-owner battles.** Today only a pet fighting itself is blocked (`backend/src/features/battle/ledger/intent.service.ts`). | Block different pets of the same owner before team battles exist, as its own small PR (Phase 0). **Done:** intents naming one owner on both sides are refused as `same-owner`. |
 | D8 | **Defenders.** Drawing three of five by rank made the plan, the receipt and both engines carry a draw, and the plan editor carry ranks. | Decided 2026-11-26, before any plan, battle or receipt existed: a plan names exactly the three pets that defend, and there is no draw. The trade-off is that an attacker sees the exact lineup and can counter-pick it. Changed in place rather than as new versions, since nothing had been signed: `defensePlan` v1, snapshot v3 and receipt v2 lost their ranks and `drawn`, `VerifyTeamBattle` reserved its rank and drawn fields, and `team.json` lost its draw cases while every fight case stayed byte for byte the same. |
+| D9 | **Hidden defenders.** With D8 an attacker could read the exact lineup, tiles and tactics from the opponent list and counter-build a squad, which made defending a losing position. | Decided 2026-11-26: `GET /battle/team-opponents` serves a plan's owner, level band, expiry and readiness only, and the challenge screen shows the rival zone as unknown until the battle reveals it. Two limits are known and accepted for now. Receipts are public (§H), so a roster is readable from the first battle it defends until the defender saves a new plan. And `defensePlan` v1 carries no salt: every field but the roster is shown or guessable, so the roster can be recovered from the public `planHash` by trying each choice of pets, tiles and tactics, which is cheap. Closing that needs a random salt in the plan, a `defensePlan` v2 the verifier also reads, and is a follow-up. |
 
 ## 3. How it fits the current code
 
