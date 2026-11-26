@@ -5,7 +5,7 @@ the execution order and the decisions it depends on. Steps are small on purpose:
 a command that passes, so the branch is revertible at any point. The golden-vector and
 schema-version rules in `AGENTS.md` apply throughout.
 
-Branch: `feat/team-battles-3v3`. **Status: proposed, nothing implemented.**
+Branch: `feat/team-battles-3v3`. **Status: Phase 0 done (same-owner battles blocked, decisions recorded). Phase 1 not started.**
 
 ## 1. What a team battle is
 
@@ -114,19 +114,21 @@ no neighbours, and the only enemy is always in reach. Under today's attributes, 
 and the win check must then reduce **exactly** to today's engine. This is a requirement, not a hope:
 the first cases in the new vector file replay every `battle.json` fight in this layout (Phase 1).
 
-## 2. Decisions to make first
+## 2. Decisions
 
-Each has a recommendation; the phases below assume it unless this section is updated.
+Decided on 2026-11-26: every recommendation below was accepted. D1, D3, D5 and D6 were chosen
+explicitly. D2 and D4 are the technical formats that follow from them. The phases below assume
+these, so if one is reopened, change it here first.
 
-| | Decision | Recommendation |
+| | Question | Decided |
 |---|---|---|
 | D1 | **Attributes 2.0.** The rules use Speed, Range and Temperament, which do not exist yet. | Build the team engine with them as inputs, and ship team battles first with neutral values (everyone Melee, no temperament bonus, and today's turn order: a Shell pet last, then higher INT). Attributes 2.0 then fills those inputs under a later ruleset version, and that version is also where turn order switches to Speed first. Note that "equal Speed" would not be neutral: it would reduce the order to the tie-breaks and drop INT, so a team battle would order differently from a duel between the same pets. The cost is a second re-consent when Attributes 2.0 ships; the benefit is not blocking on genes that need a contract upgrade. |
 | D2 | **Consent object.** | A new signed object kind, `defensePlan` v1 (roster, ranks, tactics, home tiles, plus today's consent fields). `DefenseAuthorization` v1 stays for duels. |
 | D3 | **Locks.** The three defenders are unknown until the seed. | Lock all five roster pets from acceptance until the battle is computed, then release the two benched pets. |
 | D4 | **Receipt shape.** | `receipt` v2: a team result, per-pet previous-receipt links for the six fighters (benched pets are not linked), and progression for six pets. `combatLog` v2 records actor and target slots and the guard, expose and second-chance events. |
-| D5 | **Duels.** | Keep one-on-one battles for players with fewer than three pets. Team battles are a separate challenge type. |
+| D5 | **Duels.** | Keep one-on-one battles for everyone, including players with fewer than three pets. Team battles are a separate challenge type. |
 | D6 | **Chains.** | Base first. Solana battles are paused, and the frozen Solana port is not touched. |
-| D7 | **Same-owner battles.** Today only a pet fighting itself is blocked (`backend/src/features/battle/ledger/intent.service.ts`). | Block different pets of the same owner before team battles exist, as its own small PR (Phase 0). |
+| D7 | **Same-owner battles.** Today only a pet fighting itself is blocked (`backend/src/features/battle/ledger/intent.service.ts`). | Block different pets of the same owner before team battles exist, as its own small PR (Phase 0). **Done:** intents naming one owner on both sides are refused as `same-owner`. |
 
 ## 3. How it fits the current code
 
@@ -253,7 +255,7 @@ differences are deliberate, but each one should be either accepted or pulled bac
   and its simulated win rates depend on them.
 - **Mobile screens and pet profiles are deferred.** The whitepaper's roadmap lists both on web and
   mobile; this plan builds web only.
-- **The leaderboard's skill rating is an open question** (section 7, question 3). The whitepaper
+- **The leaderboard's skill rating is an open question** (section 7, question 2). The whitepaper
   lists a rating that rises more for beating stronger squads as planned.
 - **There is no rematch.** The whitepaper's result screen has a Rematch button; Phase 5 has a
   result screen and replay only.
@@ -290,10 +292,9 @@ differences are deliberate, but each one should be either accepted or pulled bac
 
 ## 7. Open questions
 
-1. D1: ship with neutral attributes, or wait for Attributes 2.0?
-2. Should a defender be able to cancel a plan while one of its pets is locked in a battle?
-3. How should the leaderboard rank team wins against duel wins: together or on separate boards?
-4. What do benched defenders earn, if anything?
+1. Should a defender be able to cancel a plan while one of its pets is locked in a battle?
+2. How should the leaderboard rank team wins against duel wins: together or on separate boards?
+3. What do benched defenders earn, if anything?
 
 ## References
 

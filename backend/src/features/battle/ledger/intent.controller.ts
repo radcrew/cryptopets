@@ -32,6 +32,7 @@ export const STATUS_BY_REASON: Record<IntentRejection, number> = {
     'unknown-pet': 404,
     'not-pet-owner': 403,
     'self-battle': 422,
+    'same-owner': 422,
     'nonce-already-used': 409,
     'duplicate-intent': 409,
 };

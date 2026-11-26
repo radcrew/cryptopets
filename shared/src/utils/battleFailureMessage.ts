@@ -33,6 +33,7 @@ export const MESSAGES: Record<string, string> = {
     'unknown-pet': 'One of those pets is not on record yet.',
     'not-pet-owner': 'You can only attack with a pet you own.',
     'self-battle': 'A pet cannot battle itself.',
+    'same-owner': 'You cannot battle two of your own pets.',
     'nonce-already-used': 'That battle request was already used. Try again.',
     'duplicate-intent': 'That battle request was already submitted.',
 

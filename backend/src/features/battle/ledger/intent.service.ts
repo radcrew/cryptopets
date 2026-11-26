@@ -86,6 +86,7 @@ export type IntentRejection =
     | 'unknown-pet'
     | 'not-pet-owner'
     | 'self-battle'
+    | 'same-owner'
     | 'nonce-already-used'
     | 'duplicate-intent';
 
@@ -130,6 +131,13 @@ export async function submitBattleIntent(request: SubmitIntentRequest): Promise<
 
     if (intent.attackerPetId === intent.defenderPetId) {
         return reject('self-battle', 'a pet cannot fight itself');
+    }
+
+    if (intent.attackerOwner === intent.defenderOwner) {
+        // Comparing the declared owners is enough: both are normalized above, and the roster
+        // reads below refuse any pet whose real owner differs from the one declared. Without
+        // this, one wallet fights itself for XP and drops, which team battles would triple.
+        return reject('same-owner', 'two pets of the same owner cannot fight each other');
     }
 
     const expectedFormat: SignatureFormat = chainFamily(intent.domain.chainId) === 'evm' ? 'eip712' : 'solana-message';
