@@ -98,6 +98,11 @@ export async function* streamTaunts(
     rivalry?: string,
     banter?: string,
 ): AsyncGenerator<DialogueTurn[], DialogueTurn[]> {
+    // streamObject reports a failed request through onError and ends the partial stream
+    // without throwing, and `result.object` never settles after that. Rethrowing it below
+    // is what ends the HTTP stream; otherwise the client waits on taunts forever and the
+    // battle that starts once they finish never does.
+    let streamError: unknown;
     const result = streamObject({
         model: hfModel(),
         output: 'no-schema',
@@ -106,6 +111,9 @@ export async function* streamTaunts(
         maxRetries: 1,
         system: `${TAUNT_SYSTEM_PROMPT}\n\n${TAUNT_JSON_FORMAT_INSTRUCTION}`,
         prompt: buildTauntUserMessage(attackerName, defenderName, attacker, defender, rivalry, banter),
+        onError: ({ error }) => {
+            streamError = error;
+        },
     });
 
     let emitted = 0;
@@ -118,6 +126,8 @@ export async function* streamTaunts(
             yield settled;
         }
     }
+
+    if (streamError !== undefined) throw streamError;
 
     return finalizeTaunts(ResponseSchema.parse(await result.object).turns);
 }

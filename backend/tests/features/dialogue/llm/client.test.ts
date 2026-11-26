@@ -141,4 +141,20 @@ describe('streamTaunts', () => {
         }
         expect(returnVal.every((t: unknown) => (t as { phase: string }).phase !== 'result')).toBe(true);
     });
+
+    it('throws a failed request instead of waiting on an object that never settles', async () => {
+        const failure = new Error('model_not_found');
+        // Mirrors the SDK on a rejected request: the error goes to onError, the partial
+        // stream ends quietly, and `object` stays pending.
+        vi.mocked(streamObject).mockImplementation(((options: { onError?: (event: { error: unknown }) => void }) => ({
+            partialObjectStream: (async function* () {
+                options.onError?.({ error: failure });
+                yield* [];
+            })(),
+            object: new Promise(() => {}),
+        })) as never);
+
+        const gen = streamTaunts('Rex', 'Blaze', attacker, defender);
+        await expect(gen.next()).rejects.toBe(failure);
+    });
 });
