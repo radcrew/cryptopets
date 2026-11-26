@@ -47,46 +47,50 @@ const TeamFormationCheck: React.FC<TeamFormationCheckProps> = ({ roster, pets })
     const report = useMemo(() => analyzeFormation(formation), [formation]);
 
     return (
-        <section className={styles.sideCard} aria-label="Formation check">
-            <h4 className={styles.columnHeading}>
-                Formation check
-                <InfoTooltip subject="Formation check">
-                    How your placement works out in a fight. Your three act in the order shown:
-                    Shell pets act last, and otherwise higher INT goes first. Pets help each other
-                    only when their tiles touch along a side, never across a corner.
-                </InfoTooltip>
-            </h4>
-            {formation.length === 0 ? (
-                <p className={styles.fieldHint}>Add pets to see how they work together.</p>
-            ) : (
-                <>
-                    <div className={styles.fieldRow}>
-                        <span>Turn order</span>
-                        <ol className={styles.chips} aria-label="Turn order">
-                            {report.turnOrder.map((index, place) => (
-                                <li key={index} className={styles.chip}>
-                                    {ORDINALS[place]} {formation[index]?.name}
+        <section className={styles.sideSection} aria-label="Formation check">
+            <div className={styles.cardHead}>
+                <h4 className={styles.columnHeading}>
+                    Formation check
+                    <InfoTooltip subject="Formation check">
+                        How your placement works out in a fight. Your three act in the order shown:
+                        Shell pets act last, and otherwise higher INT goes first. Pets help each
+                        other only when their tiles touch along a side, never across a corner.
+                    </InfoTooltip>
+                </h4>
+            </div>
+            <div className={styles.sideCard}>
+                {formation.length === 0 ? (
+                    <p className={styles.fieldHint}>Add pets to see how they work together.</p>
+                ) : (
+                    <>
+                        <div className={styles.fieldRow}>
+                            <span>Turn order</span>
+                            <ol className={styles.chips} aria-label="Turn order">
+                                {report.turnOrder.map((index, place) => (
+                                    <li key={index} className={styles.chip}>
+                                        {ORDINALS[place]} {formation[index]?.name}
+                                    </li>
+                                ))}
+                            </ol>
+                        </div>
+                        <ul className={styles.notes} aria-label="Formation notes">
+                            {report.notes.map((note) => (
+                                <li
+                                    key={note.text}
+                                    className={clsx(
+                                        styles.note,
+                                        note.kind === 'good' && styles.noteGood,
+                                        note.kind === 'warning' && styles.noteWarning,
+                                        note.kind === 'info' && styles.noteInfo,
+                                    )}
+                                >
+                                    {note.text}
                                 </li>
                             ))}
-                        </ol>
-                    </div>
-                    <ul className={styles.notes} aria-label="Formation notes">
-                        {report.notes.map((note) => (
-                            <li
-                                key={note.text}
-                                className={clsx(
-                                    styles.note,
-                                    note.kind === 'good' && styles.noteGood,
-                                    note.kind === 'warning' && styles.noteWarning,
-                                    note.kind === 'info' && styles.noteInfo,
-                                )}
-                            >
-                                {note.text}
-                            </li>
-                        ))}
-                    </ul>
-                </>
-            )}
+                        </ul>
+                    </>
+                )}
+            </div>
         </section>
     );
 };

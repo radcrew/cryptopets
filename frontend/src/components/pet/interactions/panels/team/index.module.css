@@ -350,6 +350,12 @@ button.tile:focus-visible {
     gap: 1rem;
 }
 
+/* A warning about the whole plan sits on its own line above both columns, so it moves them
+   together and the card tops stay level with the board. */
+.planBanner {
+    flex: 1 1 100%;
+}
+
 .planLayout > .arena {
     flex: 1 1 47rem;
     min-width: 0;
@@ -376,28 +382,43 @@ button.tile:focus-visible {
     text-align: left;
 }
 
-.sideCard:last-child {
+/* A side card is a heading and a box, like the board's columns. The last one grows so the
+   side column ends level with the team. */
+.sideSection {
+    display: flex;
+    flex-direction: column;
+}
+
+.sideSection:last-child {
     flex: 1 1 auto;
 }
 
-.sideCard .columnHeading {
+.sideSection:last-child .sideCard {
+    flex: 1 1 auto;
+}
+
+/* Exactly one board column heading tall (its 0.95rem text at line height 1.5) with the same
+   gap below, so each card's box starts level with the zone tiles and the details box. */
+.cardHead {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    height: 1.425rem;
+    margin-bottom: 0.4rem;
+}
+
+.cardHead .columnHeading {
     margin: 0;
 }
 
-.cardHead {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.4rem 0.75rem;
-}
-
-/* The saved plan's state, at the top right of the rules card. */
+/* The saved plan's state, beside the rules card's heading. */
 .planStatus {
-    padding: 2px 10px;
+    padding: 1px 9px;
     border: 1px solid currentcolor;
     border-radius: 999px;
-    font-size: 0.75rem;
+    font-size: 0.72rem;
+    line-height: 1.4;
     white-space: nowrap;
 }
 

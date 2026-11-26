@@ -122,14 +122,13 @@ const TeamPlan: React.FC = () => {
 
     return (
         <div className={styles.planLayout}>
+            {plan?.isStale && (
+                <p className={clsx(styles.stale, styles.planBanner)} role="status">
+                    The battle rules changed since you saved this team, so it cannot be challenged.
+                    Save it again.
+                </p>
+            )}
             <div className={clsx(styles.panel, styles.arena)}>
-                {plan?.isStale && (
-                    <p className={styles.stale} role="status">
-                        The battle rules changed since you saved this team, so it cannot be
-                        challenged. Save it again.
-                    </p>
-                )}
-
                 <div className={styles.boardRow}>
                     <div className={styles.zoneColumn}>
                         <h4 className={styles.columnHeading}>Defence zone</h4>

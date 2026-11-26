@@ -85,7 +85,7 @@ const TeamPlanRules: React.FC<TeamPlanRulesProps> = ({
           };
 
     return (
-        <section className={styles.sideCard} aria-label="Challenge rules">
+        <section className={styles.sideSection} aria-label="Challenge rules">
             <div className={styles.cardHead}>
                 <h4 className={styles.columnHeading}>
                     Challenge rules
@@ -98,72 +98,74 @@ const TeamPlanRules: React.FC<TeamPlanRulesProps> = ({
                 <span className={clsx(styles.planStatus, status.tone)}>{status.text}</span>
             </div>
 
-            <div className={styles.ruleFields}>
-                <div className={styles.ruleField}>
-                    <span className={styles.fieldLabel}>Challenger level</span>
-                    <span className={styles.rangeInputs}>
+            <div className={styles.sideCard}>
+                <div className={styles.ruleFields}>
+                    <div className={styles.ruleField}>
+                        <span className={styles.fieldLabel}>Challenger level</span>
+                        <span className={styles.rangeInputs}>
+                            <input
+                                type="number"
+                                aria-label="Lowest challenger level"
+                                className={clsx(styles.select, styles.numberInput)}
+                                min={1}
+                                max={MAX_LEVEL}
+                                value={shown(rules.minLevel)}
+                                disabled={disabled}
+                                onChange={(e) => set({ minLevel: read(e.target.value) })}
+                            />
+                            <span>to</span>
+                            <input
+                                type="number"
+                                aria-label="Highest challenger level"
+                                className={clsx(styles.select, styles.numberInput)}
+                                min={1}
+                                max={MAX_LEVEL}
+                                value={shown(rules.maxLevel)}
+                                disabled={disabled}
+                                onChange={(e) => set({ maxLevel: read(e.target.value) })}
+                            />
+                        </span>
+                    </div>
+                    <div className={styles.ruleField}>
+                        <span className={styles.fieldLabel}>Battles per day</span>
                         <input
                             type="number"
-                            aria-label="Lowest challenger level"
+                            aria-label="Battles per day"
                             className={clsx(styles.select, styles.numberInput)}
                             min={1}
-                            max={MAX_LEVEL}
-                            value={shown(rules.minLevel)}
+                            max={MAX_BATTLES_PER_DAY}
+                            value={shown(rules.maxBattlesPerDay)}
                             disabled={disabled}
-                            onChange={(e) => set({ minLevel: read(e.target.value) })}
+                            onChange={(e) => set({ maxBattlesPerDay: read(e.target.value) })}
                         />
-                        <span>to</span>
-                        <input
-                            type="number"
-                            aria-label="Highest challenger level"
-                            className={clsx(styles.select, styles.numberInput)}
-                            min={1}
-                            max={MAX_LEVEL}
-                            value={shown(rules.maxLevel)}
+                    </div>
+                    <div className={styles.ruleField}>
+                        <span className={styles.fieldLabel}>Valid for</span>
+                        <select
+                            aria-label="Valid for"
+                            className={clsx(styles.select, styles.daysSelect)}
+                            value={rules.days}
                             disabled={disabled}
-                            onChange={(e) => set({ maxLevel: read(e.target.value) })}
-                        />
-                    </span>
+                            onChange={(e) => set({ days: Number(e.target.value) })}
+                        >
+                            {VALIDITY_DAYS.map((d) => (
+                                <option key={d} value={d}>
+                                    {d} days
+                                </option>
+                            ))}
+                        </select>
+                    </div>
                 </div>
-                <div className={styles.ruleField}>
-                    <span className={styles.fieldLabel}>Battles per day</span>
-                    <input
-                        type="number"
-                        aria-label="Battles per day"
-                        className={clsx(styles.select, styles.numberInput)}
-                        min={1}
-                        max={MAX_BATTLES_PER_DAY}
-                        value={shown(rules.maxBattlesPerDay)}
-                        disabled={disabled}
-                        onChange={(e) => set({ maxBattlesPerDay: read(e.target.value) })}
-                    />
-                </div>
-                <div className={styles.ruleField}>
-                    <span className={styles.fieldLabel}>Valid for</span>
-                    <select
-                        aria-label="Valid for"
-                        className={clsx(styles.select, styles.daysSelect)}
-                        value={rules.days}
-                        disabled={disabled}
-                        onChange={(e) => set({ days: Number(e.target.value) })}
-                    >
-                        {VALIDITY_DAYS.map((d) => (
-                            <option key={d} value={d}>
-                                {d} days
-                            </option>
-                        ))}
-                    </select>
-                </div>
-            </div>
-            <p className={styles.fieldHint}>
-                Saving opens the team to challenges for the next {rules.days} days.
-            </p>
-
-            {error && (
-                <p className={styles.error} role="alert">
-                    {error}
+                <p className={styles.fieldHint}>
+                    Saving opens the team to challenges for the next {rules.days} days.
                 </p>
-            )}
+
+                {error && (
+                    <p className={styles.error} role="alert">
+                        {error}
+                    </p>
+                )}
+            </div>
         </section>
     );
 };
