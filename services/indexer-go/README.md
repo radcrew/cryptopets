@@ -70,10 +70,12 @@ schema bump deploys, those fields decode to their zero values.
   or runaway `indexer_ws_reconnects_total`. A flat `indexer_last_version` is
   *not* a signal on its own — it also means nobody has played.
 
-Deployment: `render.yaml` at the repo root defines `do-not-stop-indexer` as a
-free-plan Go web service (`/healthz` checked, `/metrics` on the same port).
-Free web services sleep when idle — the reconnect/backfill machinery recovers
-the gap on wake. Connection env vars are set in the Render dashboard.
+Deployment: there is no Render blueprint in the repo at the moment (`render.yaml`
+was removed while the project runs on localhost only). It defined
+`do-not-stop-indexer` as a free-plan Go web service (`/healthz` checked,
+`/metrics` on the same port). Free web services sleep when idle, and the
+reconnect/backfill machinery recovers the gap on wake. Connection env vars are
+set in the Render dashboard.
 
 Note this service is now the **only** roster indexer: the backend's Node
 `RosterIndexer` was deleted, so nothing else writes `pet_roster` and there is no
