@@ -63,6 +63,54 @@ describe('TeamPlan', () => {
         await user.click(screen.getByRole('button', { name: 'Save team' }));
         expect(saveCall().roster[0]).toMatchObject({ petId: '1', col: 0, row: 0, tactic: 'breaker' });
     });
+
+    it('signs the challenge rules with the team, and refuses a level range the wrong way round', async () => {
+        const user = userEvent.setup();
+        render(<TeamPlan />);
+        for (const id of ['1', '2', '3']) {
+            await user.click(screen.getByRole('button', { name: `Pet ${id}, level 10` }));
+        }
+        const rules = screen.getByRole('region', { name: 'Challenge rules' });
+        const lowest = within(rules).getByRole('spinbutton', { name: 'Lowest challenger level' });
+        const highest = within(rules).getByRole('spinbutton', { name: 'Highest challenger level' });
+        const saveButton = screen.getByRole('button', { name: 'Save team' });
+
+        await user.clear(highest);
+        await user.type(highest, '20');
+        await user.clear(lowest);
+        await user.type(lowest, '30');
+        expect(within(rules).getByRole('alert')).toHaveTextContent('The lowest challenger level is above the highest.');
+        expect(saveButton).toBeDisabled();
+
+        await user.clear(lowest);
+        await user.type(lowest, '10');
+        const perDay = within(rules).getByRole('spinbutton', { name: 'Battles per day' });
+        await user.clear(perDay);
+        await user.type(perDay, '5');
+        await user.selectOptions(within(rules).getByRole('combobox', { name: 'Valid for' }), '7');
+        expect(within(rules).queryByRole('alert')).toBeNull();
+        await user.click(saveButton);
+
+        expect(saveCall()).toMatchObject({ minLevel: 10, maxLevel: 20, maxBattlesPerDay: 5, days: 7 });
+    });
+
+    it('checks the formation as pets are placed and moved', async () => {
+        const user = userEvent.setup();
+        render(<TeamPlan />);
+        const check = screen.getByRole('region', { name: 'Formation check' });
+        expect(check).toHaveTextContent(/add pets/i);
+
+        for (const id of ['1', '2', '3']) {
+            await user.click(screen.getByRole('button', { name: `Pet ${id}, level 10` }));
+        }
+        // Equal pets act in slot order, and all three start on the front column.
+        expect(within(check).getByRole('list', { name: 'Turn order' })).toHaveTextContent('1st Pet 12nd Pet 23rd Pet 3');
+        expect(check).toHaveTextContent('Pet 1, Pet 2 and Pet 3 share the front line');
+
+        await user.click(screen.getByRole('button', { name: 'Pet 1, front column, middle row' }));
+        await user.click(screen.getByRole('button', { name: 'Move here: back column, top row' }));
+        expect(check).toHaveTextContent('Pet 2 and Pet 3 share the front line');
+    });
 });
 
 describe('TeamPetGrid', () => {
@@ -88,7 +136,7 @@ describe('TeamPetGrid', () => {
 });
 
 function saveCall() {
-    return save.mock.calls[0]![0] as { roster: { petId: string }[] };
+    return save.mock.calls[0]![0] as { roster: { petId: string }[]; minLevel: number; maxLevel: number; maxBattlesPerDay: number; days: number };
 }
 
 describe('TeamPlayback', () => {

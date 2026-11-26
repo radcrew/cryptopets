@@ -343,6 +343,111 @@ button.tile:focus-visible {
     font-size: 13px;
 }
 
+/* The defence plan screen: the team on the left, its challenge rules and formation check
+   beside it. The team takes the room first, at the width where its own board row stays side
+   by side (just over the 46rem the board row stacks at); the cards wrap below it when there
+   is no room left for them. */
+.planLayout {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.planLayout > .arena {
+    flex: 1 1 47rem;
+    min-width: 0;
+}
+
+.planSide {
+    flex: 1 1 17rem;
+    max-width: 24rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.sideCard {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    padding: 0.85rem 1rem;
+    border: 1px solid rgb(125 214 255 / 22%);
+    border-radius: 12px;
+    background: linear-gradient(135deg, rgb(12 22 48 / 90%), rgb(4 10 26 / 90%));
+    box-shadow: inset 0 0 24px rgb(125 214 255 / 5%);
+}
+
+.sideCard .columnHeading {
+    margin: 0;
+}
+
+.fieldRow {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.4rem 0.75rem;
+    font-size: 0.85rem;
+}
+
+.rangeInputs {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.numberInput {
+    width: 5.5rem;
+}
+
+.fieldHint {
+    margin: 0;
+    color: var(--color-text-muted, #9aa3b5);
+    font-size: 0.78rem;
+    line-height: 1.4;
+}
+
+/* Formation notes, each marked by what kind of note it is. */
+.notes {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 0.82rem;
+    line-height: 1.4;
+}
+
+.note {
+    position: relative;
+    padding-left: 1.1rem;
+}
+
+.note::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.45em;
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background: var(--cp-cyan, #7dd6ff);
+}
+
+.noteGood::before {
+    background: var(--color-success, #4cd6a3);
+}
+
+.noteWarning::before {
+    background: var(--color-warning, #f5b14c);
+}
+
+.noteInfo::before {
+    background: var(--cp-cyan, #7dd6ff);
+}
+
 /* The battle map and its result, side by side. */
 .playRow {
     display: flex;
