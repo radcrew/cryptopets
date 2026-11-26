@@ -8,6 +8,7 @@ import type { Tactic } from '@shared/core';
 import { type ArtPet, teamPetArt } from './art';
 import { TACTIC_OPTIONS } from './tactics';
 import { ZoneGrid } from './team-board';
+import TeamPetDetails, { type PetSelection, rankFact } from './team-pet-details';
 import TeamPetGrid from './team-pet-grid';
 import TeamPlayback from './team-playback';
 import styles from './index.module.css';
@@ -20,13 +21,18 @@ const STATE_LABELS: Record<string, string> = {
     verified: 'Verified. Signing the receipt…',
 };
 
+const ORDINALS = ['1st', '2nd', '3rd'] as const;
+
 /**
  * The team challenge flow, a view over `useTeamBattlePanel`: pick a defender, build and place a
  * squad of three, sign, then watch the verified battle.
  */
 const TeamChallenge: React.FC = () => {
     const panel = useTeamBattlePanel();
-    const [selected, setSelected] = useState<string | null>(null);
+    // The pet whose details are shown: one of the player's, which can then be moved, or a rival's.
+    const [inspected, setInspected] = useState<{ side: 0 | 1; petId: string } | null>(null);
+    const toggleInspected = (side: 0 | 1, petId: string) =>
+        setInspected((current) => (current?.side === side && current.petId === petId ? null : { side, petId }));
     const ownPet = useCallback((petId: string) => panel.pets.find((p) => p.id === petId), [panel.pets]);
     const petName = useCallback((petId: string) => ownPet(petId)?.name ?? `Pet ${petId}`, [ownPet]);
     const ownArt = (petId: string): ArtPet => ownPet(petId) ?? teamPetArt(petId, 0n, petName(petId));
@@ -109,33 +115,61 @@ const TeamChallenge: React.FC = () => {
 
     const opponent = panel.opponent;
     const squadIds = panel.squad.map((m) => m.petId);
+    const movingPetId = inspected?.side === 0 ? inspected.petId : null;
+    const selection = ((): PetSelection | null => {
+        if (inspected?.side === 0) {
+            const slot = panel.squad.findIndex((m) => m.petId === inspected.petId);
+            const member = panel.squad[slot];
+            const pet = ownPet(inspected.petId);
+            if (!member || !pet) return null;
+            const order = panel.turnOrder.indexOf(slot);
+            return {
+                petId: pet.id,
+                side: 0,
+                pet: { art: pet, name: pet.name, level: pet.level, rarity: pet.rarity, dna: pet.dna, speciesId: pet.speciesId, readyAt: pet.readyAt },
+                col: member.col,
+                row: member.row,
+                tactic: member.tactic,
+                facts: order >= 0 ? [{ label: 'Turn order', value: `Acts ${ORDINALS[order] ?? order + 1} in your squad` }] : [],
+            };
+        }
+        if (inspected?.side === 1) {
+            const p = opponent.roster.find((r) => r.petId === inspected.petId);
+            if (!p) return null;
+            return {
+                petId: p.petId,
+                side: 1,
+                pet: { art: teamPetArt(p.petId, p.dna, p.name), name: p.name, level: p.level, rarity: p.rarity, dna: BigInt(p.dna), speciesId: p.speciesId, readyAt: p.readyAt },
+                col: p.col,
+                row: p.row,
+                tactic: p.tactic,
+                facts: [rankFact(p.rank)],
+            };
+        }
+        return null;
+    })();
     return (
         <div className={styles.panel}>
             <div className={styles.row}>
-                <div className={styles.grow}>
+                <div className={styles.zoneColumn}>
                     <h4>Your squad</h4>
                     <ZoneGrid
                         label="Your zone"
                         side={0}
                         members={panel.squad.map((m) => ({ petId: m.petId, col: m.col, row: m.row, art: ownArt(m.petId), label: petName(m.petId) }))}
-                        selectedPetId={selected}
-                        onTileClick={(col, row) => {
-                            const here = panel.squad.find((m) => m.col === col && m.row === row);
-                            if (selected) {
-                                panel.placePet(selected, col, row);
-                                setSelected(null);
-                            } else if (here) {
-                                setSelected(here.petId);
-                            }
-                        }}
+                        selectedPetId={movingPetId}
+                        onPetClick={(petId) => toggleInspected(0, petId)}
+                        onEmptyClick={movingPetId ? (col, row) => panel.placePet(movingPetId, col, row) : undefined}
                         onDropPet={panel.placePet}
                     />
                 </div>
-                <div className={styles.grow}>
+                <div className={styles.zoneColumn}>
                     <h4>Their team</h4>
                     <ZoneGrid
                         label="Rival zone"
                         side={1}
+                        selectedPetId={inspected?.side === 1 ? inspected.petId : null}
+                        onPetClick={(petId) => toggleInspected(1, petId)}
                         members={opponent.roster.map((p) => ({
                             petId: p.petId,
                             col: p.col,
@@ -146,10 +180,15 @@ const TeamChallenge: React.FC = () => {
                         }))}
                     />
                 </div>
+                <TeamPetDetails
+                    selection={selection}
+                    onTacticChange={selection?.side === 0 ? (tactic) => panel.setTactic(selection.petId, tactic) : undefined}
+                />
             </div>
             <p className={styles.muted}>
-                Tap a pet below to add or remove it. To move one, select it on your zone and then a
-                tile, or drag it. Melee pets can only reach the enemy front line.
+                Tap a pet below to add or remove it. Tap a pet on either zone to see its details. To
+                move one of yours, select it and tap an empty tile, or drag it onto another pet to swap
+                them. Melee pets can only reach the enemy front line.
             </p>
 
             {panel.squad.length > 0 && (

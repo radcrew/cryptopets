@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -45,6 +45,30 @@ describe('TeamPlan', () => {
             ['5', 5],
         ]);
         expect(await screen.findByRole('status')).toHaveTextContent(/saved/i);
+    });
+
+    it('shows the selected pet in the details panel, moves it to an empty tile, and saves the tactic set there', async () => {
+        const user = userEvent.setup();
+        render(<TeamPlan />);
+        for (const id of ['1', '2', '3', '4', '5']) {
+            await user.click(screen.getByRole('button', { name: `Pet ${id}, level 10` }));
+        }
+        const details = screen.getByRole('complementary', { name: 'Pet details' });
+        expect(details).toHaveTextContent(/select a pet/i);
+
+        await user.click(screen.getByRole('button', { name: 'Pet 1, front column, middle row' }));
+        expect(details).toHaveTextContent('Pet 1');
+        expect(details).toHaveTextContent('1 of 5, defends in about 83% of battles');
+        // DNA 1 at rarity 1 and level 10 has every stat gene at 0: HP is 100 + 6 * 10, ATK 10 + 2 * 10.
+        expect(within(details).getByRole('list', { name: 'Base stats' })).toHaveTextContent('160HP30ATK');
+
+        await user.click(screen.getByRole('button', { name: 'Move here: back column, top row' }));
+        expect(screen.getByRole('button', { name: 'Pet 1, back column, top row' })).toBeInTheDocument();
+        expect(details).toHaveTextContent('Back column, top row');
+
+        await user.selectOptions(within(details).getByRole('combobox'), 'breaker');
+        await user.click(screen.getByRole('button', { name: 'Save team' }));
+        expect(saveCall().roster[0]).toMatchObject({ petId: '1', rank: 1, col: 0, row: 0, tactic: 'breaker' });
     });
 });
 

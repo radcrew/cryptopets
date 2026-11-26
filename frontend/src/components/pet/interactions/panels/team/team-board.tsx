@@ -8,6 +8,9 @@ import styles from './index.module.css';
 const COL_NAMES = ['back', 'middle', 'front'] as const;
 const ROW_NAMES = ['top', 'middle', 'bottom'] as const;
 
+/** A tile's place in its own zone, as words: 'front column, top row'. */
+export const positionLabel = (col: number, row: number) => `${COL_NAMES[col]} column, ${ROW_NAMES[row]} row`;
+
 export interface ZoneMember {
     petId: string;
     col: number;
@@ -22,19 +25,22 @@ export interface ZoneGridProps {
     /** 0 draws the zone facing right (front on the right), 1 mirrored, as the two sides face. */
     side: 0 | 1;
     selectedPetId?: string | null;
-    /** Omit for a read-only zone. */
-    onTileClick?: (col: number, row: number) => void;
-    /** A pet dragged onto a tile. */
+    /** Tapping a pet, which selects it to show its details. Omit for a zone nobody selects in. */
+    onPetClick?: (petId: string) => void;
+    /** Tapping an empty tile. Pass it only while a move is possible: it moves the selected pet. */
+    onEmptyClick?: (col: number, row: number) => void;
+    /** A pet dragged onto a tile. Dropped onto another pet, the two swap. */
     onDropPet?: (petId: string, col: number, row: number) => void;
     label: string;
 }
 
 /**
- * One side's 3×3 zone. Interactive when given handlers: click a tile to move the selected pet
- * there, or drop a dragged pet on it. Every tile is a button with a spoken position, so
- * placement works from a keyboard as well as by drag.
+ * One side's 3×3 zone. Tapping a pet selects it, and tapping an empty tile then moves it there;
+ * dragging works on top, and is the way to swap two pets. Tapping a pet never moves anything,
+ * so selecting a pet to read its details cannot rearrange the zone by accident. Every
+ * interactive tile is a button with a spoken position, so all of it works from a keyboard.
  */
-export const ZoneGrid: React.FC<ZoneGridProps> = ({ members, side, selectedPetId, onTileClick, onDropPet, label }) => {
+export const ZoneGrid: React.FC<ZoneGridProps> = ({ members, side, selectedPetId, onPetClick, onEmptyClick, onDropPet, label }) => {
     const columns = side === 0 ? [0, 1, 2] : [2, 1, 0];
     return (
         <div className={styles.zone} role="group" aria-label={label}>
@@ -49,7 +55,7 @@ export const ZoneGrid: React.FC<ZoneGridProps> = ({ members, side, selectedPetId
                     ]
                         .filter(Boolean)
                         .join(' ');
-                    const position = `${COL_NAMES[col]} column, ${ROW_NAMES[row]} row`;
+                    const position = positionLabel(col, row);
                     const content = member ? (
                         <>
                             <span className={styles.tokenArt} aria-hidden>
@@ -59,9 +65,24 @@ export const ZoneGrid: React.FC<ZoneGridProps> = ({ members, side, selectedPetId
                             {member.sub && <span className={styles.tokenSub}>{member.sub}</span>}
                         </>
                     ) : null;
-                    if (!onTileClick) {
+                    const onClick = member
+                        ? onPetClick && (() => onPetClick(member.petId))
+                        : onEmptyClick && (() => onEmptyClick(col, row));
+                    const drag = onDropPet
+                        ? {
+                              draggable: Boolean(member),
+                              onDragStart: (e: React.DragEvent<HTMLElement>) => member && e.dataTransfer.setData('text/plain', member.petId),
+                              onDragOver: (e: React.DragEvent<HTMLElement>) => e.preventDefault(),
+                              onDrop: (e: React.DragEvent<HTMLElement>) => {
+                                  e.preventDefault();
+                                  const petId = e.dataTransfer.getData('text/plain');
+                                  if (petId) onDropPet(petId, col, row);
+                              },
+                          }
+                        : {};
+                    if (!onClick) {
                         return (
-                            <div key={`${col}-${row}`} className={className} aria-label={member ? `${member.label}, ${position}` : `Empty, ${position}`}>
+                            <div key={`${col}-${row}`} className={className} aria-label={member ? `${member.label}, ${position}` : `Empty, ${position}`} {...drag}>
                                 {content}
                             </div>
                         );
@@ -71,16 +92,10 @@ export const ZoneGrid: React.FC<ZoneGridProps> = ({ members, side, selectedPetId
                             key={`${col}-${row}`}
                             type="button"
                             className={className}
-                            aria-label={member ? `${member.label}, ${position}` : `Place here: ${position}`}
-                            draggable={Boolean(member)}
-                            onDragStart={(e) => member && e.dataTransfer.setData('text/plain', member.petId)}
-                            onDragOver={(e) => e.preventDefault()}
-                            onDrop={(e) => {
-                                e.preventDefault();
-                                const petId = e.dataTransfer.getData('text/plain');
-                                if (petId) onDropPet?.(petId, col, row);
-                            }}
-                            onClick={() => onTileClick(col, row)}
+                            aria-label={member ? `${member.label}, ${position}` : `Move here: ${position}`}
+                            aria-pressed={member ? member.petId === selectedPetId : undefined}
+                            onClick={onClick}
+                            {...drag}
                         >
                             {content}
                         </button>
