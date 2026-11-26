@@ -33,7 +33,10 @@ describe('TeamPlan', () => {
         }
         // A full team takes no sixth pet.
         expect(screen.getByRole('button', { name: 'Pet 6, level 10' })).toBeDisabled();
+        // Ranking happens in the details panel, for the pet selected on the zone.
+        await user.click(screen.getByRole('button', { name: 'Pet 2, front column, top row' }));
         await user.click(screen.getByRole('button', { name: 'Rank Pet 2 higher' }));
+        expect(screen.getByRole('button', { name: 'Rank Pet 2 higher' })).toBeDisabled();
         await user.click(saveButton);
 
         const vars = saveCall();

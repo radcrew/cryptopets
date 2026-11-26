@@ -3,10 +3,8 @@ import React, { useCallback, useState } from 'react';
 import PetArt from '@components/pet/pet-art';
 import NeonButton from '@components/ui/neon-button';
 import { SQUAD_SIZE, useTeamBattlePanel } from '@hooks/team/useTeamBattlePanel';
-import type { Tactic } from '@shared/core';
 
 import { type ArtPet, teamPetArt } from './art';
-import { TACTIC_OPTIONS } from './tactics';
 import { ZoneGrid } from './team-board';
 import TeamPetDetails, { type PetSelection, rankFact } from './team-pet-details';
 import TeamPetGrid from './team-pet-grid';
@@ -190,26 +188,6 @@ const TeamChallenge: React.FC = () => {
                 move one of yours, select it and tap an empty tile, or drag it onto another pet to swap
                 them. Melee pets can only reach the enemy front line.
             </p>
-
-            {panel.squad.length > 0 && (
-                <div className={styles.list}>
-                    {panel.squad.map((m) => (
-                        <div key={m.petId} className={styles.listItem}>
-                            <span className={styles.miniArt} aria-hidden>
-                                <PetArt pet={ownArt(m.petId)} />
-                            </span>
-                            <span className={styles.grow}>{petName(m.petId)}</span>
-                            <select aria-label={`Tactic for ${petName(m.petId)}`} value={m.tactic} onChange={(e) => panel.setTactic(m.petId, e.target.value as Tactic)}>
-                                {TACTIC_OPTIONS.map((t) => (
-                                    <option key={t.id} value={t.id}>
-                                        {t.label}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-                    ))}
-                </div>
-            )}
 
             <h4>
                 Choose your squad ({panel.squad.length}/{SQUAD_SIZE})

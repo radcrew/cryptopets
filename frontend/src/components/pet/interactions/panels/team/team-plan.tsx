@@ -1,11 +1,9 @@
 import React, { useEffect, useState } from 'react';
 
-import PetArt from '@components/pet/pet-art';
 import NeonButton from '@components/ui/neon-button';
 import { type PlanRosterEntry, type Tactic, useDefensePlan, usePetList } from '@shared/core';
 
 import { type ArtPet, teamPetArt } from './art';
-import { TACTIC_OPTIONS } from './tactics';
 import { ZoneGrid } from './team-board';
 import TeamPetDetails, { type PetSelection, rankFact } from './team-pet-details';
 import TeamPetGrid from './team-pet-grid';
@@ -76,9 +74,9 @@ const TeamPlan: React.FC = () => {
     const setTactic = (petId: string, tactic: Tactic) =>
         setRoster((current) => current.map((d) => (d.petId === petId ? { ...d, tactic } : d)));
 
+    const selectedIndex = roster.findIndex((d) => d.petId === selected);
     const selection = ((): PetSelection | null => {
-        const rank = roster.findIndex((d) => d.petId === selected) + 1;
-        const draft = roster[rank - 1];
+        const draft = roster[selectedIndex];
         const pet = pets.find((p) => p.id === selected);
         if (!draft || !pet) return null;
         return {
@@ -88,7 +86,7 @@ const TeamPlan: React.FC = () => {
             col: draft.col,
             row: draft.row,
             tactic: draft.tactic,
-            facts: [rankFact(rank)],
+            facts: [rankFact(selectedIndex + 1)],
         };
     })();
 
@@ -128,38 +126,23 @@ const TeamPlan: React.FC = () => {
                         onDropPet={place}
                     />
                 </div>
-                <TeamPetDetails selection={selection} onTacticChange={selection ? (tactic) => setTactic(selection.petId, tactic) : undefined} />
+                <TeamPetDetails
+                    selection={selection}
+                    onTacticChange={selection ? (tactic) => setTactic(selection.petId, tactic) : undefined}
+                    rank={
+                        selection
+                            ? {
+                                  up: selectedIndex > 0 ? () => move(selectedIndex, -1) : undefined,
+                                  down: selectedIndex < roster.length - 1 ? () => move(selectedIndex, 1) : undefined,
+                              }
+                            : undefined
+                    }
+                />
             </div>
-            {roster.length > 0 && (
-                <div className={styles.list}>
-                    {roster.map((d, i) => (
-                        <div key={d.petId} className={styles.listItem}>
-                            <strong>{i + 1}.</strong>
-                            <span className={styles.miniArt} aria-hidden>
-                                <PetArt pet={art(d.petId)} />
-                            </span>
-                            <span className={styles.grow}>{name(d.petId)}</span>
-                            <select aria-label={`Tactic for ${name(d.petId)}`} value={d.tactic} onChange={(e) => setTactic(d.petId, e.target.value as Tactic)}>
-                                {TACTIC_OPTIONS.map((t) => (
-                                    <option key={t.id} value={t.id}>
-                                        {t.label}
-                                    </option>
-                                ))}
-                            </select>
-                            <NeonButton size="xs" tone="cyan" aria-label={`Rank ${name(d.petId)} higher`} disabled={i === 0} onClick={() => move(i, -1)}>
-                                ↑
-                            </NeonButton>
-                            <NeonButton size="xs" tone="cyan" aria-label={`Rank ${name(d.petId)} lower`} disabled={i === roster.length - 1} onClick={() => move(i, 1)}>
-                                ↓
-                            </NeonButton>
-                        </div>
-                    ))}
-                </div>
-            )}
             <p className={styles.muted}>
                 Rank 1 defends in about 83% of battles and rank 5 in about 27%. Tap a pet below to add or
-                remove it. Tap a pet on the zone to see its details; to move it, tap an empty tile, or
-                drag it onto another pet to swap them.
+                remove it. Tap a pet on the zone to see its details, change its tactic or rank it higher
+                or lower. To move it, tap an empty tile, or drag it onto another pet to swap them.
             </p>
 
             <h4>

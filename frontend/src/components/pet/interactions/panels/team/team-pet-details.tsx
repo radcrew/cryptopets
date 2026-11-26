@@ -1,6 +1,7 @@
 import React from 'react';
 
 import PetArt from '@components/pet/pet-art';
+import NeonButton from '@components/ui/neon-button';
 import { extract, getPetSkill, getRarityColor, getRarityName, type Tactic } from '@shared/core';
 
 import type { ArtPet } from './art';
@@ -45,6 +46,8 @@ export interface TeamPetDetailsProps {
     selection: PetSelection | null;
     /** Omit for a rival's pet: its tactic is part of the plan its owner signed. */
     onTacticChange?: (tactic: Tactic) => void;
+    /** A defence plan's pet: moves it up or down the ranking. Leave out the end it is already at. */
+    rank?: { up?: () => void; down?: () => void };
 }
 
 const STATS = [
@@ -60,7 +63,7 @@ const STATS = [
  * stats and its tactic. Stats come from the combat engine's own `extract`, so they are the
  * numbers a fight starts from, before gear and the skill's multipliers.
  */
-const TeamPetDetails: React.FC<TeamPetDetailsProps> = ({ selection, onTacticChange }) => {
+const TeamPetDetails: React.FC<TeamPetDetailsProps> = ({ selection, onTacticChange, rank }) => {
     if (!selection) {
         return (
             <aside className={styles.details} aria-label="Pet details">
@@ -115,6 +118,17 @@ const TeamPetDetails: React.FC<TeamPetDetailsProps> = ({ selection, onTacticChan
                     </>
                 )}
             </dl>
+
+            {rank && (
+                <div className={styles.row}>
+                    <NeonButton size="xs" tone="cyan" aria-label={`Rank ${pet.name} higher`} disabled={!rank.up} onClick={rank.up}>
+                        ↑ Rank higher
+                    </NeonButton>
+                    <NeonButton size="xs" tone="cyan" aria-label={`Rank ${pet.name} lower`} disabled={!rank.down} onClick={rank.down}>
+                        ↓ Rank lower
+                    </NeonButton>
+                </div>
+            )}
 
             <div className={styles.stats} role="list" aria-label="Base stats">
                 {STATS.map(([key, label]) => (

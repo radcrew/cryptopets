@@ -220,7 +220,7 @@ button.tile:focus-visible {
     font-size: 0.95rem;
 }
 
-/* Small inline art for list rows: a squad pet's tactic row, a rival's roster. */
+/* Small inline art: a rival's roster in the opponent list, a fighter in the result table. */
 .miniArt {
     display: inline-flex;
     align-items: center;
@@ -392,11 +392,6 @@ button.tile:focus-visible {
     padding: 0.45rem 0.6rem;
     border-radius: 8px;
     background: rgba(255, 255, 255, 0.04);
-}
-
-.grow {
-    flex: 1 1 8rem;
-    min-width: 0;
 }
 
 .captions {
