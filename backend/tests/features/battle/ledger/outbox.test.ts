@@ -25,7 +25,7 @@ import {
     OUTBOX_TOPICS,
     retryDelaySeconds,
 } from '@features/battle/ledger';
-import { STALE_LOCK_MS } from '@features/battle/ledger/outbox';
+import { STALE_LOCK_MS } from '@features/battle/ledger/constants';
 
 const NOW = new Date('2026-07-26T09:00:00.000Z');
 

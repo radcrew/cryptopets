@@ -372,6 +372,24 @@ describe('opening the ledger', () => {
         expect(sign).not.toHaveBeenCalled();
     });
 
+    it('has the progress each snapshot froze rechecked once the pets are locked', async () => {
+        await acceptBattle({ intentHash: INTENT.intentHash, nowSeconds: NOW });
+        expect(vi.mocked(openBattle).mock.calls[0]![0].expectedProgress).toEqual([
+            { petId: '1', level: 10, xp: 120, streak: 0, lastOpponentId: '0', readyAt: BigInt(NOW - 100) },
+            { petId: '2', level: 10, xp: 120, streak: 2, lastOpponentId: '1', readyAt: BigInt(NOW - 100) },
+        ]);
+    });
+
+    it('refuses as pet-locked when a pet\'s progress changed while this one was being accepted', async () => {
+        vi.mocked(openBattle).mockResolvedValue({ ok: false, reason: 'pet-progress-changed', petId: '1' });
+        expect(await acceptBattle({ intentHash: INTENT.intentHash, nowSeconds: NOW })).toMatchObject({
+            ok: false,
+            reason: 'pet-locked',
+            detail: "pet 1's progress changed during this accept",
+        });
+        expect(sign).not.toHaveBeenCalled();
+    });
+
     it('locks both pets, in numeric order, and consumes the originating intent atomically', async () => {
         await acceptBattle({ intentHash: INTENT.intentHash, nowSeconds: NOW });
         const call = vi.mocked(openBattle).mock.calls[0]![0];
