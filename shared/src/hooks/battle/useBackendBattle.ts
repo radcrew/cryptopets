@@ -26,10 +26,16 @@ export interface BattleStateSummary {
     deploymentId: string;
     state: string;
     failureReason: string | null;
-    attackerPetId: string;
+    /** 'duel' | 'team'. Absent from a backend that predates team battles, which means a duel. */
+    kind?: string;
+    /** Null on a team battle, whose pets are in its snapshot. */
+    attackerPetId: string | null;
     attackerOwner: string;
-    defenderPetId: string;
+    /** Null on a team battle, whose pets are in its snapshot. */
+    defenderPetId: string | null;
     defenderOwner: string;
+    /** Team battles: the defenders' roster indices once the battle is computed. */
+    drawn?: number[] | null;
     rulesetHash: string;
     createdAt: string;
     updatedAt: string;

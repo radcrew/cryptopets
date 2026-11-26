@@ -22,6 +22,12 @@ export interface BattleConfig {
     deploymentId: string;
     chainIds: string[];
     ruleset: { hash: string; version: number };
+    /**
+     * Team battles: whether the deployment accepts them, and the ruleset a defence plan and a
+     * team challenge must be signed against. Not the duel ruleset above, until the rollout
+     * moves duels onto it. Absent from a backend that predates team battles.
+     */
+    team?: { enabled: boolean; ruleset: { hash: string; version: number } };
 }
 
 export const BATTLE_CONFIG_QUERY_KEY = ['battle', 'config'] as const;

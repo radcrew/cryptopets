@@ -1,0 +1,187 @@
+.panel {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    align-items: flex-start;
+}
+
+.muted {
+    color: var(--color-text-muted, #9aa3b5);
+    font-size: 0.9rem;
+}
+
+.error {
+    color: var(--color-danger, #ff6b8a);
+}
+
+.status {
+    padding: 0.6rem 0.8rem;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.stale {
+    composes: status;
+    border: 1px solid var(--color-warning, #f5b14c);
+}
+
+.active {
+    composes: status;
+    border: 1px solid var(--color-success, #4cd6a3);
+}
+
+/* The 3×3 zone and the 6×3 board share one tile look. */
+.zone,
+.board {
+    display: grid;
+    gap: 4px;
+    width: max-content;
+    max-width: 100%;
+}
+
+.zone {
+    grid-template-columns: repeat(3, 4.5rem);
+}
+
+.board {
+    grid-template-columns: repeat(3, 4.25rem) 0.75rem repeat(3, 4.25rem);
+}
+
+.divider {
+    border-left: 2px dashed rgba(255, 255, 255, 0.2);
+    margin: 0 auto;
+}
+
+.tile {
+    min-height: 4.25rem;
+    border-radius: 8px;
+    border: 1px dashed rgba(255, 255, 255, 0.18);
+    background: rgba(255, 255, 255, 0.03);
+    color: inherit;
+    font: inherit;
+    font-size: 0.75rem;
+    padding: 0.25rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+}
+
+button.tile {
+    cursor: pointer;
+}
+
+button.tile:focus-visible {
+    outline: 2px solid var(--color-accent, #43d3ff);
+}
+
+.occupied {
+    border-style: solid;
+    border-color: rgba(67, 211, 255, 0.5);
+    background: rgba(67, 211, 255, 0.08);
+}
+
+.rival {
+    border-color: rgba(255, 92, 200, 0.5);
+    background: rgba(255, 92, 200, 0.08);
+}
+
+.selected {
+    outline: 2px solid var(--color-accent, #43d3ff);
+}
+
+.actor {
+    box-shadow: 0 0 0 2px #f5d24c;
+}
+
+.victim {
+    box-shadow: 0 0 0 2px #ff6b8a;
+}
+
+.knockedOut {
+    opacity: 0.35;
+}
+
+.tokenName {
+    font-weight: 600;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.hpTrack {
+    width: 100%;
+    height: 4px;
+    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.12);
+    overflow: hidden;
+}
+
+.hpFill {
+    height: 100%;
+    background: #4cd6a3;
+    transition: width 0.3s ease;
+}
+
+.list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    max-height: 18rem;
+    overflow-y: auto;
+}
+
+.listItem {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.45rem 0.6rem;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.grow {
+    flex: 1 1 8rem;
+    min-width: 0;
+}
+
+.captions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    font-size: 0.85rem;
+    min-height: 5.5rem;
+}
+
+.table {
+    border-collapse: collapse;
+    font-size: 0.85rem;
+}
+
+.table th,
+.table td {
+    padding: 0.3rem 0.6rem;
+    text-align: left;
+}
+
+.table td.num,
+.table th.num {
+    text-align: right;
+}
+
+.victory {
+    color: var(--color-success, #4cd6a3);
+}
+
+.defeat {
+    color: var(--color-danger, #ff6b8a);
+}

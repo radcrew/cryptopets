@@ -5,7 +5,7 @@ the execution order and the decisions it depends on. Steps are small on purpose:
 a command that passes, so the branch is revertible at any point. The golden-vector and
 schema-version rules in `AGENTS.md` apply throughout.
 
-Branch: `feat/team-battles-3v3`. **Status: Phases 0 to 4 done (same-owner battles blocked, decisions recorded, team engine in both languages with `team.json`, team protocol objects and the public verifier, `VerifyTeamBattle` in the Go service, and the backend). The Phase 4 migration is written but not yet applied. Phase 5 not started.**
+Branch: `feat/team-battles-3v3`. **Status: Phases 0 to 5 done (same-owner battles blocked, decisions recorded, team engine in both languages with `team.json`, team protocol objects and the public verifier, `VerifyTeamBattle` in the Go service, the backend, and the web frontend). The Phase 4 migration is written but not yet applied. Phase 6 not started.**
 
 ## 1. What a team battle is
 
@@ -287,6 +287,22 @@ test passes.
 
 *Done when:* `pnpm --filter frontend lint:check`, `pnpm --filter frontend test` and
 `pnpm --filter frontend build` pass.
+
+*As built:*
+
+- A "Team battles" tab on `/battle`, shown only while `GET /config` reports team battles enabled,
+  with two sides: challenging a team (`team-challenge.tsx` over the `useTeamBattlePanel`
+  controller hook) and setting up your own (`team-plan.tsx`, a form with local state).
+- Placement is click a pet, then a tile, which works from the keyboard; native drag-and-drop
+  works on top of it.
+- The turn-order preview covers the attacker's own squad. The defenders join the order only once
+  the seed draws them, so the screen says so rather than guessing.
+- Platform-neutral parts are in `@shared/core`: `useDefensePlan`, `useTeamOpponents`,
+  `useSubmitTeamChallenge`, `useTeamBattleResult`, and the pure playback functions
+  (`buildTeamPlayback`, `summarizeTeamBattle`, `describeStrike`, `previewSquadTurnOrder`).
+- Playback is checked before it is shown: the receipt must pass the protocol's validation and the
+  served combat log must hash to its `combatLogHash`, or the screen reports a failure.
+- EVM only, as the backend is (D6).
 
 ### Phase 6: rollout on Base Sepolia
 
