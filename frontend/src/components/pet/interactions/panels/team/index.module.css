@@ -177,9 +177,12 @@ button.tile:focus-visible {
     min-width: 11rem;
 }
 
+/* Grows into the room beside the zones, up to a width that still reads as one card: past it, a
+   wide screen would stretch the stats and tactic across the page. */
 .detailsColumn {
     flex: 1 1 18rem;
     min-width: 16rem;
+    max-width: 28rem;
     display: flex;
     flex-direction: column;
 }
@@ -375,6 +378,11 @@ button.tile:focus-visible {
     .detailsColumn,
     .playSide {
         flex-basis: 100%;
+    }
+
+    /* On its own row below the zones, the card has nothing beside it to make room for. */
+    .detailsColumn {
+        max-width: none;
     }
 
     .detailsBody {
