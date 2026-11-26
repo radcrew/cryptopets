@@ -150,7 +150,7 @@ const TeamChallenge: React.FC = () => {
         return order >= 0 ? `${ORDINALS[order] ?? order + 1} · ${tacticShort(tactic)}` : tacticShort(tactic);
     };
     return (
-        <div className={clsx(styles.panel, styles.arena)}>
+        <div className={clsx(styles.panel, styles.arena, styles.arenaWide)}>
             <div className={styles.boardRow}>
                 <div className={styles.zoneColumn}>
                     <h4 className={styles.columnHeading}>Your squad</h4>

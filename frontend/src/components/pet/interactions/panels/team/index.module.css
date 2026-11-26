@@ -158,9 +158,20 @@ button.tile:focus-visible {
 }
 
 /* Each screen is a size container, so its layout follows the room the panel actually has,
-   not the window: the dashboard's sidebar takes a different share at every width. */
+   not the window: the dashboard's sidebar takes a different share at every width.
+
+   It also has one width for everything on it, so the board, the details card, the actions and
+   the pet row share their edges: the actions are right-aligned, and they line up with the card
+   only while the card reaches the same edge. The width is what sizes the card, which fills
+   whatever the zones leave. One zone (the defence plan) leaves about 37rem; two zones (a
+   challenge, and its playback) need the wider screen to leave about 36rem. */
 .arena {
     container-type: inline-size;
+    max-width: 52rem;
+}
+
+.arenaWide {
+    max-width: 66rem;
 }
 
 /* The zones and the selected pet's details, side by side. Each column is a heading and a box,
@@ -177,12 +188,10 @@ button.tile:focus-visible {
     min-width: 11rem;
 }
 
-/* Grows into the room beside the zones, up to a width that still reads as one card: past it, a
-   wide screen would stretch the stats and tactic across the page. */
+/* Fills the room beside the zones; the screen's width (.arena) is what keeps it to one card. */
 .detailsColumn {
     flex: 1 1 18rem;
     min-width: 16rem;
-    max-width: 28rem;
     display: flex;
     flex-direction: column;
 }
@@ -378,11 +387,6 @@ button.tile:focus-visible {
     .detailsColumn,
     .playSide {
         flex-basis: 100%;
-    }
-
-    /* On its own row below the zones, the card has nothing beside it to make room for. */
-    .detailsColumn {
-        max-width: none;
     }
 
     .detailsBody {

@@ -60,7 +60,7 @@ const TeamPlayback: React.FC<TeamPlaybackProps> = ({ result, name, onDone, stepM
 
     // The board on the left and the result beside it, so the whole fight fits one screen.
     return (
-        <div className={clsx(styles.panel, styles.arena)}>
+        <div className={clsx(styles.panel, styles.arena, styles.arenaWide)}>
             <div className={styles.playRow}>
                 <div className={styles.playBoard}>
                     <BattleBoard
