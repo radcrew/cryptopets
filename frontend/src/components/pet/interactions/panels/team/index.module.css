@@ -31,11 +31,6 @@
     border: 1px solid var(--color-warning, #f5b14c);
 }
 
-.active {
-    composes: status;
-    border: 1px solid var(--color-success, #4cd6a3);
-}
-
 /* The 3×3 zone and the 6×3 board share one tile look. Columns share the width they are given
    rather than being fixed, so the whole board fits a phone screen without scrolling sideways. */
 .zone,
@@ -344,13 +339,14 @@ button.tile:focus-visible {
 }
 
 /* The defence plan screen: the team on the left, its challenge rules and formation check
-   beside it. The team takes the room first, at the width where its own board row stays side
-   by side (just over the 46rem the board row stacks at); the cards wrap below it when there
-   is no room left for them. */
+   beside it. The team keeps the arena width its board row was sized for, and the cards take
+   the rest of the row, so the screen has no empty band on the right. Both columns stretch to
+   one height and the formation card fills what the rules card leaves, so their bottoms line
+   up. The cards wrap below the team when there is no room left for them. */
 .planLayout {
     display: flex;
     flex-wrap: wrap;
-    align-items: flex-start;
+    align-items: stretch;
     gap: 1rem;
 }
 
@@ -361,7 +357,8 @@ button.tile:focus-visible {
 
 .planSide {
     flex: 1 1 17rem;
-    max-width: 24rem;
+    min-width: 0;
+    max-width: 48rem;
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
@@ -370,16 +367,64 @@ button.tile:focus-visible {
 .sideCard {
     display: flex;
     flex-direction: column;
-    gap: 0.55rem;
+    gap: 0.6rem;
     padding: 0.85rem 1rem;
     border: 1px solid rgb(125 214 255 / 22%);
     border-radius: 12px;
     background: linear-gradient(135deg, rgb(12 22 48 / 90%), rgb(4 10 26 / 90%));
     box-shadow: inset 0 0 24px rgb(125 214 255 / 5%);
+    text-align: left;
+}
+
+.sideCard:last-child {
+    flex: 1 1 auto;
 }
 
 .sideCard .columnHeading {
     margin: 0;
+}
+
+.cardHead {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.4rem 0.75rem;
+}
+
+/* The saved plan's state, at the top right of the rules card. */
+.planStatus {
+    padding: 2px 10px;
+    border: 1px solid currentcolor;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    white-space: nowrap;
+}
+
+.statusNone {
+    color: var(--color-text-muted, #9aa3b5);
+}
+
+.statusOpen {
+    color: var(--color-success, #4cd6a3);
+}
+
+.statusStale {
+    color: var(--color-warning, #f5b14c);
+}
+
+/* The three rules in one row, each labelled from above; they wrap in a narrow card. */
+.ruleFields {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem 1.5rem;
+}
+
+.ruleField {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    font-size: 0.85rem;
 }
 
 .fieldRow {
@@ -398,7 +443,13 @@ button.tile:focus-visible {
 }
 
 .numberInput {
-    width: 5.5rem;
+    width: 4.75rem;
+}
+
+/* Wide enough for "90 days" beside the native arrow. */
+.daysSelect {
+    width: auto;
+    min-width: 7.5rem;
 }
 
 .fieldHint {

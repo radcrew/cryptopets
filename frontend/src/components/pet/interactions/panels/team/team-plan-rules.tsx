@@ -1,6 +1,7 @@
 import clsx from 'clsx';
 import React from 'react';
 
+import InfoTooltip from '@components/ui/info-tooltip';
 import type { LiveDefensePlan } from '@shared/core';
 
 import styles from './index.module.css';
@@ -57,8 +58,8 @@ export interface TeamPlanRulesProps {
 }
 
 /**
- * Who can challenge a defence team and how often. These are fields of the signed plan
- * (`defensePlan` v1), so a change takes effect only when the team is saved again.
+ * Who can challenge a defence team and how often, with the saved plan's status. These are fields
+ * of the signed plan (`defensePlan` v1), so a change takes effect only when the team is saved again.
  */
 const TeamPlanRules: React.FC<TeamPlanRulesProps> = ({
     rules,
@@ -70,84 +71,92 @@ const TeamPlanRules: React.FC<TeamPlanRulesProps> = ({
     const read = (value: string) => (value === '' ? Number.NaN : Number(value));
     const shown = (value: number) => (Number.isNaN(value) ? '' : value);
     const error = planRulesError(rules);
-    const expires = plan
-        ? new Date(plan.expiresAt * 1000).toLocaleDateString(undefined, {
-              day: 'numeric',
-              month: 'short',
-              year: 'numeric',
-          })
-        : null;
+    const status = !plan
+        ? { tone: styles.statusNone, text: 'No team saved' }
+        : plan.isStale
+        ? { tone: styles.statusStale, text: 'Out of date' }
+        : {
+              tone: styles.statusOpen,
+              text: `Open until ${new Date(plan.expiresAt * 1000).toLocaleDateString(undefined, {
+                  day: 'numeric',
+                  month: 'short',
+                  year: 'numeric',
+              })}`,
+          };
 
     return (
         <section className={styles.sideCard} aria-label="Challenge rules">
-            <h4 className={styles.columnHeading}>Challenge rules</h4>
-            <p className={styles.fieldHint}>
-                Who can challenge this team, and how often. They are signed with the team, so
-                changes apply when you save it.
-            </p>
+            <div className={styles.cardHead}>
+                <h4 className={styles.columnHeading}>
+                    Challenge rules
+                    <InfoTooltip subject="Challenge rules">
+                        Who can challenge this team, and how often. These rules are signed with the
+                        team, so a change applies only when you save it. A challenging squad counts
+                        as its highest-level pet.
+                    </InfoTooltip>
+                </h4>
+                <span className={clsx(styles.planStatus, status.tone)}>{status.text}</span>
+            </div>
 
-            <div className={styles.fieldRow}>
-                <span>Challenger level</span>
-                <span className={styles.rangeInputs}>
+            <div className={styles.ruleFields}>
+                <div className={styles.ruleField}>
+                    <span className={styles.fieldLabel}>Challenger level</span>
+                    <span className={styles.rangeInputs}>
+                        <input
+                            type="number"
+                            aria-label="Lowest challenger level"
+                            className={clsx(styles.select, styles.numberInput)}
+                            min={1}
+                            max={MAX_LEVEL}
+                            value={shown(rules.minLevel)}
+                            disabled={disabled}
+                            onChange={(e) => set({ minLevel: read(e.target.value) })}
+                        />
+                        <span>to</span>
+                        <input
+                            type="number"
+                            aria-label="Highest challenger level"
+                            className={clsx(styles.select, styles.numberInput)}
+                            min={1}
+                            max={MAX_LEVEL}
+                            value={shown(rules.maxLevel)}
+                            disabled={disabled}
+                            onChange={(e) => set({ maxLevel: read(e.target.value) })}
+                        />
+                    </span>
+                </div>
+                <div className={styles.ruleField}>
+                    <span className={styles.fieldLabel}>Battles per day</span>
                     <input
                         type="number"
-                        aria-label="Lowest challenger level"
+                        aria-label="Battles per day"
                         className={clsx(styles.select, styles.numberInput)}
                         min={1}
-                        max={MAX_LEVEL}
-                        value={shown(rules.minLevel)}
+                        max={MAX_BATTLES_PER_DAY}
+                        value={shown(rules.maxBattlesPerDay)}
                         disabled={disabled}
-                        onChange={(e) => set({ minLevel: read(e.target.value) })}
+                        onChange={(e) => set({ maxBattlesPerDay: read(e.target.value) })}
                     />
-                    <span>to</span>
-                    <input
-                        type="number"
-                        aria-label="Highest challenger level"
-                        className={clsx(styles.select, styles.numberInput)}
-                        min={1}
-                        max={MAX_LEVEL}
-                        value={shown(rules.maxLevel)}
+                </div>
+                <div className={styles.ruleField}>
+                    <span className={styles.fieldLabel}>Valid for</span>
+                    <select
+                        aria-label="Valid for"
+                        className={clsx(styles.select, styles.daysSelect)}
+                        value={rules.days}
                         disabled={disabled}
-                        onChange={(e) => set({ maxLevel: read(e.target.value) })}
-                    />
-                </span>
-            </div>
-            <p className={styles.fieldHint}>A challenging squad counts as its highest-level pet.</p>
-
-            <div className={styles.fieldRow}>
-                <span>Battles per day</span>
-                <input
-                    type="number"
-                    aria-label="Battles per day"
-                    className={clsx(styles.select, styles.numberInput)}
-                    min={1}
-                    max={MAX_BATTLES_PER_DAY}
-                    value={shown(rules.maxBattlesPerDay)}
-                    disabled={disabled}
-                    onChange={(e) => set({ maxBattlesPerDay: read(e.target.value) })}
-                />
-            </div>
-
-            <div className={styles.fieldRow}>
-                <span>Valid for</span>
-                <select
-                    aria-label="Valid for"
-                    className={clsx(styles.select, styles.numberInput)}
-                    value={rules.days}
-                    disabled={disabled}
-                    onChange={(e) => set({ days: Number(e.target.value) })}
-                >
-                    {VALIDITY_DAYS.map((d) => (
-                        <option key={d} value={d}>
-                            {d} days
-                        </option>
-                    ))}
-                </select>
+                        onChange={(e) => set({ days: Number(e.target.value) })}
+                    >
+                        {VALIDITY_DAYS.map((d) => (
+                            <option key={d} value={d}>
+                                {d} days
+                            </option>
+                        ))}
+                    </select>
+                </div>
             </div>
             <p className={styles.fieldHint}>
-                {expires
-                    ? `The saved team is open until ${expires}. Saving again starts a new ${rules.days}-day window.`
-                    : `The ${rules.days}-day window starts when you save the team.`}
+                Saving opens the team to challenges for the next {rules.days} days.
             </p>
 
             {error && (

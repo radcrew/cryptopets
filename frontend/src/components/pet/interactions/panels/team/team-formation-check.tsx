@@ -1,6 +1,7 @@
 import clsx from 'clsx';
 import React, { useMemo } from 'react';
 
+import InfoTooltip from '@components/ui/info-tooltip';
 import {
     analyzeFormation,
     type FormationPet,
@@ -47,7 +48,14 @@ const TeamFormationCheck: React.FC<TeamFormationCheckProps> = ({ roster, pets })
 
     return (
         <section className={styles.sideCard} aria-label="Formation check">
-            <h4 className={styles.columnHeading}>Formation check</h4>
+            <h4 className={styles.columnHeading}>
+                Formation check
+                <InfoTooltip subject="Formation check">
+                    How your placement works out in a fight. Your three act in the order shown:
+                    Shell pets act last, and otherwise higher INT goes first. Pets help each other
+                    only when their tiles touch along a side, never across a corner.
+                </InfoTooltip>
+            </h4>
             {formation.length === 0 ? (
                 <p className={styles.fieldHint}>Add pets to see how they work together.</p>
             ) : (
@@ -62,9 +70,6 @@ const TeamFormationCheck: React.FC<TeamFormationCheckProps> = ({ roster, pets })
                             ))}
                         </ol>
                     </div>
-                    <p className={styles.fieldHint}>
-                        Among your three: Shell pets act last, then higher INT goes first.
-                    </p>
                     <ul className={styles.notes} aria-label="Formation notes">
                         {report.notes.map((note) => (
                             <li

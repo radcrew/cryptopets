@@ -129,16 +129,6 @@ const TeamPlan: React.FC = () => {
                         challenged. Save it again.
                     </p>
                 )}
-                {plan && !plan.isStale && (
-                    <p className={styles.active} role="status">
-                        Your team is open to challenges.
-                    </p>
-                )}
-                {!plan && (
-                    <p className={styles.muted}>
-                        You have no team saved, so nobody can challenge you in team battles.
-                    </p>
-                )}
 
                 <div className={styles.boardRow}>
                     <div className={styles.zoneColumn}>
