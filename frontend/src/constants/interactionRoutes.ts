@@ -33,7 +33,7 @@ export const STANDALONE_INTERACTION_HEADERS: Record<
     StandaloneInteractionHeader
 > = {
     breed: { Icon: EggIcon, label: 'Breeding Lab' },
-    battle: { Icon: BattleIcon, label: 'Battle Arena', sub: 'Pick two pets to fight' },
+    battle: { Icon: BattleIcon, label: 'Battle Arena' },
     levelup: { Icon: LevelUpIcon, label: 'Level Up', sub: 'Pay a small fee to level up your pet' },
     train: {
         Icon: TrainIcon,
