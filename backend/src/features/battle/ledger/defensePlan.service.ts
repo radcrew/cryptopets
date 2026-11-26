@@ -66,7 +66,11 @@ export type PlanRejection =
     | 'wrong-signature-format'
     | 'bad-signature'
     | 'already-expired'
-    | 'ruleset-mismatch'
+    /**
+     * Its own code, not the acceptance path's `ruleset-mismatch`: a client turns a code into
+     * text without knowing which endpoint answered, and the two mean different things.
+     */
+    | 'plan-ruleset-mismatch'
     | 'unknown-pet'
     | 'not-pet-owner'
     | 'stale-revocation-nonce'
@@ -98,7 +102,7 @@ export async function submitDefensePlan(request: SubmitPlanRequest): Promise<Sub
     if (plan.rulesetHash.toLowerCase() !== request.servedRulesetHash.toLowerCase()) {
         // Refused rather than stored stale: saving revokes the defender's current plan, so a
         // plan for other rules would replace a working plan with one that covers nothing.
-        return reject('ruleset-mismatch', `plan is for ruleset ${plan.rulesetHash}; team battles are served under ${request.servedRulesetHash}`);
+        return reject('plan-ruleset-mismatch', `plan is for ruleset ${plan.rulesetHash}; team battles are served under ${request.servedRulesetHash}`);
     }
 
     // EIP-712 only: Base ships first (D6), and the protocol has no Solana plan message yet.

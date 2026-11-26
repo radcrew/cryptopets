@@ -5,6 +5,7 @@ import {
     deleteDefensePlans,
     getDefenseAuthorizations,
     getDefensePlan,
+    getTeamOpponents,
     getBattleCombatLog,
     getBattleCommitment,
     getBattleConfigHandler,
@@ -19,6 +20,7 @@ import {
     postDefenseAuthorization,
     postDefensePlan,
     postSessionDelegation,
+    postTeamBattleIntent,
     postVerifyReceipt,
     requireBackendBattleMode,
     requireTeamBattles,
@@ -68,6 +70,11 @@ router.delete('/sessions', verifyToken, asyncRoute(deleteSessionDelegations));
 router.post('/defense-plans', requireTeamBattles, verifyToken, battleRoomRateLimit, asyncRoute(postDefensePlan));
 router.delete('/defense-plans', verifyToken, asyncRoute(deleteDefensePlans));
 router.get('/defense-plans', verifyToken, asyncRoute(getDefensePlan));
+
+// A team challenge: three placed pets against a defence plan, signed like a duel intent.
+router.post('/team-intents', requireTeamBattles, verifyToken, battleRoomRateLimit, asyncRoute(postTeamBattleIntent));
+// Plans a player can challenge. Ungated like the other reads; the caller's own plan is excluded.
+router.get('/team-opponents', verifyToken, asyncRoute(getTeamOpponents));
 
 // Authoritative, re-fetchable reads (§J). No auth: every value here is either already
 // public on chain or is itself a signed artifact anyone is meant to check, so gating

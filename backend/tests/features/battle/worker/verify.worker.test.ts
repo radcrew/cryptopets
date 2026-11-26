@@ -31,7 +31,9 @@ vi.mock('@features/battle/ledger', async () => ({
     )),
 }));
 
-vi.mock('@grpc-client/verifyBattle', () => ({
+// Only the network call is replaced; verifyPetInputs is a pure mapping and stays real.
+vi.mock('@grpc-client/verifyBattle', async () => ({
+    ...(await vi.importActual<object>('@grpc-client/verifyBattle')),
     callVerifyBattle: vi.fn(),
 }));
 

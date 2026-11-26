@@ -1,4 +1,4 @@
-import type { BattleCommitment, BattleReceipt, Hex } from '@cryptopets/protocol';
+import type { AnyBattleReceipt, BattleCommitment, Hex } from '@cryptopets/protocol';
 
 /**
  * The signer's shape, and the reason it is shaped this way (§G).
@@ -61,7 +61,8 @@ export interface SignerBackend {
 /** A signing request, as the pipeline makes it. */
 export type SignRequest =
     | { kind: 'commitment'; commitment: BattleCommitment }
-    | { kind: 'receipt'; receipt: BattleReceipt; attestations: readonly EngineAttestation[] };
+    /** A duel's receipt or a team battle's: the digest is the one its own kind defines. */
+    | { kind: 'receipt'; receipt: AnyBattleReceipt; attestations: readonly EngineAttestation[] };
 
 export interface SignResult {
     kind: SignableKind;

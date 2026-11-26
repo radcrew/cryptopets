@@ -17,7 +17,10 @@ import {
     decodeStoredSnapshot,
     OUTBOX_TOPICS,
 } from '@features/battle/ledger';
+import { BATTLE_KIND } from '@features/battle/ledger/kind';
 import { notifyBattleRoomIfPresent } from '@ws/battleRoomSocket';
+
+import { processTeamCompute } from './team.worker';
 
 /**
  * Handles `compute` messages: `seeded` -> `computed` (§F).
@@ -36,6 +39,10 @@ export async function processComputeMessage(message: ClaimedMessage, nowSeconds:
     const battle = await prisma.battleLedger.findUnique({ where: { battleId: message.battleId } });
     if (!battle) {
         await completeOutbox(message.id, new Date(nowSeconds * 1000));
+        return;
+    }
+    if (battle.kind === BATTLE_KIND.team) {
+        await processTeamCompute(battle, message, nowSeconds);
         return;
     }
     if (battle.state !== BattleState.seeded) {

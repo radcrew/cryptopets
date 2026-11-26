@@ -37,6 +37,21 @@ export const MESSAGES: Record<string, string> = {
     'nonce-already-used': 'That battle request was already used. Try again.',
     'duplicate-intent': 'That battle request was already submitted.',
 
+    // Team challenges (docs/plan-team-battles-3v3.md).
+    'team-battles-disabled': 'Team battles are switched off right now.',
+    'pet-owner-changed': 'One of these pets has changed hands since the challenge was made.',
+    'intent-ruleset-stale': 'The battle rules changed after you made this challenge. Challenge again.',
+    'unknown-plan': "That player's team is not on record any more. Refresh and pick again.",
+    'plan-revoked': 'That player has withdrawn their team from challenges.',
+
+    // Saving a defence plan. `already-expired` and `stale-revocation-nonce` come from saving
+    // duel consent too, so their text has to be true of both.
+    'malformed-plan': 'That team could not be read. Check it has five pets on different tiles.',
+    'plan-ruleset-mismatch': 'The battle rules have changed since you set up your team. Save it again.',
+    'already-expired': 'That permission had already expired. Sign it again with a later end date.',
+    'stale-revocation-nonce': 'A newer setting already replaced this one. Reload and try again.',
+    'duplicate-plan': 'That team setup is already saved.',
+
     // Accepting it.
     'intent-not-found': 'That battle request is no longer on record. Try again.',
     'intent-already-consumed': 'That battle has already started.',

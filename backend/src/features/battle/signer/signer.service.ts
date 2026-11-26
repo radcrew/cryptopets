@@ -1,10 +1,10 @@
 import {
     assertBattleCommitment,
-    assertBattleReceipt,
+    assertAnyBattleReceipt,
     type ChainId,
     chainFamily,
     hashBattleCommitment,
-    hashBattleReceipt,
+    hashAnyBattleReceipt,
     type Hex,
     toBytes,
 } from '@cryptopets/protocol';
@@ -304,8 +304,8 @@ export async function sign(request: SignRequest, nowSeconds: number): Promise<Si
             digest = hashBattleCommitment(commitment);
             chainId = commitment.domain.chainId;
         } else {
-            const receipt = assertBattleReceipt(request.receipt);
-            digest = hashBattleReceipt(receipt);
+            const receipt = assertAnyBattleReceipt(request.receipt);
+            digest = hashAnyBattleReceipt(receipt);
             chainId = receipt.domain.chainId;
         }
     } catch (error) {

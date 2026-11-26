@@ -18,18 +18,15 @@ import {
     decodeStoredSnapshot,
     OUTBOX_TOPICS,
 } from '@features/battle/ledger';
-import {
-    activeSigningKey,
-    type EngineAttestation,
-    sign,
-    signerBackendError,
-    SignerRefusedError,
-} from '@features/battle/signer';
+import { activeSigningKey, sign, signerBackendError, SignerRefusedError } from '@features/battle/signer';
 // Straight from its module rather than the barrel: a pure check, so module mocks never hide it.
-import { assertDuel } from '@features/battle/ledger/kind';
+import { assertDuel, BATTLE_KIND } from '@features/battle/ledger/kind';
 import { recordBattleDrops } from '@features/inventory';
 import { recordBattleFromReceipt } from '@repositories/history.repository';
 import { notifyBattleRoomIfPresent } from '@ws/battleRoomSocket';
+
+import { buildAttestations, commitmentHashFor, failSigning, serializeBigints } from './sign.shared';
+import { processTeamSign } from './team.worker';
 
 /**
  * Handles `sign` messages: `verified` -> `signed` (§G).
@@ -52,6 +49,10 @@ export async function processSignMessage(message: ClaimedMessage, nowSeconds: nu
     const row = await prisma.battleLedger.findUnique({ where: { battleId: message.battleId } });
     if (!row) {
         await completeOutbox(message.id, new Date(nowSeconds * 1000));
+        return;
+    }
+    if (row.kind === BATTLE_KIND.team) {
+        await processTeamSign(row, message, nowSeconds);
         return;
     }
     const battle = assertDuel(row);
@@ -268,43 +269,7 @@ export async function processSignMessage(message: ClaimedMessage, nowSeconds: nu
 
 const MAX_RECEIPT_CHAIN_RETRIES = 5;
 
-/**
- * Every attestation this receipt has earned. The TypeScript engine's own agreement
- * is implicit in having computed the receipt at all, so it is always included.
- * `go-verifier`'s is included whenever independent verification actually ran and
- * matched — which is the only way this battle reached `verified` in the first
- * place, so its presence here is just formalizing a check already passed, not
- * re-deciding anything.
- *
- * Both name `receiptHash`, the digest of *this* receipt: the signer refuses any
- * attestation whose `receiptHash` does not match what it independently
- * recomputes, so an attestation naming the wrong receipt (stale, or for a
- * different battle entirely) is caught there, not trusted here.
- */
-function buildAttestations(
-    battle: { verificationDetail: Prisma.JsonValue },
-    receiptHash: Hex,
-    nowSeconds: number,
-): EngineAttestation[] {
-    const attestations: EngineAttestation[] = [
-        { attester: 'typescript-engine', receiptHash, attestedAt: nowSeconds },
-    ];
-    if (battle.verificationDetail) {
-        attestations.push({ attester: 'go-verifier', receiptHash, attestedAt: nowSeconds });
-    }
-    return attestations;
-}
 
-async function commitmentHashFor(battleId: string): Promise<string> {
-    const commitment = await prisma.battleCommitment.findUnique({
-        where: { battleId },
-        select: { commitmentHash: true },
-    });
-    if (!commitment) {
-        throw new Error(`battle ${battleId} has no commitment row; cannot build its receipt`);
-    }
-    return commitment.commitmentHash;
-}
 
 /**
  * Applies the signed battle's outcome to both pets' off-chain progression:
@@ -367,19 +332,7 @@ function duelAuthorizationHash(battle: { battleId: string; authorizationHash: st
     return battle.authorizationHash as Hex;
 }
 
-async function failSigning(battleId: string, roomId: string | null, reason: string): Promise<void> {
-    await applyTransition({
-        battleId,
-        from: BattleState.verified,
-        to: BattleState.signing_failed,
-        patch: { failureReason: reason },
-    });
-    notifyBattleRoomIfPresent(roomId, { type: 'battle-updated', battleId, state: BattleState.signing_failed });
-}
 
-function serializeBigints<T>(value: T): Prisma.InputJsonValue {
-    return JSON.parse(JSON.stringify(value, (_key, v) => (typeof v === 'bigint' ? v.toString() : v)));
-}
 
 interface StoredProgression {
     petId: string | bigint;

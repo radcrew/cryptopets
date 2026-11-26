@@ -105,7 +105,7 @@ describe('saving a plan', () => {
     });
 
     it('refuses a plan for rules team battles are not served under, so it cannot replace a live one', async () => {
-        expect(await submit({}, { served: `0x${'ab'.repeat(32)}` })).toMatchObject({ ok: false, reason: 'ruleset-mismatch' });
+        expect(await submit({}, { served: `0x${'ab'.repeat(32)}` })).toMatchObject({ ok: false, reason: 'plan-ruleset-mismatch' });
         expect(prisma.defensePlan.updateMany).not.toHaveBeenCalled();
     });
 

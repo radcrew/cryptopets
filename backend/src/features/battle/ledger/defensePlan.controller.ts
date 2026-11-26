@@ -14,7 +14,7 @@ export const STATUS_BY_REASON: Record<PlanRejection, number> = {
     'bad-signature': 401,
     'already-expired': 422,
     // 409: the plan is well formed but conflicts with what is served; re-sign and resubmit.
-    'ruleset-mismatch': 409,
+    'plan-ruleset-mismatch': 409,
     'unknown-pet': 404,
     'not-pet-owner': 403,
     'stale-revocation-nonce': 409,

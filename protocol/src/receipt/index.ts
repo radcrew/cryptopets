@@ -9,6 +9,7 @@ export {
 export { encodeCombatLog, hashCombatLog } from './combatLog';
 export {
     type AnyBattleReceipt,
+    anyReceiptFromWire,
     assertAnyBattleReceipt,
     assertTeamBattleReceipt,
     encodeTeamBattleReceipt,

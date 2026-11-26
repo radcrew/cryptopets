@@ -22,7 +22,14 @@ import {
     type BattleResult,
     type ReceiptBeacon,
 } from './types';
-import { petProgressionFromWire, petSnapshotFromWire, type WirePetProgression, type WirePetSnapshot } from './wire';
+import {
+    petProgressionFromWire,
+    petSnapshotFromWire,
+    receiptFromWire,
+    type WireBattleReceipt,
+    type WirePetProgression,
+    type WirePetSnapshot,
+} from './wire';
 
 /**
  * The signed, permanent record of one team battle: receipt schema version 2.
@@ -246,6 +253,13 @@ export type WireTeamBattleReceipt = Omit<TeamBattleReceipt, 'snapshot' | 'progre
     };
     progression: WirePetProgression[];
 };
+
+/** Converts a JSON-wire receipt of either kind. A team receipt declares schema version 2. */
+export function anyReceiptFromWire(wire: WireBattleReceipt | WireTeamBattleReceipt): AnyBattleReceipt {
+    return wire.schemaVersion === TEAM_SCHEMA_VERSIONS.receipt
+        ? teamReceiptFromWire(wire as WireTeamBattleReceipt)
+        : receiptFromWire(wire as WireBattleReceipt);
+}
 
 /** Converts a JSON-wire team receipt into a typed one. Converts only; validation is
  *  `assertTeamBattleReceipt`'s job, as with `receiptFromWire`. */

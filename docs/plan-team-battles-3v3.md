@@ -5,7 +5,7 @@ the execution order and the decisions it depends on. Steps are small on purpose:
 a command that passes, so the branch is revertible at any point. The golden-vector and
 schema-version rules in `AGENTS.md` apply throughout.
 
-Branch: `feat/team-battles-3v3`. **Status: Phases 0 to 3 done (same-owner battles blocked, decisions recorded, team engine in both languages with `team.json`, team protocol objects and the public verifier, and `VerifyTeamBattle` in the Go service). Phase 4 not started.**
+Branch: `feat/team-battles-3v3`. **Status: Phases 0 to 4 done (same-owner battles blocked, decisions recorded, team engine in both languages with `team.json`, team protocol objects and the public verifier, `VerifyTeamBattle` in the Go service, and the backend). The Phase 4 migration is written but not yet applied. Phase 5 not started.**
 
 ## 1. What a team battle is
 
@@ -253,6 +253,27 @@ test passes.
 4. A `TEAM_BATTLES_ENABLED` flag, off by default.
 
 *Done when:* `pnpm --filter backend lint`, `pnpm --filter backend test` and the type check pass.
+
+*As built:*
+
+- Team battles share `battle_ledger`, `battle_intent` and `battle_receipt` with duels, marked by a
+  `kind` column, so they reuse the state machine, outbox and workers. The duel-only columns are
+  nullable, and CHECK constraints keep them filled on every duel. New tables: `defense_plan`,
+  `defense_plan_usage`, `battle_receipt_fighter`. Migration
+  `20261126120000_add_team_battles`, not yet applied.
+- Team battles get their own served ruleset (layout 3, the same item catalog), so duel consent is
+  untouched until Phase 6 decides otherwise. `GET /config` reports it as `team.ruleset`.
+- A defender has one live plan: saving one revokes the earlier ones in the same transaction.
+- Acceptance needs all five roster pets off cooldown, as a duel defender must be, since any of them
+  can be drawn. Only the three fighters get a cooldown afterwards, so a plan is unchallengeable
+  until its last fighters recover (`BATTLE_COOLDOWN_SECONDS`, 15 minutes by default).
+- Acceptance also refuses a challenge signed under rules no longer served
+  (`intent-ruleset-stale`). Duel acceptance has no such check today; worth adding separately.
+- **No `battle_history` rows for team battles.** That table is head-to-head context for duel
+  dialogue, and a three-on-three result is not a head-to-head between two pets. It belongs with
+  team AI commentary, which is out of this ticket.
+- Team routes: `POST/DELETE/GET /battle/defense-plans`, `POST /battle/team-intents`,
+  `GET /battle/team-opponents`; acceptance shares `/intents/:intentHash/accept`.
 
 ### Phase 5: web frontend
 

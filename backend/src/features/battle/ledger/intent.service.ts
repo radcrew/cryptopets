@@ -220,7 +220,8 @@ export async function submitBattleIntent(request: SubmitIntentRequest): Promise<
             },
         });
     } catch (error) {
-        return classifyWriteFailure(error, intentHash);
+        const failure = classifyIntentWriteFailure(error, intentHash);
+        return reject(failure.reason, failure.detail);
     }
 
     return { ok: true, intentHash };
@@ -289,14 +290,17 @@ export function toProtocolIntent(wire: BattleIntentWire): BattleIntent {
  * upsert: quietly merging would let a second, different payload inherit the first's
  * acceptance.
  */
-function classifyWriteFailure(error: unknown, intentHash: string): SubmitIntentResult {
+export function classifyIntentWriteFailure(
+    error: unknown,
+    intentHash: string,
+): { reason: 'nonce-already-used' | 'duplicate-intent'; detail: string } {
     const code = (error as { code?: string }).code;
     const target = String((error as { meta?: { target?: unknown } }).meta?.target ?? '');
     if (code === 'P2002') {
         if (target.includes('client_nonce') || target.includes('battle_intent_nonce')) {
-            return reject('nonce-already-used', 'this client nonce has already been used');
+            return { reason: 'nonce-already-used', detail: 'this client nonce has already been used' };
         }
-        return reject('duplicate-intent', `intent ${intentHash} has already been submitted`);
+        return { reason: 'duplicate-intent', detail: `intent ${intentHash} has already been submitted` };
     }
     throw error;
 }

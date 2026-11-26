@@ -91,6 +91,17 @@ export {
 export { assertDuel, BATTLE_KIND, type BattleKind, type DuelColumns } from './kind';
 export { backendBattleModeEnabled, requireBackendBattleMode, requireTeamBattles, teamBattlesEnabled } from './mode';
 export { deleteDefensePlans, getDefensePlan, postDefensePlan } from './defensePlan.controller';
+export { acceptChallenge, acceptTeamBattle } from './teamAccept.service';
+export { getTeamOpponents } from './teamReads.controller';
+export { listTeamOpponents, type TeamOpponent, type TeamOpponentPet } from './teamReads.service';
+export { postTeamBattleIntent } from './teamIntent.controller';
+export {
+    submitTeamBattleIntent,
+    type TeamBattleIntentWire,
+    type TeamIntentRejection,
+    toProtocolTeamIntent,
+    verifyTeamIntentSignature,
+} from './teamIntent.service';
 export {
     consumePlanDailyBudget,
     type DefensePlanSummary,
@@ -156,6 +167,7 @@ export { buildPetSnapshot } from './snapshot.builder';
 export {
     decodeStoredPet,
     decodeStoredSnapshot,
+    decodeStoredTeamSnapshot,
     type StoredBattleSnapshot,
     type StoredEquipEntry,
     type StoredPetSnapshot,

@@ -197,7 +197,7 @@ export async function acceptBattle(request: AcceptBattleRequest): Promise<Accept
     }
 }
 
-type CommitmentSeed = Omit<BattleCommitment, 'previousCommitmentHash' | 'signingKeyId'>;
+export type CommitmentSeed = Omit<BattleCommitment, 'previousCommitmentHash' | 'signingKeyId'>;
 
 /**
  * Builds, signs, and durably records a commitment, retrying if the chain-position write
@@ -212,7 +212,8 @@ type CommitmentSeed = Omit<BattleCommitment, 'previousCommitmentHash' | 'signing
  * including the state move — leaving the row exactly as retriable as it was before this
  * attempt.
  */
-async function signAndRecordCommitment(
+/** Shared with team acceptance (`teamAccept.service.ts`). */
+export async function signAndRecordCommitment(
     seed: CommitmentSeed,
 ): Promise<{ commitment: BattleCommitment; commitmentHash: Hex; signature: Hex; signingKeyId: string }> {
     for (let attempt = 0; attempt < MAX_COMMITMENT_CHAIN_RETRIES; attempt++) {
@@ -297,7 +298,8 @@ async function signAndRecordCommitment(
     throw new Error(`could not claim a commitment chain position after ${MAX_COMMITMENT_CHAIN_RETRIES} attempts`);
 }
 
-async function unwindToRejected(battleId: string, reason: string): Promise<void> {
+/** Shared with team acceptance (`teamAccept.service.ts`). */
+export async function unwindToRejected(battleId: string, reason: string): Promise<void> {
     await applyTransition({
         battleId,
         from: BattleState.accepted,
@@ -313,7 +315,8 @@ async function unwindToRejected(battleId: string, reason: string): Promise<void>
  * replayed by anyone (§H), so this runs before the hash is ever referenced rather than as a
  * background job that might lag behind it.
  */
-async function ensureRulesetPublished(ruleset: Ruleset, expectedHash: Hex): Promise<void> {
+/** Shared with team acceptance (`teamAccept.service.ts`). */
+export async function ensureRulesetPublished(ruleset: Ruleset, expectedHash: Hex): Promise<void> {
     const existing = await prisma.battleRuleset.findUnique({ where: { rulesetHash: expectedHash } });
     if (existing) {
         return;
@@ -372,11 +375,13 @@ async function ensureRulesetPublished(ruleset: Ruleset, expectedHash: Hex): Prom
 }
 
 /** Prisma's Json columns cannot hold a bigint; stringify it in place before storing. */
-function serializeBigints<T>(value: T): Prisma.InputJsonValue {
+/** Shared with team acceptance (`teamAccept.service.ts`). */
+export function serializeBigints<T>(value: T): Prisma.InputJsonValue {
     return JSON.parse(JSON.stringify(value, (_key, v) => (typeof v === 'bigint' ? v.toString() : v)));
 }
 
-function reject(reason: AcceptRejection, detail: string): AcceptBattleResult {
+/** Shared with team acceptance (`teamAccept.service.ts`). */
+export function reject(reason: AcceptRejection, detail: string): AcceptBattleResult {
     return { ok: false, reason, detail };
 }
 
@@ -391,7 +396,8 @@ function reject(reason: AcceptRejection, detail: string): AcceptBattleResult {
  * recoverable operational state with a clear remedy, while any other failure here is a bug
  * and should keep reaching the error handler as one.
  */
-function catalogRejection(error: unknown): AcceptBattleResult {
+/** Shared with team acceptance (`teamAccept.service.ts`). */
+export function catalogRejection(error: unknown): AcceptBattleResult {
     if (error instanceof ItemCatalogError) {
         return reject(BATTLE_REFUSALS.ITEM_CATALOG_STALE, error.message);
     }
@@ -407,10 +413,10 @@ function catalogRejection(error: unknown): AcceptBattleResult {
  * steps below are the seams that were already documented in its own comments; this type is
  * only what lets them hand a refusal back rather than each inventing a way to say no.
  */
-type Step<T> = { ok: true; value: T } | { ok: false; refusal: AcceptBattleResult };
+export type Step<T> = { ok: true; value: T } | { ok: false; refusal: AcceptBattleResult };
 
-const proceed = <T>(value: T): Step<T> => ({ ok: true, value });
-const refuse = (reason: AcceptRejection, detail: string): Step<never> => ({
+export const proceed = <T>(value: T): Step<T> => ({ ok: true, value });
+export const refuse = (reason: AcceptRejection, detail: string): Step<never> => ({
     ok: false,
     refusal: reject(reason, detail),
 });
@@ -418,7 +424,8 @@ const refuse = (reason: AcceptRejection, detail: string): Step<never> => ({
 type BattleIntentRow = NonNullable<Awaited<ReturnType<typeof prisma.battleIntent.findUnique>>>;
 
 /** The intent this battle claims to answer, if it is still answerable. */
-async function loadAcceptableIntent(request: AcceptBattleRequest): Promise<Step<BattleIntentRow>> {
+/** Shared with team acceptance (`teamAccept.service.ts`). */
+export async function loadAcceptableIntent(request: AcceptBattleRequest): Promise<Step<BattleIntentRow>> {
     const intent = await prisma.battleIntent.findUnique({ where: { intentHash: request.intentHash } });
     if (!intent) {
         return refuse(BATTLE_REFUSALS.INTENT_NOT_FOUND, `no intent ${request.intentHash}`);
@@ -578,7 +585,8 @@ async function openAcceptedBattle(args: {
 }
 
 /** The progress fields a snapshot froze, in the shape `pet_battle_progress` stores them. */
-function progressOf(pet: BattleSnapshot['attacker']): ExpectedProgress {
+/** Shared with team acceptance (`teamAccept.service.ts`). */
+export function progressOf(pet: BattleSnapshot['attacker']): ExpectedProgress {
     return {
         petId: pet.petId.toString(),
         level: pet.level,

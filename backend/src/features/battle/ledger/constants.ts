@@ -81,6 +81,18 @@ export const BATTLE_REFUSALS = {
      * finished receipt: accepting would produce a battle guaranteed to fail verification.
      */
     EQUIPMENT_CATALOG_MISMATCH: 'equipment-catalog-mismatch',
+    /** A team challenge reached acceptance after team battles were switched off. */
+    TEAM_BATTLES_DISABLED: 'team-battles-disabled',
+    /**
+     * A team battle pet changed hands since it was named: an attacker since the challenge, or
+     * a roster pet since the plan was saved. Snapshotted owners must be one wallet a side.
+     */
+    PET_OWNER_CHANGED: 'pet-owner-changed',
+    /**
+     * The team rules moved after the attacker signed. The intent names the ruleset the
+     * attacker agreed to fight under, so the battle is refused rather than run under others.
+     */
+    INTENT_RULESET_STALE: 'intent-ruleset-stale',
 } as const;
 
 /** Consent refusals the backend decides itself, rather than the protocol's coverage rule. */

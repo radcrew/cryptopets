@@ -1,4 +1,5 @@
 import * as grpc from '@grpc/grpc-js';
+import { bonusFromEquipment, type PetSnapshot } from '@cryptopets/protocol';
 
 import { env } from '@config/env';
 
@@ -48,6 +49,30 @@ export interface VerifyPetInputsWire {
     bonusDef: number;
     bonusInt: number;
     bonusMdef: number;
+}
+
+/** One frozen pet as the verify calls send it. Shared by the duel and team verify paths. */
+export function verifyPetInputs(pet: PetSnapshot): VerifyPetInputsWire {
+    // The resolved equipment total, so the independent recomputation runs on the same
+    // inputs the canonical engine used (roadmap §4). Sending the frozen modifiers rather
+    // than item ids is what lets the verifier hold no item catalog at all: what §F checks
+    // is that the fight follows from the numbers the receipt publishes.
+    const bonus = bonusFromEquipment(pet.equipment);
+    return {
+        petId: String(pet.petId),
+        dna: String(pet.dna),
+        rarity: pet.rarity,
+        level: pet.level,
+        skill: pet.skill,
+        xp: pet.xp,
+        lastOpponentId: String(pet.lastOpponentId),
+        streak: pet.streak,
+        bonusHp: bonus.hp,
+        bonusAtk: bonus.atk,
+        bonusDef: bonus.def,
+        bonusInt: bonus.int,
+        bonusMdef: bonus.mdef,
+    };
 }
 
 export interface VerifySkillConfigWire {
