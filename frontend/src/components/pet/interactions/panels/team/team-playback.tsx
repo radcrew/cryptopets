@@ -1,8 +1,10 @@
 import React, { useEffect, useMemo, useState } from 'react';
 
+import PetArt from '@components/pet/pet-art';
 import NeonButton from '@components/ui/neon-button';
 import { describeStrike, type TeamBattleResult } from '@shared/core';
 
+import { teamPetArt } from './art';
 import { BattleBoard } from './team-board';
 import styles from './index.module.css';
 
@@ -42,6 +44,7 @@ const TeamPlayback: React.FC<TeamPlaybackProps> = ({ result, name, onDone, stepM
                 slot: f.slot,
                 x: f.x,
                 row: f.row,
+                art: teamPetArt(f.petId, f.dna, name(f.side, f.slot)),
                 name: name(f.side, f.slot),
                 startHp: f.startHp,
                 hp: frame ? (frame.hp[f.side][f.slot] ?? f.startHp) : f.startHp,
@@ -110,6 +113,9 @@ const TeamPlayback: React.FC<TeamPlaybackProps> = ({ result, name, onDone, stepM
                                 return (
                                     <tr key={`${f.side}-${f.slot}`}>
                                         <td>
+                                            <span className={styles.miniArt} aria-hidden>
+                                                <PetArt pet={teamPetArt(f.petId, f.dna, name(f.side, f.slot))} />
+                                            </span>{' '}
                                             {name(f.side, f.slot)}
                                             {isMvp && ' ⭐ MVP'}
                                         </td>

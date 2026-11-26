@@ -1,11 +1,14 @@
 import React, { useCallback, useState } from 'react';
 
+import PetArt from '@components/pet/pet-art';
 import NeonButton from '@components/ui/neon-button';
-import { useTeamBattlePanel } from '@hooks/team/useTeamBattlePanel';
+import { SQUAD_SIZE, useTeamBattlePanel } from '@hooks/team/useTeamBattlePanel';
 import type { Tactic } from '@shared/core';
 
+import { type ArtPet, teamPetArt } from './art';
 import { TACTIC_OPTIONS } from './tactics';
 import { ZoneGrid } from './team-board';
+import TeamPetGrid from './team-pet-grid';
 import TeamPlayback from './team-playback';
 import styles from './index.module.css';
 
@@ -24,7 +27,9 @@ const STATE_LABELS: Record<string, string> = {
 const TeamChallenge: React.FC = () => {
     const panel = useTeamBattlePanel();
     const [selected, setSelected] = useState<string | null>(null);
-    const petName = useCallback((petId: string) => panel.pets.find((p) => p.id === petId)?.name ?? `Pet ${petId}`, [panel.pets]);
+    const ownPet = useCallback((petId: string) => panel.pets.find((p) => p.id === petId), [panel.pets]);
+    const petName = useCallback((petId: string) => ownPet(petId)?.name ?? `Pet ${petId}`, [ownPet]);
+    const ownArt = (petId: string): ArtPet => ownPet(petId) ?? teamPetArt(petId, 0n, petName(petId));
     const fighterName = useCallback(
         (side: 0 | 1, slot: number) => {
             const view = panel.result?.playback.fighters[side][slot];
@@ -78,9 +83,19 @@ const TeamChallenge: React.FC = () => {
                 <div className={styles.list}>
                     {panel.opponents.map((o) => (
                         <div key={o.planHash} className={styles.listItem}>
-                            <span className={styles.grow}>
-                                {o.roster.map((p) => `${p.name} (Lv ${p.level})`).join(', ')}
-                            </span>
+                            <div className={styles.rosterStrip}>
+                                {[...o.roster]
+                                    .sort((a, b) => a.rank - b.rank)
+                                    .map((p) => (
+                                        <span key={p.petId} className={styles.rosterPet} title={`${p.name}, level ${p.level}, rank ${p.rank}`}>
+                                            <span className={styles.miniArt} aria-hidden>
+                                                <PetArt pet={teamPetArt(p.petId, p.dna, p.name)} />
+                                            </span>
+                                            <span className={styles.tokenName}>{p.name}</span>
+                                            <span className={styles.tokenSub}>Lv {p.level}</span>
+                                        </span>
+                                    ))}
+                            </div>
                             <span className={styles.muted}>{o.ready ? `Levels ${o.minLevel}–${o.maxLevel}` : 'Resting'}</span>
                             <NeonButton size="sm" tone="magenta" disabled={!o.ready} onClick={() => panel.chooseOpponent(o)}>
                                 Challenge
@@ -93,16 +108,16 @@ const TeamChallenge: React.FC = () => {
     }
 
     const opponent = panel.opponent;
-    const inSquad = new Set(panel.squad.map((m) => m.petId));
+    const squadIds = panel.squad.map((m) => m.petId);
     return (
         <div className={styles.panel}>
             <div className={styles.row}>
-                <div>
+                <div className={styles.grow}>
                     <h4>Your squad</h4>
                     <ZoneGrid
                         label="Your zone"
                         side={0}
-                        members={panel.squad.map((m) => ({ petId: m.petId, col: m.col, row: m.row, label: petName(m.petId) }))}
+                        members={panel.squad.map((m) => ({ petId: m.petId, col: m.col, row: m.row, art: ownArt(m.petId), label: petName(m.petId) }))}
                         selectedPetId={selected}
                         onTileClick={(col, row) => {
                             const here = panel.squad.find((m) => m.col === col && m.row === row);
@@ -116,59 +131,60 @@ const TeamChallenge: React.FC = () => {
                         onDropPet={panel.placePet}
                     />
                 </div>
-                <div>
+                <div className={styles.grow}>
                     <h4>Their team</h4>
                     <ZoneGrid
                         label="Rival zone"
                         side={1}
-                        members={opponent.roster.map((p) => ({ petId: p.petId, col: p.col, row: p.row, label: p.name, sub: `Rank ${p.rank}` }))}
+                        members={opponent.roster.map((p) => ({
+                            petId: p.petId,
+                            col: p.col,
+                            row: p.row,
+                            art: teamPetArt(p.petId, p.dna, p.name),
+                            label: p.name,
+                            sub: `Rank ${p.rank}`,
+                        }))}
                     />
                 </div>
             </div>
             <p className={styles.muted}>
-                Select a pet on your zone, then a tile, to move it; or drag it. Melee pets can only
-                reach the enemy front line.
+                Tap a pet below to add or remove it. To move one, select it on your zone and then a
+                tile, or drag it. Melee pets can only reach the enemy front line.
             </p>
 
-            <div className={styles.list}>
-                {panel.squad.map((m) => (
-                    <div key={m.petId} className={styles.listItem}>
-                        <span className={styles.grow}>{petName(m.petId)}</span>
-                        <label>
-                            Tactic{' '}
-                            <select value={m.tactic} onChange={(e) => panel.setTactic(m.petId, e.target.value as Tactic)}>
+            {panel.squad.length > 0 && (
+                <div className={styles.list}>
+                    {panel.squad.map((m) => (
+                        <div key={m.petId} className={styles.listItem}>
+                            <span className={styles.miniArt} aria-hidden>
+                                <PetArt pet={ownArt(m.petId)} />
+                            </span>
+                            <span className={styles.grow}>{petName(m.petId)}</span>
+                            <select aria-label={`Tactic for ${petName(m.petId)}`} value={m.tactic} onChange={(e) => panel.setTactic(m.petId, e.target.value as Tactic)}>
                                 {TACTIC_OPTIONS.map((t) => (
                                     <option key={t.id} value={t.id}>
                                         {t.label}
                                     </option>
                                 ))}
                             </select>
-                        </label>
-                        <NeonButton size="xs" tone="violet" onClick={() => panel.removePet(m.petId)}>
-                            Remove
-                        </NeonButton>
-                    </div>
-                ))}
-            </div>
-
-            {panel.squad.length < 3 && (
-                <div className={styles.list}>
-                    {panel.pets
-                        .filter((p) => !inSquad.has(p.id))
-                        .map((p) => (
-                            <div key={p.id} className={styles.listItem}>
-                                <span className={styles.grow}>
-                                    {p.name} (Lv {p.level})
-                                </span>
-                                <NeonButton size="xs" tone="cyan" onClick={() => panel.addPet(p.id)}>
-                                    Add
-                                </NeonButton>
-                            </div>
-                        ))}
+                        </div>
+                    ))}
                 </div>
             )}
 
-            {panel.squad.length === 3 && (
+            <h4>
+                Choose your squad ({panel.squad.length}/{SQUAD_SIZE})
+            </h4>
+            <TeamPetGrid
+                label="Your pets"
+                pets={panel.pets}
+                selected={squadIds}
+                max={SQUAD_SIZE}
+                blockResting
+                onToggle={(petId) => (squadIds.includes(petId) ? panel.removePet(petId) : panel.addPet(petId))}
+            />
+
+            {panel.squad.length === SQUAD_SIZE && (
                 <p className={styles.muted}>
                     Your squad acts in this order: {panel.turnOrder.map((slot) => petName(panel.squad[slot]?.petId ?? '')).join(', ')}.
                     The defenders join the order once they are drawn.

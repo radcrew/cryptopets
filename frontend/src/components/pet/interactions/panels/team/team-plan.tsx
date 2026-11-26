@@ -1,10 +1,13 @@
 import React, { useEffect, useState } from 'react';
 
+import PetArt from '@components/pet/pet-art';
 import NeonButton from '@components/ui/neon-button';
 import { type PlanRosterEntry, type Tactic, useDefensePlan, usePetList } from '@shared/core';
 
+import { type ArtPet, teamPetArt } from './art';
 import { TACTIC_OPTIONS } from './tactics';
 import { ZoneGrid } from './team-board';
+import TeamPetGrid from './team-pet-grid';
 import styles from './index.module.css';
 
 const ROSTER_SIZE = 5;
@@ -41,7 +44,8 @@ const TeamPlan: React.FC = () => {
     }, [plan]);
 
     const name = (petId: string) => pets.find((p) => p.id === petId)?.name ?? `Pet ${petId}`;
-    const inRoster = new Set(roster.map((d) => d.petId));
+    const art = (petId: string): ArtPet => pets.find((p) => p.id === petId) ?? teamPetArt(petId, 0n, name(petId));
+    const rosterIds = roster.map((d) => d.petId);
 
     const add = (petId: string) =>
         setRoster((current) => {
@@ -99,7 +103,7 @@ const TeamPlan: React.FC = () => {
                 <ZoneGrid
                     label="Your defence zone"
                     side={0}
-                    members={roster.map((d, i) => ({ petId: d.petId, col: d.col, row: d.row, label: name(d.petId), sub: `Rank ${i + 1}` }))}
+                    members={roster.map((d, i) => ({ petId: d.petId, col: d.col, row: d.row, art: art(d.petId), label: name(d.petId), sub: `Rank ${i + 1}` }))}
                     selectedPetId={selected}
                     onTileClick={(col, row) => {
                         const here = roster.find((d) => d.col === col && d.row === row);
@@ -116,6 +120,9 @@ const TeamPlan: React.FC = () => {
                     {roster.map((d, i) => (
                         <div key={d.petId} className={styles.listItem}>
                             <strong>{i + 1}.</strong>
+                            <span className={styles.miniArt} aria-hidden>
+                                <PetArt pet={art(d.petId)} />
+                            </span>
                             <span className={styles.grow}>{name(d.petId)}</span>
                             <select aria-label={`Tactic for ${name(d.petId)}`} value={d.tactic} onChange={(e) => setTactic(d.petId, e.target.value as Tactic)}>
                                 {TACTIC_OPTIONS.map((t) => (
@@ -130,35 +137,26 @@ const TeamPlan: React.FC = () => {
                             <NeonButton size="xs" tone="cyan" aria-label={`Rank ${name(d.petId)} lower`} disabled={i === roster.length - 1} onClick={() => move(i, 1)}>
                                 ↓
                             </NeonButton>
-                            <NeonButton size="xs" tone="violet" onClick={() => remove(d.petId)}>
-                                Remove
-                            </NeonButton>
                         </div>
                     ))}
                 </div>
             </div>
             <p className={styles.muted}>
-                Rank 1 defends in about 83% of battles and rank 5 in about 27%. Select a pet on the zone,
-                then a tile, to move it; or drag it.
+                Rank 1 defends in about 83% of battles and rank 5 in about 27%. Tap a pet below to add or
+                remove it. To move one, select it on the zone and then a tile, or drag it.
             </p>
 
-            {roster.length < ROSTER_SIZE && (
-                <div className={styles.list}>
-                    {pets
-                        .filter((p) => !inRoster.has(p.id))
-                        .map((p) => (
-                            <div key={p.id} className={styles.listItem}>
-                                <span className={styles.grow}>
-                                    {p.name} (Lv {p.level})
-                                </span>
-                                <NeonButton size="xs" tone="cyan" onClick={() => add(p.id)}>
-                                    Add
-                                </NeonButton>
-                            </div>
-                        ))}
-                    {pets.length < ROSTER_SIZE && <p className={styles.muted}>A team needs five pets.</p>}
-                </div>
-            )}
+            <h4>
+                Choose your team ({roster.length}/{ROSTER_SIZE})
+            </h4>
+            <TeamPetGrid
+                label="Your pets"
+                pets={pets}
+                selected={rosterIds}
+                max={ROSTER_SIZE}
+                onToggle={(petId) => (rosterIds.includes(petId) ? remove(petId) : add(petId))}
+            />
+            {pets.length < ROSTER_SIZE && <p className={styles.muted}>A team needs five pets.</p>}
 
             {error && <p className={styles.error}>{error.message}</p>}
             {message && <p role="status">{message}</p>}

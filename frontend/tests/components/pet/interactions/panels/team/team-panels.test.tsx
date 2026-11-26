@@ -12,6 +12,7 @@ vi.mock('@shared/core', async () => ({
     useDefensePlan: () => ({ plan: null, save, revoke, isPending: false, error: null }),
 }));
 
+import TeamPetGrid from '@components/pet/interactions/panels/team/team-pet-grid';
 import TeamPlan from '@components/pet/interactions/panels/team/team-plan';
 import TeamPlayback from '@components/pet/interactions/panels/team/team-playback';
 
@@ -27,9 +28,11 @@ describe('TeamPlan', () => {
         const saveButton = screen.getByRole('button', { name: 'Save team' });
         expect(saveButton).toBeDisabled();
 
-        for (let i = 0; i < 5; i++) {
-            await user.click(screen.getAllByRole('button', { name: 'Add' })[0]!);
+        for (const id of ['1', '2', '3', '4', '5']) {
+            await user.click(screen.getByRole('button', { name: `Pet ${id}, level 10` }));
         }
+        // A full team takes no sixth pet.
+        expect(screen.getByRole('button', { name: 'Pet 6, level 10' })).toBeDisabled();
         await user.click(screen.getByRole('button', { name: 'Rank Pet 2 higher' }));
         await user.click(saveButton);
 
@@ -42,6 +45,28 @@ describe('TeamPlan', () => {
             ['5', 5],
         ]);
         expect(await screen.findByRole('status')).toHaveTextContent(/saved/i);
+    });
+});
+
+describe('TeamPetGrid', () => {
+    const pet = (id: string, readyAt = 0) => ({ id, name: `Pet ${id}`, level: 10, dna: 1n, rarity: 1, readyAt }) as never;
+
+    it('takes a chosen pet out when it is tapped again, and numbers the chosen ones in order', async () => {
+        const user = userEvent.setup();
+        const onToggle = vi.fn();
+        render(<TeamPetGrid label="Your pets" pets={[pet('1'), pet('2')]} selected={['2', '1']} max={3} onToggle={onToggle} />);
+        const first = screen.getByRole('button', { name: 'Pet 1, level 10' });
+        expect(first).toHaveAttribute('aria-pressed', 'true');
+        expect(first).toHaveTextContent('2');
+        await user.click(first);
+        expect(onToggle).toHaveBeenCalledWith('1');
+    });
+
+    it('shows resting pets but refuses them for a squad that fights now', () => {
+        const resting = Math.floor(Date.now() / 1000) + 3600;
+        render(<TeamPetGrid label="Your pets" pets={[pet('1'), pet('2', resting)]} selected={[]} max={3} blockResting onToggle={vi.fn()} />);
+        expect(screen.getByRole('button', { name: 'Pet 1, level 10' })).toBeEnabled();
+        expect(screen.getByRole('button', { name: 'Pet 2, level 10, resting' })).toBeDisabled();
     });
 });
 

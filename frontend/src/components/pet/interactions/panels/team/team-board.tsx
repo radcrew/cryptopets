@@ -1,5 +1,8 @@
 import React from 'react';
 
+import PetArt from '@components/pet/pet-art';
+
+import type { ArtPet } from './art';
 import styles from './index.module.css';
 
 const COL_NAMES = ['back', 'middle', 'front'] as const;
@@ -9,6 +12,7 @@ export interface ZoneMember {
     petId: string;
     col: number;
     row: number;
+    art: ArtPet;
     label: string;
     sub?: string;
 }
@@ -48,8 +52,11 @@ export const ZoneGrid: React.FC<ZoneGridProps> = ({ members, side, selectedPetId
                     const position = `${COL_NAMES[col]} column, ${ROW_NAMES[row]} row`;
                     const content = member ? (
                         <>
+                            <span className={styles.tokenArt} aria-hidden>
+                                <PetArt pet={member.art} />
+                            </span>
                             <span className={styles.tokenName}>{member.label}</span>
-                            {member.sub && <span>{member.sub}</span>}
+                            {member.sub && <span className={styles.tokenSub}>{member.sub}</span>}
                         </>
                     ) : null;
                     if (!onTileClick) {
@@ -89,6 +96,7 @@ export interface BoardFighter {
     slot: number;
     x: number;
     row: number;
+    art: ArtPet;
     name: string;
     hp: number;
     startHp: number;
@@ -125,8 +133,11 @@ export const BattleBoard: React.FC<BattleBoardProps> = ({ fighters, actor, victi
                 const pct = f.startHp > 0 ? Math.max(0, Math.round((f.hp / f.startHp) * 100)) : 0;
                 return (
                     <div key={`${x}-${row}`} className={className} title={`${f.name}: ${f.hp}/${f.startHp} HP`}>
+                        <span className={styles.tokenArt}>
+                            <PetArt pet={f.art} />
+                        </span>
                         <span className={styles.tokenName}>{f.name}</span>
-                        <span>{f.hp > 0 ? `${f.hp} HP` : 'Out'}</span>
+                        <span className={styles.tokenSub}>{f.hp > 0 ? `${f.hp} HP` : 'Out'}</span>
                         <div className={styles.hpTrack}>
                             <div className={styles.hpFill} style={{ width: `${pct}%` }} />
                         </div>
