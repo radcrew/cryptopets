@@ -67,7 +67,7 @@ describe('CreatePetModal', () => {
 
     it('shows the form when open', () => {
         renderModal();
-        expect(screen.getByRole('heading', { name: /Create Your First Pet/ })).toBeInTheDocument();
+        expect(screen.getByRole('heading', { name: /Summon a Pet/ })).toBeInTheDocument();
         expect(screen.getByPlaceholderText('Enter pet name...')).toBeInTheDocument();
     });
 

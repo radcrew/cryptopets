@@ -17,14 +17,10 @@
     min-height: 0;
 }
 
-/* ── Battle setup: a pre-fight tactical readout ───────────────────────────────
-   Two combatant bays flanking an odds spine. The design problem this solves is the
-   empty state, which is the state players land on: two tall dashed voids holding
-   12px of centred text, with a VS floating between them on hairlines that connected
-   nothing. Emptiness is now drawn as an empty *arena* — floor grid, lit plinth, and
-   the stat frame rendered as unfilled slots — so a waiting bay shows the shape of
-   what will fill it instead of reading as broken layout. Nothing here changes what
-   the panel reports; it is the same labels, controls and readouts, composed. */
+/* ── Battle setup: the arena floor before a fight ────────────────────────────
+   Two combatants on pedestals facing each other across a VS and the win-chance spine,
+   the rosters as trays beneath, then the fight key. An empty side keeps its pedestal,
+   holding a "?", so choosing a fighter fills a stage already drawn. */
 
 .showdown {
     display: grid;
@@ -56,34 +52,23 @@
     --bay-wash: rgb(255 123 203 / 8%);
 }
 
+/* Each side's name on a pennant in its colour. */
 .combatantColLabel {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 2px;
+    align-self: center;
+    padding: 5px 16px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--bay) 22%, rgb(8 10 28 / 85%));
+    box-shadow: inset 0 0 0 1px var(--bay-soft), 0 0 16px -4px var(--bay);
+    font: 400 11px var(--cp-display-font);
+    letter-spacing: 0.1em;
     text-transform: uppercase;
-    color: var(--bay);
-    opacity: 0.85;
+    color: #fff;
 }
 
 /* A rule running to the edge of the column, so the label sits on something rather
    than floating. Reads as a HUD channel header. */
-.combatantColLabel::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: linear-gradient(90deg, var(--bay-soft), transparent);
-}
 
-.combatantColRival .combatantColLabel {
-    flex-direction: row-reverse;
-}
 
-.combatantColRival .combatantColLabel::after {
-    background: linear-gradient(270deg, var(--bay-soft), transparent);
-}
 
 /* Selection controls, sitting directly on the bay they fill so the control and its
    subject read as one unit rather than a form stacked above a picture. */
@@ -123,58 +108,118 @@
     }
 }
 
-/* ── The bay ──────────────────────────────────────────────────────────────────
-   Two layers on purpose: clip-path cuts the corner notch but also cuts any border
-   drawn on the same element, so the outer layer is the frame (1px of accent showing
-   past the inner one) and the inner layer is the surface. One extra node buys a
-   silhouette no other card in the app has. */
-.combatantCard {
-    position: relative;
-    flex: 1;
-    min-width: 0;
-    /* Short enough that the rosters below share the screen with the arena. */
-    min-height: 260px;
-    padding: 1px;
-    /* Notched away from the centre line, so the pair opens toward the spine. */
-    clip-path: polygon(18px 0, 100% 0, 100% 100%, 0 100%, 0 18px);
-    background: linear-gradient(160deg, var(--bay-soft), rgb(101 131 255 / 10%) 55%, var(--bay-soft));
-    transition: filter 0.25s ease;
-}
-
-.combatantCardRival {
-    clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 0 100%);
-}
-
-/* An unfilled bay sits back so a filled one advances. Also the only rule that names
-   `.isEmpty` outright: a class appearing solely inside `:not()` is easy to lose in a
-   refactor, and losing it would light every empty bay instead of none. */
-.combatantCard.isEmpty {
-    opacity: 0.84;
-}
-
-/* Lit once a combatant is standing in it. */
-.combatantCard:not(.isEmpty) {
-    filter: drop-shadow(0 0 22px var(--bay-wash));
-}
-
-.combatantCardFrame {
-    position: relative;
-    height: 100%;
+/* ── A combatant on the floor ────────────────────────────────────────────────
+   The pet on its pedestal under a spotlight in its side's colour (PetStage), then its
+   rarity, owner, stats and health beneath, all centred under the figure. */
+.combatant {
     display: flex;
     flex-direction: column;
-    justify-content: flex-end;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+/* Positioned so the gear badges pin to the stage's corner. */
+.combatantStage {
+    position: relative;
+}
+
+.combatantRarity {
+    margin-top: -2px;
+    font: 400 11px var(--cp-display-font);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.combatantOwner {
+    border-radius: 999px;
+    padding: 2px 10px;
+    background: rgb(8 10 28 / 72%);
+    font-size: 12px;
+    color: var(--cp-text-muted-dark);
+    font-variant-numeric: tabular-nums;
+}
+
+.combatantStats {
+    display: flex;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.combatantStats li {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 46px;
+    padding: 4px 6px;
+    border-radius: 10px;
+    background: rgb(8 10 28 / 72%);
+    box-shadow: inset 0 0 0 1px var(--bay-soft);
+}
+
+.combatantStats small {
+    font-size: 9.5px;
+    letter-spacing: 0.1em;
+    color: var(--cp-text-muted-dark);
+}
+
+.combatantStats b {
+    font: 400 14px var(--cp-display-font);
+    color: #fff;
+}
+
+/* An empty stat: a short line where the number will go. */
+.statVoid {
+    display: block;
+    width: 18px;
+    height: 3px;
+    margin: 8px 0;
+    border-radius: 2px;
+    background: rgb(255 255 255 / 20%);
+}
+
+.combatantHp {
+    width: min(240px, 100%);
+}
+
+.combatantHpHead {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 4px;
+    font-size: 12px;
+    color: #c9cbe0;
+}
+
+.combatantHpHead b {
+    font: 400 11px var(--cp-display-font);
+    color: #fff;
+}
+
+.combatantHpTrack {
+    display: block;
+    height: 12px;
+    border-radius: 999px;
     overflow: hidden;
-    clip-path: polygon(17px 0, 100% 0, 100% 100%, 0 100%, 0 17px);
-    background: linear-gradient(180deg, rgb(10 16 32 / 97%), rgb(5 9 20 / 99%));
+    background: rgb(0 0 0 / 45%);
+    box-shadow: inset 0 2px 4px rgb(0 0 0 / 60%);
 }
 
-.combatantCardRival .combatantCardFrame {
-    clip-path: polygon(0 0, calc(100% - 17px) 0, 100% 17px, 100% 100%, 0 100%);
+.combatantHpFill {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #12d49a, #74f7c8);
+    box-shadow: inset 0 3px 0 rgb(255 255 255 / 30%);
 }
 
-/* ── Empty bay: an arena nobody is standing in ────────────────────────────────
-   The floor recedes to a horizon, a plinth marks where the fighter will stand, and
-   a sweep passes over it. Three empty divs and no images. */
+.combatantHpFillRival {
+    background: linear-gradient(90deg, #d6409c, #ff9ad8);
+}
+
+/* An empty bay drawn as an empty arena: floor grid, plinth and a passing sweep. The team
+   challenge draws its empty rival bay with these. */
 .combatantCardArena {
     position: absolute;
     inset: 0;
@@ -233,170 +278,6 @@
     }
 }
 
-/* The art layer. Positioned so the filling image resolves against it, and a grid so
-   the emoji fallback centres in the same space the art would cover. */
-.combatantCardArt {
-    position: absolute;
-    inset: 0;
-    display: grid;
-    place-items: center;
-    overflow: hidden;
-}
-
-.combatantCardScrim {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(
-        180deg,
-        transparent 30%,
-        rgb(5 9 20 / 62%) 62%,
-        rgb(5 9 20 / 94%) 100%
-    );
-}
-
-.combatantCardAvatar {
-    font-size: 92px;
-    filter: drop-shadow(0 0 24px var(--bay-wash));
-    animation: cp-vs-pulse 3.4s ease-in-out infinite;
-}
-
-/* ── Readout ──────────────────────────────────────────────────────────────────
-   Present whether or not a pet is, so choosing one fills the frame in place rather
-   than swapping one layout for another. */
-.combatantCardBody {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    gap: 9px;
-    padding: 14px;
-}
-
-.combatantCardName {
-    font-family: var(--cp-title-font);
-    font-size: 17px;
-    font-weight: 700;
-    letter-spacing: 0.4px;
-    color: #eef3ff;
-    text-wrap: balance;
-}
-
-.combatantCardMeta {
-    font-size: 11px;
-    color: rgb(195 210 255 / 62%);
-}
-
-.combatantCardOwner {
-    font-size: 10px;
-    letter-spacing: 0.6px;
-    color: rgb(195 210 255 / 38%);
-}
-
-/* The empty bay's one line of copy, sized to be read at a glance rather than the
-   12px it replaced. */
-.combatantCardPlaceholder {
-    font-family: var(--cp-title-font);
-    font-size: 13px;
-    font-weight: 600;
-    letter-spacing: 1.4px;
-    text-transform: uppercase;
-    color: var(--bay);
-    opacity: 0.72;
-    text-wrap: balance;
-}
-
-.combatantCardStats {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 6px;
-}
-
-.combatantStat {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    align-items: center;
-    padding: 6px 2px;
-    border-radius: 6px;
-    background: rgb(5 13 30 / 58%);
-    border: 1px solid rgb(101 131 255 / 12%);
-}
-
-.combatantStatLabel {
-    font-size: 8px;
-    font-weight: 700;
-    letter-spacing: 1.1px;
-    color: rgb(195 210 255 / 45%);
-}
-
-.combatantStatVal {
-    font-family: var(--cp-title-font);
-    font-size: 15px;
-    font-weight: 700;
-    line-height: 1;
-    color: var(--bay);
-    font-variant-numeric: tabular-nums;
-}
-
-/* An unfilled slot, drawn rather than written: an em dash here would collide with
-   the one the odds spine shows for an unknown win rate. */
-.combatantStatVoid {
-    width: 14px;
-    height: 2px;
-    border-radius: 2px;
-    background: rgb(195 210 255 / 22%);
-}
-
-.combatantCardHp {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-}
-
-.combatantCardHpHead {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    font-size: 8px;
-    font-weight: 700;
-    letter-spacing: 1.2px;
-    text-transform: uppercase;
-    color: rgb(195 210 255 / 45%);
-}
-
-.combatantCardHpVal {
-    font-variant-numeric: tabular-nums;
-    color: rgb(195 210 255 / 72%);
-}
-
-.combatantCardHpTrack {
-    height: 5px;
-    border-radius: 3px;
-    background: rgb(5 13 30 / 88%);
-    border: 1px solid rgb(101 131 255 / 14%);
-    overflow: hidden;
-}
-
-.combatantCardHpFill {
-    height: 100%;
-    border-radius: 3px;
-    transition: width 0.35s ease;
-}
-
-.combatantCardHpFillFighter {
-    background: linear-gradient(90deg, #29a8ff, var(--cp-cyan));
-    box-shadow: 0 0 10px rgb(125 214 255 / 55%);
-}
-
-.combatantCardHpFillRival {
-    background: linear-gradient(90deg, var(--cp-magenta), #ff6ec4);
-    box-shadow: 0 0 10px rgb(255 123 203 / 55%);
-}
-
-/* ── Odds spine ───────────────────────────────────────────────────────────────
-   Replaces a floating VS on two hairlines that joined nothing, plus a detached
-   win-rate box. One rail now spans the height of the bays and carries the number:
-   your share fills from the bottom in cyan, theirs sits above in magenta, and the
-   pin marks the split. */
 .vs {
     display: flex;
     flex-direction: column;
@@ -407,16 +288,19 @@
     width: 76px;
 }
 
+/* VS on a burst, between the two spotlights. */
 .vsMark {
-    font-family: var(--cp-title-font);
-    font-size: 30px;
-    font-weight: 900;
+    display: grid;
+    place-items: center;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #ff7bcb 0 34%, #8a62ff 70%);
+    box-shadow: 0 0 0 3px #fff, 0 0 28px rgb(255 123 203 / 70%), 0 8px 18px rgb(0 0 0 / 45%);
+    font: 400 22px var(--cp-display-font);
     line-height: 1;
-    background: var(--cp-gradient-line);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    filter: drop-shadow(0 0 16px rgb(255 123 203 / 55%));
+    color: #fff;
+    text-shadow: 0 2px 0 #43278f;
     animation: cp-vs-pulse 2.6s ease-in-out infinite;
 }
 
@@ -562,10 +446,6 @@
         grid-template-columns: 1fr;
     }
 
-    .combatantCard {
-        min-height: 260px;
-    }
-
     /* The spine turns on its side and the rail fills left to right, so your share
        still grows toward your own bay. */
     .vs {
@@ -599,7 +479,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .combatantCardAvatar,
     .combatantCardArenaSweep,
     .vsMark {
         animation: none !important;

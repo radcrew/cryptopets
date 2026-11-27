@@ -114,14 +114,14 @@ const CreatePetModal: React.FC<CreatePetModalProps> = ({ isOpen, onClose }) => {
             title={
                 <>
                     <Icon as={PawIcon} tone={Tones.Cyan} />
-                    Create Your First Pet
+                    Summon a Pet
                 </>
             }
             contentClassName={styles.createPetBody}
         >
             <p>
-                Give your pet a unique name and bring it to life! You can only create one pet
-                initially — breed to grow your collection!
+                Name your new pet and summon it. Each pet you summon costs a little more than the
+                last; breeding is the other way to grow your party.
             </p>
 
             <div className={styles.form}>

@@ -131,7 +131,7 @@ describe('TeamChallenge showdown', () => {
         const theirs = screen.getByRole('list', { name: 'Rival team' });
         expect(within(theirs).getAllByText('Hidden until the battle')).toHaveLength(3);
         expect(screen.getByRole('img', { name: 'Rival zone, hidden until the battle' })).toBeInTheDocument();
-        expect(screen.getByRole('option', { name: /Lv 1–30/ })).toBeInTheDocument();
+        expect(screen.getByRole('radio', { name: /Lv 1–30/ })).toBeInTheDocument();
     });
 
     it('reports taps to the hook: selecting a pet, moving the picked-up one, and setting a tactic', async () => {
@@ -165,7 +165,9 @@ describe('TeamChallenge showdown', () => {
         panel = { ...basePanel(), phase: 'running', battleId: 'b1', inFlight: true, inBattle: true, sceneOpen: false };
         render(<TeamChallenge />);
         expect(screen.getByRole('button', { name: 'Cancel' })).toBeDisabled();
-        expect(screen.getByRole('combobox', { name: 'Choose a team to challenge' })).toBeDisabled();
+        for (const team of within(screen.getByRole('radiogroup', { name: 'Choose a team to challenge' })).getAllByRole('radio')) {
+            expect(team).toBeDisabled();
+        }
         expect(screen.getByRole('button', { name: /Random/ })).toBeDisabled();
         expect(screen.getByRole('button', { name: 'Mine 1, level 10' })).toBeDisabled();
         // Read-only lineup and zone: no tactic picker, no tile to move to, no pet to pick up.

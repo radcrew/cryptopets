@@ -222,25 +222,40 @@ const TeamChallenge: React.FC = () => {
                     {/* The rival team: who and which levels, never which pets. */}
                     <div className={clsx(duel.combatantCol, duel.combatantColRival)}>
                         <div className={duel.combatantColLabel}>Rival Team</div>
-                        <div className={duel.combatantSelect}>
-                            <div className={duel.combatantSelectField}>
-                                <select
-                                    className={clsx(styles.select, styles.teamSelect)}
-                                    aria-label="Choose a team to challenge"
-                                    value={opponent?.planHash ?? ''}
-                                    disabled={inFlight || panel.opponents.length === 0}
-                                    onChange={(e) =>
-                                        panel.chooseOpponent(panel.opponents.find((o) => o.planHash === e.target.value) ?? null)
-                                    }
-                                >
-                                    <option value="">{opponentEmpty}</option>
-                                    {panel.opponents.map((o) => (
-                                        <option key={o.planHash} value={o.planHash} disabled={!o.ready}>
-                                            {`${teamLabel(o)} · Lv ${o.minLevel}–${o.maxLevel}${o.ready ? '' : ' · resting'}`}
-                                        </option>
-                                    ))}
-                                </select>
+                        {/* Every open team as a card to pick: whose it is and the levels it takes. With
+                            none, the empty bay below says why. */}
+                        {panel.opponents.length > 0 && (
+                            <div className={styles.teamCards} role="radiogroup" aria-label="Choose a team to challenge">
+                                {panel.opponents.map((o) => {
+                                    const chosen = opponent?.planHash === o.planHash;
+                                    return (
+                                        <button
+                                            key={o.planHash}
+                                            type="button"
+                                            role="radio"
+                                            aria-checked={chosen}
+                                            className={clsx(
+                                                styles.teamCard,
+                                                chosen && styles.teamCardChosen,
+                                                !o.ready && styles.teamCardResting,
+                                            )}
+                                            disabled={inFlight || !o.ready}
+                                            onClick={() => panel.chooseOpponent(o)}
+                                        >
+                                            <span className={styles.teamCardCrest} aria-hidden>
+                                                🛡️
+                                            </span>
+                                            <span className={styles.teamCardName}>{teamLabel(o)}</span>
+                                            <span className={styles.teamCardLevels}>
+                                                Lv {o.minLevel}–{o.maxLevel}
+                                                {o.ready ? '' : ' · resting'}
+                                            </span>
+                                        </button>
+                                    );
+                                })}
                             </div>
+                        )}
+                        <div className={duel.combatantSelect}>
                             <button
                                 type="button"
                                 className={duel.combatantSelectBtn}

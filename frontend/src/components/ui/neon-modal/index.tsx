@@ -2,8 +2,6 @@ import { useEffect } from 'react';
 import type { ReactNode } from 'react';
 import Modal from 'react-modal';
 
-import { Tones } from '@constants/tones';
-import NeonButton from '@components/ui/neon-button';
 import './index.css';
 
 type NeonModalProps = {
@@ -45,15 +43,9 @@ const NeonModal = ({
                 <h3 className="title">{title}</h3>
                 <div className="controls">
                     {headerActions}
-                    <NeonButton
-                        className="close-btn"
-                        onClick={onRequestClose}
-                        tone={Tones.Cyan}
-                        size="sm"
-                        aria-label="Close modal"
-                    >
-                        Close
-                    </NeonButton>
+                    <button type="button" className="close-btn" onClick={onRequestClose} aria-label="Close modal">
+                        ×
+                    </button>
                 </div>
             </div>
             <div className={bodyClassName}>{children}</div>

@@ -795,9 +795,67 @@ button.tile:focus-visible {
     margin-left: auto;
 }
 
-.teamSelect {
-    box-sizing: border-box;
-    min-height: 32px;
+/* The open teams, as crest cards to pick from. A resting team shows but cannot be chosen. */
+.teamCards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 8px;
+    max-height: 220px;
+    overflow-y: auto;
+    padding: 2px;
+}
+
+.teamCard {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    column-gap: 10px;
+    align-items: center;
+    padding: 8px 12px;
+    border: 0;
+    border-radius: 16px;
+    background: linear-gradient(170deg, #2a1838, #150c24 70%);
+    box-shadow: inset 0 0 0 1px rgb(255 123 203 / 30%), 0 6px 14px rgb(0 0 0 / 35%);
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: transform 0.2s var(--cp-ease-spring), box-shadow 0.2s ease;
+}
+
+.teamCard:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: inset 0 0 0 2px rgb(255 123 203 / 60%), 0 8px 18px rgb(0 0 0 / 40%);
+}
+
+.teamCard:disabled {
+    cursor: not-allowed;
+}
+
+.teamCardChosen {
+    box-shadow: inset 0 0 0 2px var(--cp-magenta), 0 0 22px -4px rgb(255 123 203 / 70%), 0 8px 18px rgb(0 0 0 / 40%);
+}
+
+.teamCardResting {
+    opacity: 0.5;
+}
+
+.teamCardCrest {
+    grid-row: 1 / 3;
+    font-size: 26px;
+    line-height: 1;
+}
+
+.teamCardName {
+    overflow: hidden;
+    font-weight: 700;
+    font-size: 13px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.teamCardLevels {
+    font-size: 12px;
+    color: var(--cp-text-muted-dark);
 }
 
 .bay {
