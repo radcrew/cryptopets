@@ -44,11 +44,13 @@ type PetCardProps = {
     equipped?: readonly EquippedItem[];
     onBattle: () => void;
     onSendClick: () => void;
+    /** Opens the preview of the planned pet stories. */
+    onStoryClick: () => void;
 };
 
 /** One pet's card in the gallery grid: rarity/level/skill, avatar, XP, record,
- *  DNA stat tiles, cooldown status, and the Battle/Send actions. */
-const PetCard: React.FC<PetCardProps> = ({ pet, cooldown, equipped, onBattle, onSendClick }) => {
+ *  DNA stat tiles, cooldown status, and the Battle/Story/Send actions. */
+const PetCard: React.FC<PetCardProps> = ({ pet, cooldown, equipped, onBattle, onSendClick, onStoryClick }) => {
     const rarityColor = getRarityColor(pet.rarity);
     const xp = getXpNumbers(pet);
     const skill = getPetSkill(pet.speciesId);
@@ -141,6 +143,15 @@ const PetCard: React.FC<PetCardProps> = ({ pet, cooldown, equipped, onBattle, on
                 <button type="button" className={styles.battleBtn} onClick={onBattle}>
                     <Icon as={BattleIcon} tone={Tones.Magenta} glow="none" noGap />
                     Battle
+                </button>
+                <button
+                    type="button"
+                    className={styles.storyBtn}
+                    onClick={onStoryClick}
+                    title="Story · coming soon"
+                    aria-label={`${pet.name}'s story, coming soon`}
+                >
+                    📖
                 </button>
                 <button
                     type="button"

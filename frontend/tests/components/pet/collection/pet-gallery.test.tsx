@@ -150,6 +150,20 @@ describe('PetGallery', () => {
         expect(navigateSpy).toHaveBeenCalledWith('/battle', { state: { petId: '1' } });
     });
 
+    it('opens a pet story preview, labelled as coming soon, and closes it on Escape', async () => {
+        petList.pets = [aPet()];
+        renderGallery();
+
+        await userEvent.click(screen.getByRole('button', { name: "Sparky's story, coming soon" }));
+        const book = screen.getByRole('dialog', { name: "Sparky's story" });
+        expect(book).toHaveTextContent('The night Sparky hatched');
+        // The chapters are sample content: inside the inert Coming soon frame, not live controls.
+        expect(screen.getByText('Follow the lantern light').closest('[inert]')).not.toBeNull();
+
+        await userEvent.keyboard('{Escape}');
+        expect(screen.queryByRole('dialog')).toBeNull();
+    });
+
     it('shows a cooldown status when the pet is not ready', () => {
         Object.assign(cooldownStatus, {
             onCooldown: true,

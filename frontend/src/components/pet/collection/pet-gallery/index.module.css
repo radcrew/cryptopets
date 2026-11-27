@@ -556,6 +556,27 @@
     box-shadow: inset 0 2px 0 rgb(255 255 255 / 35%), 0 1px 0 #6e1650;
 }
 
+/* A small amber key for the story preview, the same size as Send. */
+.storyBtn {
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    width: 38px;
+    padding: 8px;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(180deg, #ffe08a, #ffad3b);
+    box-shadow: inset 0 2px 0 rgb(255 255 255 / 35%), 0 4px 0 #8a4a12;
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+    transition: transform 0.12s var(--cp-ease-spring), box-shadow 0.12s ease;
+}
+
+.storyBtn:hover {
+    transform: translateY(-2px);
+}
+
 .sendBtn {
     flex-shrink: 0;
     display: flex;
@@ -637,7 +658,8 @@
 
 @media (prefers-reduced-motion: reduce) {
     .petCard,
-    .sendBtn {
+    .sendBtn,
+    .storyBtn {
         transition: none;
     }
     .avatar {

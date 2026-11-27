@@ -26,6 +26,10 @@ export interface UsePetGallery {
     createModalOpen: boolean;
     onOpenCreateModal: () => void;
     onCloseCreateModal: () => void;
+    /** The pet whose story preview is open, or null. */
+    storyPet: Pet | null;
+    onStoryClick: (pet: Pet) => void;
+    onCloseStory: () => void;
 }
 
 /**
@@ -40,6 +44,7 @@ export const usePetGallery = (): UsePetGallery => {
     const [sendModalOpen, setSendModalOpen] = useState(false);
     const [createModalOpen, setCreateModalOpen] = useState(false);
     const [sendSelection, setSendSelection] = useState<{ pet: Pet; petId: bigint } | null>(null);
+    const [storyPet, setStoryPet] = useState<Pet | null>(null);
 
     const { statusFor } = usePetCooldowns(pets);
 
@@ -81,5 +86,8 @@ export const usePetGallery = (): UsePetGallery => {
         createModalOpen,
         onOpenCreateModal: () => setCreateModalOpen(true),
         onCloseCreateModal: () => setCreateModalOpen(false),
+        storyPet,
+        onStoryClick: setStoryPet,
+        onCloseStory: () => setStoryPet(null),
     };
 };

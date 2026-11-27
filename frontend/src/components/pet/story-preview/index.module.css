@@ -1,0 +1,221 @@
+/* CSS Module — class names are local; reference via `import styles from './index.module.css'`.
+   A storybook over the page: a leather cover framed in the pet's rarity colour, a contents
+   page and an open chapter side by side, stacking on a phone. */
+.veil {
+    position: fixed;
+    inset: 0;
+    z-index: var(--cp-z-modal);
+    display: grid;
+    place-items: center;
+    overflow-y: auto;
+    padding: 16px;
+    background: radial-gradient(circle at 50% 30%, rgb(255 210 90 / 12%), transparent 55%), rgb(3 4 14 / 78%);
+    backdrop-filter: blur(3px);
+    animation: fade 0.3s ease;
+}
+
+.close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 40px;
+    height: 40px;
+    border: 0;
+    border-radius: 50%;
+    background: rgb(8 10 28 / 85%);
+    box-shadow: inset 0 0 0 1px rgb(255 210 90 / 40%);
+    color: #e9dcc0;
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.book {
+    --rc: #8b4513;
+
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    width: min(760px, 100%);
+    padding: 20px 20px 22px;
+    border-radius: 22px;
+    background: linear-gradient(160deg, #2c1e40, #170f27 70%);
+    box-shadow: 0 0 0 2px var(--rc), 0 0 40px -10px var(--rc), inset 0 0 60px rgb(0 0 0 / 45%),
+        0 30px 70px rgb(0 0 0 / 60%);
+    animation: rise 0.45s var(--cp-ease-spring);
+}
+
+.cover {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.portrait {
+    position: relative;
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 58px;
+    height: 58px;
+    overflow: hidden;
+    border-radius: 50%;
+    background: radial-gradient(circle at 50% 40%, #1d2250, #0a0d24);
+    box-shadow: 0 0 0 3px var(--rc), 0 0 16px -2px var(--rc);
+    font-size: 34px;
+}
+
+.title {
+    margin: 0;
+    font: 700 clamp(18px, 3vw, 24px) var(--cp-lore-font);
+    letter-spacing: 0.06em;
+    color: #f3e6c6;
+    text-shadow: 0 1px 0 #000;
+}
+
+.byline {
+    font-size: 12.5px;
+    color: #b9a98a;
+}
+
+.spread {
+    display: grid;
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    gap: 16px;
+    text-align: left;
+
+    @media (max-width: 640px) {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+.contents {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.entry {
+    display: grid;
+    grid-template-columns: 26px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 12px;
+    background: rgb(0 0 0 / 22%);
+    color: #9d93ad;
+}
+
+.entry b {
+    display: block;
+    font: 700 13.5px var(--cp-lore-font);
+    color: #cfc4dc;
+}
+
+.entry small {
+    display: block;
+    font-size: 11.5px;
+    line-height: 1.35;
+}
+
+.entryOpen {
+    background: rgb(255 210 90 / 12%);
+    box-shadow: inset 0 0 0 1px rgb(255 210 90 / 40%);
+}
+
+.entryOpen b {
+    color: #ffe9b3;
+}
+
+.number {
+    display: grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    border: 1px solid #6b5a80;
+    font: 700 12px var(--cp-lore-font);
+}
+
+.entryOpen .number {
+    border-color: var(--cp-gold);
+    background: var(--cp-gold);
+    color: #2a1600;
+}
+
+.lock {
+    font-size: 13px;
+    opacity: 0.7;
+}
+
+/* The open chapter: warm parchment, the one light surface in the book. */
+.page {
+    padding: 16px 18px;
+    border-radius: 14px;
+    background: linear-gradient(170deg, #f4e7c9, #e2cfa5);
+    box-shadow: inset 0 0 24px rgb(120 80 30 / 25%);
+    color: #3a2a14;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.page p {
+    margin: 0 0 10px;
+}
+
+.kicker {
+    font: 700 11px var(--cp-lore-font);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #8a5a20;
+}
+
+.chapter {
+    margin: 2px 0 10px;
+    font: 700 20px var(--cp-lore-font);
+    color: #2a1a08;
+}
+
+.ask {
+    font-weight: 600;
+}
+
+.choices {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.choice {
+    border: 0;
+    border-radius: 12px;
+    padding: 8px 14px;
+    background: linear-gradient(180deg, #5a3e8a, #3a2660);
+    box-shadow: 0 3px 0 #1f1438;
+    color: #f3e6c6;
+    font: 700 12.5px var(--cp-lore-font);
+}
+
+@keyframes fade {
+    from {
+        opacity: 0;
+    }
+}
+
+@keyframes rise {
+    from {
+        opacity: 0;
+        transform: translateY(24px) scale(0.96);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .veil,
+    .book {
+        animation: none;
+    }
+}

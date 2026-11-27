@@ -6,6 +6,7 @@ import Icon, { CloseIcon, PawIcon } from '@components/ui/icon';
 import NeonButton from '@components/ui/neon-button';
 import CreatePetModal from '@components/pet/creation/create-pet-modal';
 import SendPetModal from '@components/pet/transfer/send-pet-modal';
+import StoryPreview from '@components/pet/story-preview';
 import { usePetGallery } from '@hooks/pet-gallery/usePetGallery';
 import PetCard from './parts/pet-card';
 import styles from './index.module.css';
@@ -36,6 +37,9 @@ const PetGallery: React.FC = () => {
         createModalOpen,
         onOpenCreateModal,
         onCloseCreateModal,
+        storyPet,
+        onStoryClick,
+        onCloseStory,
     } = usePetGallery();
 
     /**
@@ -137,6 +141,7 @@ const PetGallery: React.FC = () => {
                             equipped={equippedByPet.get(String(pet.id))}
                             onBattle={() => onBattle(pet)}
                             onSendClick={() => onSendClick(pet)}
+                            onStoryClick={() => onStoryClick(pet)}
                         />
                     ))}
 
@@ -155,6 +160,8 @@ const PetGallery: React.FC = () => {
                     petId={sendSelection.petId}
                 />
             )}
+
+            {storyPet && <StoryPreview pet={storyPet} onClose={onCloseStory} />}
 
             <CreatePetModal isOpen={createModalOpen} onClose={onCloseCreateModal} />
         </div>
