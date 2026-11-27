@@ -233,6 +233,19 @@ describe('structural rejections', () => {
         const result = await submit({ defenderPetId: '1', defenderOwner: ATTACKER });
         expect(result).toMatchObject({ ok: false, reason: 'self-battle' });
     });
+
+    it('rejects two different pets of the same owner', async () => {
+        // Both pets really are the attacker's, so every later check would pass: only the
+        // owner comparison stands between this intent and a battle a player fights with
+        // themselves for XP and drops (D7 in docs/plan-team-battles-3v3.md).
+        vi.mocked(getPetById).mockImplementation((async (_chain: string, petId: string) => ({
+            petId,
+            owner: ATTACKER,
+        })) as never);
+        const result = await submit({ defenderOwner: ATTACKER });
+        expect(result).toMatchObject({ ok: false, reason: 'same-owner' });
+        expect(getPetById).not.toHaveBeenCalled();
+    });
 });
 
 describe('nonce consumption', () => {

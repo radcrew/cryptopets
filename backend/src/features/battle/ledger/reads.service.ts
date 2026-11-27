@@ -1,13 +1,13 @@
 import { type Hex } from '@cryptopets/protocol';
 
-import { servedRuleset, servedRulesetHash } from './ruleset.builder';
+import { servedRuleset, servedRulesetHash, servedTeamRuleset, servedTeamRulesetHash } from './ruleset.builder';
 import { ethers } from 'ethers';
 
 import { prisma } from '@config/prisma';
 import { listSigningKeys } from '@features/battle/signer';
 
 import { servedChainIds, servedDeploymentId } from './domain';
-import { backendBattleModeEnabled } from './mode';
+import { backendBattleModeEnabled, teamBattlesEnabled } from './mode';
 
 /**
  * Public, authoritative reads for a battle in flight or settled (§J).
@@ -41,6 +41,12 @@ export interface BattleConfig {
     chainIds: string[];
     /** The ruleset a defence authorization must be bound to for a battle to be accepted. */
     ruleset: { hash: string; version: number };
+    /**
+     * Team battles: whether they are accepted, and the ruleset a defence plan and a team
+     * intent must be bound to. A different ruleset from the duel one until rollout, so a
+     * client must not sign a plan against `ruleset.hash`.
+     */
+    team: { enabled: boolean; ruleset: { hash: string; version: number } };
 }
 
 /**
@@ -66,6 +72,10 @@ export async function getBattleConfig(): Promise<BattleConfig> {
         deploymentId: servedDeploymentId(),
         chainIds: servedChainIds(),
         ruleset: { hash: await servedRulesetHash(), version: ruleset.version },
+        team: {
+            enabled: teamBattlesEnabled(),
+            ruleset: { hash: await servedTeamRulesetHash(), version: (await servedTeamRuleset()).version },
+        },
     };
 }
 
@@ -75,9 +85,13 @@ export interface BattleStateSummary {
     deploymentId: string;
     state: string;
     failureReason: string | null;
-    attackerPetId: string;
+    /** 'duel' | 'team'. */
+    kind: string;
+    /** Null on a team battle, whose pets are in its snapshot. */
+    attackerPetId: string | null;
     attackerOwner: string;
-    defenderPetId: string;
+    /** Null on a team battle, whose pets are in its snapshot. */
+    defenderPetId: string | null;
     defenderOwner: string;
     rulesetHash: string;
     createdAt: string;
@@ -93,6 +107,7 @@ export async function getBattleStateSummary(battleId: string): Promise<BattleSta
         deploymentId: battle.deploymentId,
         state: battle.state,
         failureReason: battle.failureReason,
+        kind: battle.kind,
         attackerPetId: battle.attackerPetId,
         attackerOwner: battle.attackerOwner,
         defenderPetId: battle.defenderPetId,

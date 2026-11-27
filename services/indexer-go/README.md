@@ -70,10 +70,12 @@ schema bump deploys, those fields decode to their zero values.
   or runaway `indexer_ws_reconnects_total`. A flat `indexer_last_version` is
   *not* a signal on its own — it also means nobody has played.
 
-Deployment: `render.yaml` at the repo root defines `do-not-stop-indexer` as a
-free-plan Go web service (`/healthz` checked, `/metrics` on the same port).
-Free web services sleep when idle — the reconnect/backfill machinery recovers
-the gap on wake. Connection env vars are set in the Render dashboard.
+Deployment: there is no Render blueprint in the repo at the moment (`render.yaml`
+was removed while the project runs on localhost only). It defined
+`do-not-stop-indexer` as a free-plan Go web service (`/healthz` checked,
+`/metrics` on the same port). Free web services sleep when idle, and the
+reconnect/backfill machinery recovers the gap on wake. Connection env vars are
+set in the Render dashboard.
 
 Note this service is now the **only** roster indexer: the backend's Node
 `RosterIndexer` was deleted, so nothing else writes `pet_roster` and there is no
@@ -191,6 +193,21 @@ itself, so the only question this check answers is whether the two engines
 computed the same strikes, never whether Go's encoding agrees with TS's (there
 is only one canonical encoding, and it lives in `protocol/`).
 
+Team battles get the same check as `VerifyTeamBattle` (`internal/grpcsrv/verify_team.go`,
+`internal/combat/team_verify.go`). The backend sends the three attackers and the three
+defenders the defence plan names, and Go recomputes the fight and all six fighters'
+progression (`ComputeTeamProgression`).
+`TestVerifyTeamMatchesProtocolTeamReceipts` replays the team receipts in
+`contracts/test-vectors/protocol-team.json`, which the TypeScript side produced, and
+`TestVerifyTeamBattleMatchesProtocolTeamReceiptsOverGRPC` does the same through the wire.
+
+Regenerating `pb/` needs `buf` and the plugin versions recorded in the generated headers
+(`go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.36.11`,
+`google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.6.2` and
+`github.com/bufbuild/buf/cmd/buf@latest`), then `buf generate ../../proto --template
+buf.gen.yaml` from this directory. The backend needs no regeneration: it loads
+`proto/cryptopets.proto` at runtime.
+
 `TestProgressionMatchesGoldenVectors` in `progression_test.go` consumes
 `contracts/test-vectors/protocol-progression.json`, the same file
 `protocol/tests/progression/vectors.test.ts` consumes, so the composition
@@ -205,6 +222,6 @@ internal/evm/       subgraph watermark adapter (pets)
 internal/solana/    WS push adapter, Borsh decode, reconnect/backfill
 internal/store/     single version-guarded batch writer (pgx)
 internal/combat/    pure Go combat sim + independent verify (cross-chain parity via golden vectors)
-internal/grpcsrv/   GetPetState + EstimateWin + VerifyBattle server
+internal/grpcsrv/   GetPetState + EstimateWin + VerifyBattle + VerifyTeamBattle server
 pb/                 generated stubs (buf generate ../proto)
 ```

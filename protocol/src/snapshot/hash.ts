@@ -23,8 +23,8 @@ export function encodeBattleSnapshot(snapshot: BattleSnapshot): Uint8Array {
     const version = checked.schemaVersion ?? 1;
     const writer = CanonicalWriter.withDomain(DOMAIN_TAGS.SNAPSHOT);
     writeHeader(writer, 'snapshot', checked.domain, version);
-    writePet(writer, checked.attacker, version);
-    writePet(writer, checked.defender, version);
+    writePetSnapshot(writer, checked.attacker, version);
+    writePetSnapshot(writer, checked.defender, version);
     return writer.u64(checked.takenAt).build();
 }
 
@@ -41,7 +41,7 @@ export function hashBattleSnapshot(snapshot: BattleSnapshot): Hex {
  * differs from the v1 of the same pet only by the version in the header and a zero-length
  * array — which is the point: adding the field cannot change what an old fight hashed to.
  */
-function writePet(writer: CanonicalWriter, pet: PetSnapshot, version: number): void {
+export function writePetSnapshot(writer: CanonicalWriter, pet: PetSnapshot, version: number): void {
     writer
         .u256(pet.petId)
         .account(pet.owner)

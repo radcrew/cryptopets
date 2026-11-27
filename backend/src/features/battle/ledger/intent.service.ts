@@ -86,6 +86,7 @@ export type IntentRejection =
     | 'unknown-pet'
     | 'not-pet-owner'
     | 'self-battle'
+    | 'same-owner'
     | 'nonce-already-used'
     | 'duplicate-intent';
 
@@ -130,6 +131,13 @@ export async function submitBattleIntent(request: SubmitIntentRequest): Promise<
 
     if (intent.attackerPetId === intent.defenderPetId) {
         return reject('self-battle', 'a pet cannot fight itself');
+    }
+
+    if (intent.attackerOwner === intent.defenderOwner) {
+        // Comparing the declared owners is enough: both are normalized above, and the roster
+        // reads below refuse any pet whose real owner differs from the one declared. Without
+        // this, one wallet fights itself for XP and drops, which team battles would triple.
+        return reject('same-owner', 'two pets of the same owner cannot fight each other');
     }
 
     const expectedFormat: SignatureFormat = chainFamily(intent.domain.chainId) === 'evm' ? 'eip712' : 'solana-message';
@@ -212,7 +220,8 @@ export async function submitBattleIntent(request: SubmitIntentRequest): Promise<
             },
         });
     } catch (error) {
-        return classifyWriteFailure(error, intentHash);
+        const failure = classifyIntentWriteFailure(error, intentHash);
+        return reject(failure.reason, failure.detail);
     }
 
     return { ok: true, intentHash };
@@ -281,14 +290,17 @@ export function toProtocolIntent(wire: BattleIntentWire): BattleIntent {
  * upsert: quietly merging would let a second, different payload inherit the first's
  * acceptance.
  */
-function classifyWriteFailure(error: unknown, intentHash: string): SubmitIntentResult {
+export function classifyIntentWriteFailure(
+    error: unknown,
+    intentHash: string,
+): { reason: 'nonce-already-used' | 'duplicate-intent'; detail: string } {
     const code = (error as { code?: string }).code;
     const target = String((error as { meta?: { target?: unknown } }).meta?.target ?? '');
     if (code === 'P2002') {
         if (target.includes('client_nonce') || target.includes('battle_intent_nonce')) {
-            return reject('nonce-already-used', 'this client nonce has already been used');
+            return { reason: 'nonce-already-used', detail: 'this client nonce has already been used' };
         }
-        return reject('duplicate-intent', `intent ${intentHash} has already been submitted`);
+        return { reason: 'duplicate-intent', detail: `intent ${intentHash} has already been submitted` };
     }
     throw error;
 }

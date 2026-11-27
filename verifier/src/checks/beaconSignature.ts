@@ -1,4 +1,4 @@
-import { type BattleReceipt, verifyReceiptBeacon } from '@cryptopets/protocol';
+import { type AnyBattleReceipt, verifyReceiptBeacon } from '@cryptopets/protocol';
 
 import type { CheckResult } from './types';
 
@@ -14,7 +14,7 @@ import type { CheckResult } from './types';
  *
  * Needs no ruleset: this runs even when the bundle a receipt names could not be obtained.
  */
-export function checkBeaconSignature(receipt: BattleReceipt): CheckResult {
+export function checkBeaconSignature(receipt: AnyBattleReceipt): CheckResult {
     const check = 'beacon-signature';
     let result: ReturnType<typeof verifyReceiptBeacon>;
     try {

@@ -1,4 +1,12 @@
-import { assertBattleReceipt, type BattleReceipt, receiptFromWire, type Ruleset } from '@cryptopets/protocol';
+import {
+    type AnyBattleReceipt,
+    assertAnyBattleReceipt,
+    receiptFromWire,
+    type Ruleset,
+    teamReceiptFromWire,
+    type WireBattleReceipt,
+    type WireTeamBattleReceipt,
+} from '@cryptopets/protocol';
 
 import {
     checkBeaconSignature,
@@ -58,7 +66,7 @@ export function verifyReceipts(
 ): VerifyReceiptsReport {
     const rulesets = options.rulesets ?? builtInRulesets();
     const results: CheckResult[] = [];
-    const wellFormed: BattleReceipt[] = [];
+    const wellFormed: AnyBattleReceipt[] = [];
 
     for (const envelope of envelopes) {
         results.push(...verifyOne(envelope, trustedKeys, rulesets, wellFormed));
@@ -76,11 +84,11 @@ function verifyOne(
     envelope: SignedReceiptEnvelope,
     trustedKeys: readonly TrustedSigningKey[],
     rulesets: RulesetRegistry,
-    wellFormed: BattleReceipt[],
+    wellFormed: AnyBattleReceipt[],
 ): CheckResult[] {
-    let converted: BattleReceipt;
+    let converted: AnyBattleReceipt;
     try {
-        converted = receiptFromWire(envelope.payload);
+        converted = fromWire(envelope.payload);
     } catch (error) {
         // Not even structurally a receipt: nothing further can run against it, and there is
         // no readable battle id to attribute it to either.
@@ -104,9 +112,9 @@ function verifyOne(
     // the actual accusation under a shape complaint.
     const results: CheckResult[] = [about(checkSeedDerivation(converted))];
 
-    let receipt: BattleReceipt;
+    let receipt: AnyBattleReceipt;
     try {
-        receipt = assertBattleReceipt(converted);
+        receipt = assertAnyBattleReceipt(converted);
     } catch (error) {
         results.push(about({ check: 'malformed-receipt', ok: false, detail: (error as Error).message }));
         return results;
@@ -135,6 +143,13 @@ function verifyOne(
     return results;
 }
 
-function resolveRuleset(receipt: BattleReceipt, rulesets: RulesetRegistry): Ruleset | undefined {
+/** A team battle's receipt declares schema version 2; a duel's declares nothing, or 1. */
+function fromWire(payload: WireBattleReceipt | WireTeamBattleReceipt): AnyBattleReceipt {
+    return payload.schemaVersion === 2
+        ? teamReceiptFromWire(payload as WireTeamBattleReceipt)
+        : receiptFromWire(payload as WireBattleReceipt);
+}
+
+function resolveRuleset(receipt: AnyBattleReceipt, rulesets: RulesetRegistry): Ruleset | undefined {
     return rulesets.get(receipt.rulesetHash.toLowerCase());
 }

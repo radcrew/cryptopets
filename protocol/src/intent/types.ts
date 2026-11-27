@@ -84,14 +84,16 @@ export function isExpired(intent: BattleIntent, nowSeconds: number): boolean {
     return nowSeconds >= intent.expiresAt;
 }
 
-function assertAccount(value: string, field: string): string {
+/** Validates and normalizes an account. Shared with the team intent. */
+export function assertAccount(value: string, field: string): string {
     if (typeof value !== 'string' || !SAFE_ID_PATTERN.test(value)) {
         throw new Error(`${field} is not a valid account: ${JSON.stringify(value)}`);
     }
     return normalizeAccount(value);
 }
 
-function assertPetId(value: bigint, field: string): bigint {
+/** Validates a pet id. Shared with the team intent. */
+export function assertPetId(value: bigint, field: string): bigint {
     if (typeof value !== 'bigint' || value <= 0n) {
         throw new Error(`${field} must be a positive pet id, got ${value}`);
     }
@@ -101,7 +103,8 @@ function assertPetId(value: bigint, field: string): bigint {
     return value;
 }
 
-function assertId(value: string, field: string, min: number, max: number): void {
+/** Validates an opaque id against the signing-safe charset. Shared with the team intent. */
+export function assertId(value: string, field: string, min: number, max: number): void {
     if (typeof value !== 'string' || value.length < min || value.length > max) {
         throw new Error(`${field} must be ${min}-${max} characters, got ${JSON.stringify(value)}`);
     }

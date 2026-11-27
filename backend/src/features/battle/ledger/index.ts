@@ -88,7 +88,32 @@ export {
     toProtocolDelegation,
     verifyDelegationSignature,
 } from './session.service';
-export { backendBattleModeEnabled, requireBackendBattleMode } from './mode';
+export { assertDuel, BATTLE_KIND, type BattleKind, type DuelColumns } from './kind';
+export { backendBattleModeEnabled, requireBackendBattleMode, requireTeamBattles, teamBattlesEnabled } from './mode';
+export { deleteDefensePlans, getDefensePlan, postDefensePlan } from './defensePlan.controller';
+export { acceptChallenge, acceptTeamBattle } from './teamAccept.service';
+export { getTeamOpponents } from './teamReads.controller';
+export { listTeamOpponents, type TeamOpponent } from './teamReads.service';
+export { postTeamBattleIntent } from './teamIntent.controller';
+export {
+    submitTeamBattleIntent,
+    type TeamBattleIntentWire,
+    type TeamIntentRejection,
+    toProtocolTeamIntent,
+    verifyTeamIntentSignature,
+} from './teamIntent.service';
+export { clearPublishedRulesetCache, loadPublishedRuleset } from './rulesetBundle.store';
+export {
+    consumePlanDailyBudget,
+    refundPlanDailyBudget,
+    type DefensePlanSummary,
+    type DefensePlanWire,
+    getLiveDefensePlan,
+    type PlanRejection,
+    revokeDefensePlans,
+    submitDefensePlan,
+    toProtocolPlan,
+} from './defensePlan.service';
 export { postBattleIntent } from './intent.controller';
 export {
     type BattleIntentWire,
@@ -107,7 +132,6 @@ export {
     enqueueOutbox,
     failOutbox,
     listDeadLetters,
-    nextOutboxDueAt,
     requeueDeadLetter,
     type OutboxMessage,
     type OutboxTopic,
@@ -144,6 +168,7 @@ export { buildPetSnapshot } from './snapshot.builder';
 export {
     decodeStoredPet,
     decodeStoredSnapshot,
+    decodeStoredTeamSnapshot,
     type StoredBattleSnapshot,
     type StoredEquipEntry,
     type StoredPetSnapshot,

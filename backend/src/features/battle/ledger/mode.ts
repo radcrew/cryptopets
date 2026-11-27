@@ -20,6 +20,23 @@ export function backendBattleModeEnabled(): boolean {
     return env.battle.enabled;
 }
 
+/** Team battles need both switches: they run on the backend battle pipeline. */
+export function teamBattlesEnabled(): boolean {
+    return env.battle.enabled && env.battle.teamEnabled;
+}
+
+/** Gates the team write routes, as `requireBackendBattleMode` gates the duel ones. */
+export function requireTeamBattles(_req: Request, res: Response, next: NextFunction): void {
+    if (!teamBattlesEnabled()) {
+        res.status(503).json({
+            error: 'team-battles-disabled',
+            detail: 'this deployment is not currently accepting team battles',
+        });
+        return;
+    }
+    next();
+}
+
 export function requireBackendBattleMode(_req: Request, res: Response, next: NextFunction): void {
     if (!backendBattleModeEnabled()) {
         res.status(503).json({

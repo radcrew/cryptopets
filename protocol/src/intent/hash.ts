@@ -1,4 +1,5 @@
 import { writeHeader } from '../domain/deployment';
+import { DUEL_SCHEMA_VERSIONS } from '../domain/schemaVersions';
 import type { Hex } from '../encoding/bytes';
 import { DOMAIN_TAGS } from '../encoding/domain';
 import { keccak256Hex } from '../encoding/hash';
@@ -13,14 +14,14 @@ import { assertBattleIntent, type BattleIntent } from './types';
  * Pet ids encode as u256 rather than text, which also canonicalizes them: `"7"`
  * and `"07"` parse to one value instead of hashing differently.
  *
- * The version written is always the one this build produces. Intents expire in
- * minutes, so there is no old-version intent to re-verify later; receipts are the
- * long-lived object and will need a version parameter when they land.
+ * Always the duel layout, version 1. A team battle's intent is version 2 and has its
+ * own encoder (`./team`); intents expire in minutes, so neither is ever re-encoded at an
+ * older version later.
  */
 export function encodeBattleIntent(intent: BattleIntent): Uint8Array {
     const checked = assertBattleIntent(intent);
     const writer = CanonicalWriter.withDomain(DOMAIN_TAGS.INTENT);
-    return writeHeader(writer, 'intent', checked.domain)
+    return writeHeader(writer, 'intent', checked.domain, DUEL_SCHEMA_VERSIONS.intent)
         .account(checked.attackerOwner)
         .u256(checked.attackerPetId)
         .account(checked.defenderOwner)

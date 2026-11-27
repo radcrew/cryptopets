@@ -26,8 +26,10 @@ export interface ReceiptSummary {
     battleId: string;
     chainId: string;
     deploymentId: string;
-    attackerPetId: string;
-    defenderPetId: string;
+    /** Null on a team receipt, whose six fighters are in `payload`. */
+    attackerPetId: string | null;
+    /** Null on a team receipt, whose six fighters are in `payload`. */
+    defenderPetId: string | null;
     signingKeyId: string;
     sequence: string;
     previousReceiptHash: string | null;
@@ -43,8 +45,8 @@ function toSummary(row: {
     battleId: string;
     chainId: string;
     deploymentId: string;
-    attackerPetId: string;
-    defenderPetId: string;
+    attackerPetId: string | null;
+    defenderPetId: string | null;
     signingKeyId: string;
     sequence: bigint;
     previousReceiptHash: string | null;
@@ -94,7 +96,12 @@ export async function listReceiptsByPet(
 ): Promise<CursorPage> {
     const take = clampLimit(limit);
     const rows = await prisma.battleReceipt.findMany({
-        where: { chainId, OR: [{ attackerPetId: petId }, { defenderPetId: petId }] },
+        // A team receipt names its fighters in battle_receipt_fighter rather than the two duel
+        // columns, so a pet's team battles are found there.
+        where: {
+            chainId,
+            OR: [{ attackerPetId: petId }, { defenderPetId: petId }, { fighters: { some: { chainId, petId } } }],
+        },
         orderBy: [{ createdAt: 'asc' }, { receiptHash: 'asc' }],
         ...(cursor ? { cursor: { receiptHash: cursor }, skip: 1 } : {}),
         take,

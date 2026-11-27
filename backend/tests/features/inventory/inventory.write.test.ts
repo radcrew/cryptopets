@@ -35,6 +35,7 @@ vi.mock('@config/prisma', () => ({
     prisma: {
         petRoster: { findUnique: vi.fn() },
         petBattleProgress: { findUnique: vi.fn(), upsert: vi.fn() },
+        petBattleLock: { findUnique: vi.fn() },
         itemEntitlement: { findUnique: vi.fn(), updateMany: vi.fn(), update: vi.fn(), create: vi.fn() },
     },
 }));
@@ -89,6 +90,17 @@ describe('useItem', () => {
         const result = await useItem('evm', OWNER, '7', '100');
 
         expect(result).toMatchObject({ level: 5, xp: 0, leveledUp: true });
+    });
+
+    // A battle writes level and XP when it signs, from what it froze at acceptance, so a potion
+    // drunk mid-battle would be overwritten. Refused before the burn, so the item is kept.
+    it('refuses a pet that is in a battle, without burning the item', async () => {
+        happyPath(POTION);
+        vi.mocked(prisma.petBattleLock.findUnique).mockResolvedValueOnce({ battleId: 'btl_1' } as never);
+
+        expect(await useItem('evm', OWNER, '7', '100')).toBe('pet-in-battle');
+        expect(client.burnFrom).not.toHaveBeenCalled();
+        expect(prisma.petBattleProgress.upsert).not.toHaveBeenCalled();
     });
 
     it('clears the backend battle cooldown', async () => {

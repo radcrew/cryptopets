@@ -1,4 +1,4 @@
-import { type BattleReceipt, hashBattleReceipt, type Hex, recoverAddress } from '@cryptopets/protocol';
+import { type AnyBattleReceipt, hashAnyBattleReceipt, type Hex, recoverAddress } from '@cryptopets/protocol';
 
 import type { SignedReceiptEnvelope, TrustedSigningKey } from '../io/types';
 import type { CheckResult } from './types';
@@ -18,7 +18,7 @@ import type { CheckResult } from './types';
  */
 export function checkOperatorSignature(
     envelope: SignedReceiptEnvelope,
-    receipt: BattleReceipt,
+    receipt: AnyBattleReceipt,
     trustedKeys: readonly TrustedSigningKey[],
 ): CheckResult {
     const check = 'operator-signature';
@@ -50,7 +50,7 @@ export function checkOperatorSignature(
         };
     }
 
-    const digest = hashBattleReceipt(receipt);
+    const digest = hashAnyBattleReceipt(receipt);
     if (digest.toLowerCase() !== envelope.receiptHash.toLowerCase()) {
         return {
             check,

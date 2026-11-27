@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { clearPublishedRulesetCache } from '@features/battle/ledger/rulesetBundle.store';
+
 import { deriveBattleSeed, hashRuleset, publishRuleset, QUICKNET, roundTime, SOURCE_DEFAULT_RULESET } from '@cryptopets/protocol';
 
 vi.mock('@config/prisma', () => ({
@@ -16,6 +18,9 @@ vi.mock('@features/battle/ledger', async () => ({
     applyTransition: vi.fn(),
     completeOutbox: vi.fn(),
     OUTBOX_TOPICS: { verify: 'verify' },
+    ...(await vi.importActual<typeof import('@features/battle/ledger/rulesetBundle.store')>(
+        '@features/battle/ledger/rulesetBundle.store',
+    )),
     ...(await vi.importActual<typeof import('@features/battle/ledger/snapshot.codec')>(
         '@features/battle/ledger/snapshot.codec',
     )),
@@ -83,6 +88,7 @@ const BATTLE = {
 const MESSAGE = { id: 'msg_1', battleId: 'btl_1', topic: 'compute', payload: {}, attempts: 1 };
 
 beforeEach(() => {
+    clearPublishedRulesetCache();
     vi.clearAllMocks();
     vi.mocked(prisma.battleLedger.findUnique).mockResolvedValue(BATTLE as never);
     const { json } = publishRuleset(SOURCE_DEFAULT_RULESET);

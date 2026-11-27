@@ -1,7 +1,6 @@
 import type { Hex } from '../encoding/bytes';
 
-import { hashBattleReceipt } from './hash';
-import type { BattleReceipt } from './types';
+import { type AnyBattleReceipt, hashAnyBattleReceipt, isTeamBattleReceipt, teamFighterIds } from './team';
 
 /**
  * Receipt hash chains: the global one per signing key, and one per pet.
@@ -35,7 +34,7 @@ export type ReceiptChainResult = { ok: true } | { ok: false; index: number; reas
  * like, and unlike the hash link it names the missing position.
  */
 export function verifyReceiptChain(
-    receipts: readonly BattleReceipt[],
+    receipts: readonly AnyBattleReceipt[],
     expectedAnchor?: Hex | null,
 ): ReceiptChainResult {
     const seenBattleIds = new Set<string>();
@@ -68,7 +67,7 @@ export function verifyReceiptChain(
         }
 
         seenBattleIds.add(receipt.battleId);
-        previousHash = hashBattleReceipt(receipt);
+        previousHash = hashAnyBattleReceipt(receipt);
         previousSequence = receipt.sequence;
         previousCreatedAt = receipt.createdAt;
     }
@@ -89,7 +88,7 @@ export function verifyReceiptChain(
  */
 export function verifyPetReceiptChain(
     petId: bigint,
-    receipts: readonly BattleReceipt[],
+    receipts: readonly AnyBattleReceipt[],
     expectedAnchor?: Hex | null,
 ): ReceiptChainResult {
     let previousHash: Hex | null | undefined = expectedAnchor;
@@ -105,14 +104,19 @@ export function verifyPetReceiptChain(
         if (previousHash !== undefined && link !== previousHash) {
             return { ok: false, index, reason: index === 0 ? 'wrong-anchor' : 'broken-link' };
         }
-        previousHash = hashBattleReceipt(receipt);
+        previousHash = hashAnyBattleReceipt(receipt);
     }
 
     return { ok: true };
 }
 
 /** The link a given pet follows in a receipt, or undefined if the pet is not in it. */
-export function petPreviousReceiptHash(receipt: BattleReceipt, petId: bigint): Hex | null | undefined {
+export function petPreviousReceiptHash(receipt: AnyBattleReceipt, petId: bigint): Hex | null | undefined {
+    if (isTeamBattleReceipt(receipt)) {
+        // Only the six fighters are linked; a benched roster pet was not in this battle.
+        const index = teamFighterIds(receipt).indexOf(petId);
+        return index < 0 ? undefined : receipt.fighterPreviousReceiptHashes[index];
+    }
     if (receipt.snapshot.attacker.petId === petId) {
         return receipt.attackerPreviousReceiptHash;
     }
@@ -128,11 +132,11 @@ export function petPreviousReceiptHash(receipt: BattleReceipt, petId: bigint): H
  * An empty result is not proof of honesty, only that these receipts do not contradict
  * each other.
  */
-export function findReceiptEquivocations(receipts: readonly BattleReceipt[]): string[] {
+export function findReceiptEquivocations(receipts: readonly AnyBattleReceipt[]): string[] {
     const hashesByBattleId = new Map<string, Set<Hex>>();
     for (const receipt of receipts) {
         const hashes = hashesByBattleId.get(receipt.battleId) ?? new Set<Hex>();
-        hashes.add(hashBattleReceipt(receipt));
+        hashes.add(hashAnyBattleReceipt(receipt));
         hashesByBattleId.set(receipt.battleId, hashes);
     }
     return [...hashesByBattleId.entries()].filter(([, hashes]) => hashes.size > 1).map(([battleId]) => battleId);

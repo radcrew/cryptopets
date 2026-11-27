@@ -177,12 +177,14 @@ function readUint32(bytes: Uint8Array, offset: number): number {
  * battle collides with its own earlier row instead of paying twice.
  *
  * That same key is why the two sides are merged before writing rather than inserted as
- * they come. Nothing stops a player fighting two pets they both own, and then the winner
- * and the loser are one wallet; when both rolls land on the same item the two drops share
- * a key, and `skipDuplicates` silently keeps one. Measured on the shipped pool that is
- * about one in six of the self-battles that pay twice, each one quietly costing the player
- * an item they earned. Merging turns that into a single row of quantity 2, which is what
- * was owed.
+ * they come. A player could once fight two pets they both own, and then the winner and the
+ * loser are one wallet. Intent submission now refuses that (`same-owner`), but a battle
+ * accepted before the refusal existed can still be computed, and a pet sold between
+ * submitting and accepting can still produce one. When both rolls land on the same item the
+ * two drops share a key, and `skipDuplicates` silently keeps one. Measured on the shipped
+ * pool that is about one in six of the self-battles that pay twice, each one quietly
+ * costing the player an item they earned. Merging turns that into a single row of
+ * quantity 2, which is what was owed.
  *
  * Returns what was written, not what was rolled, so a caller sees the same thing the table
  * does.

@@ -14,10 +14,12 @@ const usePlayerRank = vi.fn(
             isLoading: boolean;
         },
 );
+const useBattleConfig = vi.fn(() => ({ data: { team: { enabled: false } } }));
 
 vi.mock('@shared/core', () => ({
     useChainCapabilities: () => useChainCapabilities(),
     usePlayerRank: (chain: string | null) => usePlayerRank(chain),
+    useBattleConfig: () => useBattleConfig(),
 }));
 
 import Sidebar from '@components/layout/sidebar';
@@ -36,6 +38,19 @@ beforeEach(() => {
     vi.clearAllMocks();
     useChainCapabilities.mockReturnValue({ activeKind: 'evm' });
     usePlayerRank.mockReturnValue({ rank: null, isLoading: false });
+    useBattleConfig.mockReturnValue({ data: { team: { enabled: false } } });
+});
+
+describe('Sidebar team battle entry', () => {
+    it('is hidden while the backend does not accept team battles, and shown once it does', () => {
+        const { unmount } = renderSidebar();
+        expect(screen.queryByRole('button', { name: /Team Battle/ })).toBeNull();
+        unmount();
+
+        useBattleConfig.mockReturnValue({ data: { team: { enabled: true } } });
+        renderSidebar();
+        expect(screen.getByRole('button', { name: /Team Battle/ })).toBeInTheDocument();
+    });
 });
 
 describe('Sidebar pin', () => {

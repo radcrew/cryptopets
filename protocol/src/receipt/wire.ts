@@ -64,7 +64,8 @@ export function receiptFromWire(wire: WireBattleReceipt): BattleReceipt {
     };
 }
 
-function petSnapshotFromWire(pet: WirePetSnapshot): PetSnapshot {
+/** Shared with the team receipt. */
+export function petSnapshotFromWire(pet: WirePetSnapshot): PetSnapshot {
     // `equipment` is pulled out of the spread rather than overridden after it: its wire
     // shape carries a string item type, and spreading it first would leave that type in
     // the result even though the value is replaced.
@@ -84,7 +85,8 @@ function petSnapshotFromWire(pet: WirePetSnapshot): PetSnapshot {
     };
 }
 
-function petProgressionFromWire(pet: WirePetProgression): PetProgression {
+/** Shared with the team receipt. */
+export function petProgressionFromWire(pet: WirePetProgression): PetProgression {
     return {
         ...pet,
         petId: BigInt(pet.petId),

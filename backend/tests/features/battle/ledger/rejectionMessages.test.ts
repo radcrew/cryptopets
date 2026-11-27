@@ -3,7 +3,9 @@ import { describe, expect, it } from 'vitest';
 import { MESSAGES } from '@shared/core';
 
 import { STATUS_BY_REASON as ACCEPT_STATUS } from '@features/battle/ledger/accept.controller';
+import { STATUS_BY_REASON as PLAN_STATUS } from '@features/battle/ledger/defensePlan.controller';
 import { STATUS_BY_REASON as INTENT_STATUS } from '@features/battle/ledger/intent.controller';
+import { STATUS_BY_REASON as TEAM_INTENT_STATUS } from '@features/battle/ledger/teamIntent.controller';
 
 /**
  * Every refusal these two controllers can return has player-facing text.
@@ -23,7 +25,13 @@ import { STATUS_BY_REASON as INTENT_STATUS } from '@features/battle/ledger/inten
  * the degraded text is the internal slug, and a player who reads one cannot act on it.
  */
 describe('every battle rejection has something to show the player', () => {
-    const reasons = [...Object.keys(INTENT_STATUS), ...Object.keys(ACCEPT_STATUS)];
+    // Team challenges and defence plans too: the same client turns their codes into text.
+    const reasons = [
+        ...Object.keys(INTENT_STATUS),
+        ...Object.keys(ACCEPT_STATUS),
+        ...Object.keys(TEAM_INTENT_STATUS),
+        ...Object.keys(PLAN_STATUS),
+    ];
 
     it.each(reasons)('%s', (reason) => {
         expect(MESSAGES[reason]).toBeTruthy();

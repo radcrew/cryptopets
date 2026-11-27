@@ -239,7 +239,7 @@ function toWire(intent: BattleIntent) {
  * WebViews and some React Native runtimes lack it. Uniqueness is enforced server-side by a
  * unique constraint either way, so a collision is refused rather than accepted twice.
  */
-function newClientNonce(): string {
+export function newClientNonce(): string {
     const cryptoApi = (globalThis as { crypto?: { randomUUID?: () => string } }).crypto;
     if (typeof cryptoApi?.randomUUID === 'function') {
         return cryptoApi.randomUUID();

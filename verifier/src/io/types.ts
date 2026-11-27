@@ -1,4 +1,4 @@
-import type { WireBattleReceipt } from '@cryptopets/protocol';
+import type { WireBattleReceipt, WireTeamBattleReceipt } from '@cryptopets/protocol';
 
 /**
  * One signed receipt, exactly as the backend's read/corpus endpoints serve it
@@ -13,7 +13,8 @@ export interface SignedReceiptEnvelope {
     receiptHash: string;
     signature: string;
     signingKeyId: string;
-    payload: WireBattleReceipt;
+    /** A duel receipt, or a team battle receipt (schema version 2). */
+    payload: WireBattleReceipt | WireTeamBattleReceipt;
 }
 
 /**

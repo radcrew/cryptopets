@@ -1,4 +1,4 @@
-import { type BattleReceipt, deriveBattleSeed, hashBattleSnapshot } from '@cryptopets/protocol';
+import { type AnyBattleReceipt, deriveBattleSeed, hashAnyBattleSnapshot } from '@cryptopets/protocol';
 
 import type { CheckResult } from './types';
 
@@ -13,7 +13,7 @@ import type { CheckResult } from './types';
  * "the seed was chosen, not derived" and "this JSON is malformed" are very different
  * accusations, and collapsing them into one line would lose that.
  */
-export function checkSeedDerivation(receipt: BattleReceipt): CheckResult {
+export function checkSeedDerivation(receipt: AnyBattleReceipt): CheckResult {
     const check = 'seed-derivation';
     let expected: string;
     try {
@@ -21,7 +21,7 @@ export function checkSeedDerivation(receipt: BattleReceipt): CheckResult {
             domain: receipt.domain,
             drandRandomness: receipt.beacon.randomness,
             battleId: receipt.battleId,
-            snapshotHash: hashBattleSnapshot(receipt.snapshot),
+            snapshotHash: hashAnyBattleSnapshot(receipt.snapshot),
             rulesetHash: receipt.rulesetHash,
         }).hex;
     } catch (error) {

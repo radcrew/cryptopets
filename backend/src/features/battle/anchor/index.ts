@@ -38,10 +38,7 @@ export function startBatchAnchor(): void {
     console.log(`[battle-anchor] batching and anchoring every ${env.battle.anchorIntervalMs}ms to ${context.registryAddress}`);
 }
 
-/**
- * The clients and scope one anchoring pass needs, or null when anchoring is off. Shared by
- * the timer above and by the scheduled job a serverless deployment runs instead.
- */
+/** The clients and scope one anchoring pass needs, or null when anchoring is off. */
 export function createAnchorContext(): AnchorContext | null {
     if (!env.battle.enabled) {
         return null;

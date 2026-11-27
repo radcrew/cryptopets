@@ -34,6 +34,8 @@ export type BattleSetupProps = {
     randomMatchDisabled: boolean;
     onRandomMatch: () => void;
     readyPets: ReadyPet[];
+    /** The player's pets are still being read, so an empty list means "not yet", not "none". */
+    petsLoading: boolean;
     selectedPet1: string;
     onSelectFighter: (petId: string) => void;
     sortedOpponents: OpponentPet[];
@@ -180,6 +182,7 @@ const BattleSetup: React.FC<BattleSetupProps> = ({
     randomMatchDisabled,
     onRandomMatch,
     readyPets,
+    petsLoading,
     selectedPet1,
     onSelectFighter,
     sortedOpponents,
@@ -261,7 +264,9 @@ const BattleSetup: React.FC<BattleSetupProps> = ({
                                 value={selectedPet1}
                                 onChange={onSelectFighter}
                                 placeholder={
-                                    readyPets.length === 0
+                                    petsLoading
+                                        ? 'Loading your pets…'
+                                        : readyPets.length === 0
                                         ? 'No ready fighters'
                                         : 'Choose your fighter…'
                                 }
@@ -272,7 +277,13 @@ const BattleSetup: React.FC<BattleSetupProps> = ({
                     <CombatantCard
                         pet={selectedFighter}
                         side="fighter"
-                        emptyLabel={readyPets.length === 0 ? 'No ready fighters' : 'Choose your fighter'}
+                        emptyLabel={
+                            petsLoading
+                                ? 'Loading your pets…'
+                                : readyPets.length === 0
+                                ? 'No ready fighters'
+                                : 'Choose your fighter'
+                        }
                         equipped={selectedFighter ? equippedByPet.get(String(selectedFighter.id)) : undefined}
                     />
                 </div>

@@ -28,6 +28,11 @@ service GameDataService {
   // controls both processes (see the architecture doc's "what the Go verifier
   // is for" section). Never wired to any state-mutating path.
   rpc VerifyBattle(VerifyBattleRequest) returns (VerifyBattleResponse);
+
+  // VerifyBattle's job for a three-on-three team battle (docs/battle-protocol.md §F,
+  // "Team battles"): the fight and all six fighters' progression, recomputed by the Go
+  // port. Release safety only, exactly as VerifyBattle.
+  rpc VerifyTeamBattle(VerifyTeamBattleRequest) returns (VerifyTeamBattleResponse);
 }
 
 message PetRequest {
@@ -163,4 +168,75 @@ message VerifyBattleResponse {
   repeated VerifyStrikeLogEntry log = 6;
   VerifyPetProgression attacker = 7;
   VerifyPetProgression defender = 8;
+}
+
+// One team-battle pet: its frozen inputs and where it stands. Every pet fights neutral at
+// ruleset layout 3 (Melee, no temperament), so neither is sent; Attributes 2.0 adds them.
+message VerifyTeamPet {
+  VerifyPetInputs pet = 1;
+  uint32 col = 2; // own zone: 0 back, 1 mid, 2 front
+  uint32 row = 3;
+  string tactic = 4; // "focus" | "breaker" | "hunter" | "bodyguard"
+  // Was the roster rank, when defenders were drawn from five. Never reuse the number.
+  reserved 5;
+  reserved "rank";
+}
+
+// Mirrors protocol's TeamConfig field for field.
+message VerifyTeamConfig {
+  string turn_order = 1; // "int" until Attributes 2.0
+  uint32 combo_step_pct = 2;
+  uint32 expose_pct = 3;
+  uint32 aura_pct = 4;
+  uint32 tailwind_bps = 5;
+  uint32 long_shot_pct = 6;
+  uint32 temperament_pct = 7;
+}
+
+message VerifyTeamBattleRequest {
+  repeated VerifyTeamPet attackers = 1; // exactly 3, slot order
+  repeated VerifyTeamPet roster = 2; // the defenders: exactly 3, slot order
+  bytes seed = 3; // 32 bytes, big-endian
+  VerifySkillConfig skill_config = 4;
+  VerifyTeamConfig team_config = 5;
+  uint32 max_level = 6;
+}
+
+// One resolved team strike. Mirrors protocol's TeamStrikeLogEntry field for field, so the
+// caller can hash it with the canonical encoder; Go never reimplements that encoding.
+message VerifyTeamStrike {
+  uint32 round = 1;
+  uint32 side = 2; // 0 attackers, 1 defenders
+  uint32 actor = 3;
+  uint32 target = 4;
+  uint32 victim = 5; // differs from target only when a Tank guarded
+  bool is_magic = 6;
+  bool crit = 7;
+  uint64 damage = 8;
+  uint32 element_mult = 9;
+  uint32 combo = 10;
+  bool long_shot = 11;
+  bool fury_triggered = 12;
+  bool temperament = 13;
+  bool exposed = 14;
+  bool guarded = 15;
+  bool second_chance = 16;
+  bool knocked_out = 17;
+  uint64 heal = 18;
+  int32 healed = 19; // slot on the striker's side, or -1 when nothing was healed
+  uint32 victim_hp_after = 20;
+}
+
+message VerifyTeamBattleResponse {
+  // Was the draw's roster indices. Never reuse the number.
+  reserved 1;
+  reserved "drawn";
+  bool attacker_wins = 2;
+  uint32 rounds = 3;
+  uint32 winner_hp_remaining = 4;
+  repeated uint32 attacker_start_hp = 5;
+  repeated uint32 defender_start_hp = 6;
+  repeated VerifyTeamStrike log = 7;
+  // The six fighters, attackers then defenders, each by slot.
+  repeated VerifyPetProgression progression = 8;
 }

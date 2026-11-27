@@ -71,7 +71,13 @@ describe('schema versioning', () => {
     });
 
     it('refuses a version this build does not implement', () => {
-        expect(() => assertBattleSnapshot({ ...BASE, schemaVersion: 3 })).toThrow(/unsupported snapshot schema version/);
+        expect(() => assertBattleSnapshot({ ...BASE, schemaVersion: 4 })).toThrow(/unsupported snapshot schema version/);
+    });
+
+    // Version 3 exists, but it is a team battle's snapshot. Reading a duel at it would hash
+    // two pets under a layout built for eight.
+    it('refuses the team layout for a duel', () => {
+        expect(() => assertBattleSnapshot({ ...BASE, schemaVersion: 3 })).toThrow(/team battle's layout/);
     });
 
     // Refused rather than silently dropped: encoding it at v1 would hash a fight without

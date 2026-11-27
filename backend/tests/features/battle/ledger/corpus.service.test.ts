@@ -36,7 +36,10 @@ describe('listReceiptsByPet', () => {
         vi.mocked(prisma.battleReceipt.findMany).mockResolvedValue([]);
         await listReceiptsByPet('eip155:84532', '7');
         expect(vi.mocked(prisma.battleReceipt.findMany).mock.calls[0]![0]).toMatchObject({
-            where: { chainId: 'eip155:84532', OR: [{ attackerPetId: '7' }, { defenderPetId: '7' }] },
+            where: {
+                chainId: 'eip155:84532',
+                OR: [{ attackerPetId: '7' }, { defenderPetId: '7' }, { fighters: { some: { chainId: 'eip155:84532', petId: '7' } } }],
+            },
         });
     });
 

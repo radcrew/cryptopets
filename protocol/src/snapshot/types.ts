@@ -1,5 +1,5 @@
 import { assertProtocolDomain, type ProtocolDomain } from '../domain/deployment';
-import { assertSupportedSchemaVersion, currentSchemaVersion } from '../domain/schemaVersions';
+import { assertSupportedSchemaVersion, DUEL_SCHEMA_VERSIONS } from '../domain/schemaVersions';
 import { normalizeAccount } from '../encoding/bytes';
 
 /**
@@ -101,13 +101,14 @@ export interface BattleSnapshot {
 }
 
 /**
- * The layout a new snapshot should declare.
+ * The layout a new duel snapshot should declare.
  *
  * Exported so a producer names it deliberately rather than relying on a default: the
  * default is 1, because that is what an absent field means on every snapshot written
- * before the field existed.
+ * before the field existed. Pinned to the duel layout: version 3 is a team battle's
+ * snapshot, a different object with its own type (`./team`).
  */
-export const SNAPSHOT_SCHEMA_VERSION = currentSchemaVersion('snapshot');
+export const SNAPSHOT_SCHEMA_VERSION = DUEL_SCHEMA_VERSIONS.snapshot;
 
 /** DNA is a 16-digit number on both chains (see `combat/dna.ts`). */
 const MAX_DNA = 10n ** 16n;
@@ -209,6 +210,9 @@ export function assertBattleSnapshot(snapshot: BattleSnapshot): BattleSnapshot {
     // sets the version explicitly, and `SNAPSHOT_SCHEMA_VERSION` is what it should set.
     const schemaVersion = snapshot.schemaVersion ?? 1;
     assertSupportedSchemaVersion('snapshot', schemaVersion);
+    if (schemaVersion > DUEL_SCHEMA_VERSIONS.snapshot) {
+        throw new Error(`snapshot schema version ${schemaVersion} is a team battle's layout, not a duel's`);
+    }
 
     const attacker = assertPetSnapshot(snapshot.attacker, 'attacker');
     const defender = assertPetSnapshot(snapshot.defender, 'defender');

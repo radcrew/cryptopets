@@ -2,7 +2,8 @@ import type { Response } from 'express';
 
 import type { AuthenticatedRequest } from '@middleware/auth';
 
-import { acceptBattle, type AcceptRejection } from './accept.service';
+import type { AcceptRejection } from './accept.service';
+import { acceptChallenge } from './teamAccept.service';
 import { BATTLE_REFUSALS, CONSENT_REFUSALS } from './constants';
 
 /**
@@ -39,6 +40,10 @@ export const STATUS_BY_REASON: Record<AcceptRejection, number> = {
     [BATTLE_REFUSALS.SIGNER_UNAVAILABLE]: 503,
     [BATTLE_REFUSALS.ITEM_CATALOG_STALE]: 503,
     [BATTLE_REFUSALS.EQUIPMENT_CATALOG_MISMATCH]: 503,
+    [BATTLE_REFUSALS.TEAM_BATTLES_DISABLED]: 503,
+    [BATTLE_REFUSALS.PET_OWNER_CHANGED]: 409,
+    [BATTLE_REFUSALS.INTENT_RULESET_STALE]: 409,
+    [BATTLE_REFUSALS.NOT_INTENT_ATTACKER]: 403,
 };
 
 interface AcceptBody {
@@ -64,9 +69,11 @@ export async function postAcceptBattle(req: AuthenticatedRequest, res: Response)
         return;
     }
 
-    const result = await acceptBattle({
+    // Duels and team battles share this endpoint; acceptChallenge routes by the intent kind.
+    const result = await acceptChallenge({
         intentHash: body.intentHash,
         ...(typeof body.roomId === 'string' ? { roomId: body.roomId } : {}),
+        callerWallet: req.user.address,
         nowSeconds: Math.floor(Date.now() / 1000),
     });
 

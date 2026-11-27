@@ -1,4 +1,5 @@
 import { DEFAULT_SKILL_CONFIG, type SkillConfig } from '../combat/skills';
+import { DEFAULT_TEAM_CONFIG, type TeamConfig } from '../combat/team';
 import { MAX_ROUNDS } from '../combat/sim';
 import { DEFAULT_MAX_LEVEL } from '../combat/xp';
 import { assertSupportedSchemaVersion, currentSchemaVersion } from '../domain/schemaVersions';
@@ -70,6 +71,14 @@ export interface Ruleset {
      */
     itemCatalog?: ItemModifier[];
     /**
+     * The team rules' tunable values (schema v3+, docs/battle-protocol.md §F).
+     *
+     * Required from version 3 and refused before it, like the catalog. Inside the hash for
+     * the same reason the skill config is: a defender's consent covers how hard a combo
+     * hits as much as how hard a crit does. A duel never reads it.
+     */
+    teamConfig?: TeamConfig;
+    /**
      * Which layout this ruleset was written under. Absent means 1.
      *
      * Same rule as the snapshot's, for the same reason: published bundles predate this
@@ -83,10 +92,18 @@ export interface Ruleset {
 export const ENGINE_ID = 'cryptopets-combat-ts';
 
 /**
- * The layout a new ruleset should declare. Absent means 1, for published bundles that
+ * The layout `SOURCE_DEFAULT_RULESET` declares. Absent means 1, for published bundles that
  * predate the field.
+ *
+ * Held at 2 although this build implements 3, and deliberately: the backend serves this
+ * ruleset (plus its item catalog), and defence consent is bound to its hash. Moving it to
+ * 3 would cancel every defender's consent on the next deploy, which is the team-battle
+ * rollout's job to do on purpose, not a side effect of the code existing.
  */
-export const RULESET_SCHEMA_VERSION = currentSchemaVersion('ruleset');
+export const RULESET_SCHEMA_VERSION = 2;
+
+/** The layout that carries the team rules. */
+export const TEAM_RULESET_SCHEMA_VERSION = currentSchemaVersion('ruleset');
 
 /**
  * Bumped when `src/combat/` changes what a fight or a progression delta produces.
@@ -99,6 +116,11 @@ export const RULESET_SCHEMA_VERSION = currentSchemaVersion('ruleset');
  * 2: the engine reads equipment modifiers (roadmap §4). An ungeared fight resolves
  * identically, which the unchanged golden vectors prove, but the engine is no longer the
  * same function of its inputs, so the version moves.
+ *
+ * Not bumped for team battles (§F). A duel resolves exactly as before, which team.json's
+ * one-on-one replays prove, and the team rules are identified by ruleset layout 3: a build
+ * without the team engine refuses that layout outright, so no two implementations can
+ * disagree under one `rulesetHash`. A later change to how a team fight resolves bumps this.
  */
 export const ENGINE_VERSION = 2;
 
@@ -124,6 +146,31 @@ export const SOURCE_DEFAULT_RULESET: Ruleset = {
     itemCatalog: [],
     schemaVersion: RULESET_SCHEMA_VERSION,
 };
+
+/**
+ * The source-default ruleset with the team rules: layout 3 and the launch team
+ * configuration. What a deployment serves once team battles roll out, with its own skill
+ * values and catalog joined on exactly as it does for `SOURCE_DEFAULT_RULESET`.
+ */
+export const TEAM_SOURCE_DEFAULT_RULESET: Ruleset = {
+    ...SOURCE_DEFAULT_RULESET,
+    version: 2,
+    teamConfig: DEFAULT_TEAM_CONFIG,
+    schemaVersion: TEAM_RULESET_SCHEMA_VERSION,
+};
+
+/** Field order for `teamConfig`'s numbers, which is also their canonical encoding order. */
+export const TEAM_CONFIG_FIELDS = [
+    'comboStepPct',
+    'exposePct',
+    'auraPct',
+    'tailwindBps',
+    'longShotPct',
+    'temperamentPct',
+] as const satisfies readonly (keyof TeamConfig)[];
+
+/** `teamConfig.turnOrder` as one byte. */
+export const TURN_ORDER_CODES = { int: 0, speed: 1 } as const;
 
 /** Field order for `skillConfig`, which is also its canonical encoding order. */
 export const SKILL_CONFIG_FIELDS = [
@@ -196,6 +243,7 @@ export function assertRuleset(ruleset: Ruleset): Ruleset {
         // encoding this would publish rules that omit the gear they were meant to price.
         throw new Error('ruleset schema version 1 cannot carry an item catalog; use version 2');
     }
+    const teamConfig = assertTeamConfig(ruleset.teamConfig, schemaVersion);
 
     return {
         version: ruleset.version,
@@ -205,8 +253,46 @@ export function assertRuleset(ruleset: Ruleset): Ruleset {
         skillConfig,
         maxLevel: ruleset.maxLevel,
         itemCatalog,
+        ...(teamConfig && { teamConfig }),
         schemaVersion,
     };
+}
+
+/**
+ * Validates the team rules: required from layout 3, refused before it.
+ *
+ * Refused rather than dropped below 3, like the catalog: an older layout has nowhere to put
+ * them, so encoding one would publish rules that silently omit the team rules.
+ *
+ * Only the `int` turn order is accepted for now. The `speed` order needs a speed for every
+ * pet, which arrives with Attributes 2.0 in a later layout; a ruleset naming it today would
+ * promise an order no snapshot can supply.
+ */
+function assertTeamConfig(config: TeamConfig | undefined, schemaVersion: number): TeamConfig | undefined {
+    if (schemaVersion < 3) {
+        if (config !== undefined) {
+            throw new Error(`ruleset schema version ${schemaVersion} cannot carry team rules; use version 3`);
+        }
+        return undefined;
+    }
+    if (typeof config !== 'object' || config === null) {
+        throw new Error('ruleset schema version 3 requires teamConfig');
+    }
+    if (config.turnOrder !== 'int') {
+        throw new Error(`teamConfig.turnOrder must be 'int' until Attributes 2.0, got ${JSON.stringify(config.turnOrder)}`);
+    }
+    const checked: TeamConfig = { ...DEFAULT_TEAM_CONFIG, turnOrder: config.turnOrder };
+    for (const field of TEAM_CONFIG_FIELDS) {
+        const value = config[field];
+        // The two bonus steps may be switched off with 0. The rest are multipliers, where 0
+        // would erase the strike rather than tune it.
+        const min = field === 'comboStepPct' || field === 'tailwindBps' ? 0 : 1;
+        if (!Number.isSafeInteger(value) || value < min || value > 10000) {
+            throw new Error(`teamConfig.${field} must be an integer between ${min} and 10000, got ${value}`);
+        }
+        checked[field] = value;
+    }
+    return checked;
 }
 
 /** Highest slot index the protocol accepts, matching ItemCore's three gear slots. */

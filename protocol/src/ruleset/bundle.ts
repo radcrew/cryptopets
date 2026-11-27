@@ -1,7 +1,7 @@
 import type { Hex } from '../encoding/bytes';
 
 import { assertRulesetHash, hashRuleset } from './hash';
-import { assertRuleset, type Ruleset, SKILL_CONFIG_FIELDS } from './types';
+import { assertRuleset, type Ruleset, SKILL_CONFIG_FIELDS, TEAM_CONFIG_FIELDS } from './types';
 
 /**
  * The published, content-addressed ruleset artifact (§H item 2).
@@ -49,6 +49,14 @@ export function serializeRuleset(ruleset: Ruleset): string {
             mdef: item.mdef,
         }));
     }
+    // Likewise only from version 3, so earlier bundles still serialize as they always did.
+    if (checked.teamConfig) {
+        const teamConfig: Record<string, unknown> = { turnOrder: checked.teamConfig.turnOrder };
+        for (const field of TEAM_CONFIG_FIELDS) {
+            teamConfig[field] = checked.teamConfig[field];
+        }
+        document.teamConfig = teamConfig;
+    }
 
     return `${JSON.stringify(document, null, 2)}\n`;
 }
@@ -61,6 +69,7 @@ const RULESET_KEYS = [
     'maxLevel',
     'skillConfig',
     'itemCatalog',
+    'teamConfig',
     'schemaVersion',
 ] as const;
 
@@ -122,6 +131,15 @@ export function parseRulesetBundle(json: string): Ruleset {
               return { ...item, itemType: BigInt(item.itemType) };
           })
         : record.itemCatalog;
+
+    const teamConfig = record.teamConfig;
+    if (typeof teamConfig === 'object' && teamConfig !== null) {
+        const known: readonly string[] = ['turnOrder', ...TEAM_CONFIG_FIELDS];
+        const unexpectedTeam = Object.keys(teamConfig).filter((key) => !known.includes(key));
+        if (unexpectedTeam.length > 0) {
+            throw new Error(`ruleset bundle teamConfig has unexpected keys: ${unexpectedTeam.join(', ')}`);
+        }
+    }
 
     return assertRuleset({ ...record, itemCatalog: parsedCatalog } as unknown as Ruleset);
 }

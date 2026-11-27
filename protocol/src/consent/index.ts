@@ -1,3 +1,16 @@
+export {
+    assertDefensePlan,
+    type DefensePlan,
+    type DefensePlanTypedData,
+    defensePlanTypedData,
+    EIP712_DEFENSE_PLAN_TYPES,
+    EIP712_DEFENSE_PLAN_V2_TYPES,
+    encodeDefensePlan,
+    hashDefensePlan,
+    planCovers,
+    type PlanCoverageQuery,
+    type RosterEntry,
+} from './defensePlan';
 export { encodeDefenseAuthorization, hashDefenseAuthorization } from './hash';
 export {
     defenseAuthorizationSolanaMessage,

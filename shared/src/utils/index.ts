@@ -8,3 +8,6 @@ export * from './solana';
 export * from './pets';
 export * from './items';
 export * from './combat';
+export * from './team/teamPlayback';
+export * from './team/formation';
+export * from './team/placement';

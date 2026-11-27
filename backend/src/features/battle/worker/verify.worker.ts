@@ -1,10 +1,6 @@
 import {
-    bonusFromEquipment,
-    type Hex,
     hashCombatLog,
-    loadRulesetBundle,
     type PetProgression,
-    type PetSnapshot,
     type ProgressionDelta,
     type SimOutcome,
 } from '@cryptopets/protocol';
@@ -17,10 +13,19 @@ import {
     type ClaimedMessage,
     completeOutbox,
     decodeStoredSnapshot,
+    loadPublishedRuleset,
     OUTBOX_TOPICS,
 } from '@features/battle/ledger';
-import { callVerifyBattle, type VerifyBattleWire, type VerifyPetProgressionWire } from '@grpc-client/verifyBattle';
+import {
+    callVerifyBattle,
+    type VerifyBattleWire,
+    type VerifyPetProgressionWire,
+    verifyPetInputs,
+} from '@grpc-client/verifyBattle';
+import { BATTLE_KIND } from '@features/battle/ledger/kind';
 import { notifyBattleRoomIfPresent } from '@ws/battleRoomSocket';
+
+import { processTeamVerify } from './team.worker';
 
 /**
  * Handles `verify` messages: `computed` -> `verified` (§F).
@@ -48,6 +53,10 @@ export async function processVerifyMessage(message: ClaimedMessage, nowSeconds: 
         await completeOutbox(message.id, new Date(nowSeconds * 1000));
         return;
     }
+    if (battle.kind === BATTLE_KIND.team) {
+        await processTeamVerify(battle, message, nowSeconds);
+        return;
+    }
     if (battle.state !== BattleState.computed) {
         await completeOutbox(message.id, new Date(nowSeconds * 1000));
         return;
@@ -56,17 +65,13 @@ export async function processVerifyMessage(message: ClaimedMessage, nowSeconds: 
         throw new Error(`battle ${battle.battleId} is computed but is missing a computed field`);
     }
 
-    const rulesetRow = await prisma.battleRuleset.findUnique({ where: { rulesetHash: battle.rulesetHash } });
-    if (!rulesetRow) {
-        throw new Error(`no published ruleset bundle for ${battle.rulesetHash}; cannot verify battle ${battle.battleId}`);
-    }
-    const ruleset = loadRulesetBundle(JSON.stringify(rulesetRow.bundle), battle.rulesetHash as Hex);
+    const ruleset = await loadPublishedRuleset(battle.rulesetHash, `verify battle ${battle.battleId}`);
 
     const { attacker, defender } = decodeStoredSnapshot(battle.snapshot);
 
     const outcome = await callVerifyBattle({
-        attacker: toWirePet(attacker),
-        defender: toWirePet(defender),
+        attacker: verifyPetInputs(attacker),
+        defender: verifyPetInputs(defender),
         seed: battle.seed,
         skillConfig: ruleset.skillConfig,
         maxLevel: ruleset.maxLevel,
@@ -112,28 +117,6 @@ export async function processVerifyMessage(message: ClaimedMessage, nowSeconds: 
     await completeOutbox(message.id, new Date(nowSeconds * 1000));
 }
 
-function toWirePet(pet: PetSnapshot) {
-    // The resolved equipment total, so the independent recomputation runs on the same
-    // inputs the canonical engine used (roadmap §4). Sending the frozen modifiers rather
-    // than item ids is what lets the verifier hold no item catalog at all: what §F checks
-    // is that the fight follows from the numbers the receipt publishes.
-    const bonus = bonusFromEquipment(pet.equipment);
-    return {
-        petId: String(pet.petId),
-        dna: String(pet.dna),
-        rarity: pet.rarity,
-        level: pet.level,
-        skill: pet.skill,
-        xp: pet.xp,
-        lastOpponentId: String(pet.lastOpponentId),
-        streak: pet.streak,
-        bonusHp: bonus.hp,
-        bonusAtk: bonus.atk,
-        bonusDef: bonus.def,
-        bonusInt: bonus.int,
-        bonusMdef: bonus.mdef,
-    };
-}
 
 /**
  * Every field §F requires to match: winner, rounds, winner HP, the combat-log

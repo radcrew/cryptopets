@@ -69,6 +69,7 @@ export {
     type UseSpousePetOptions,
     type SpousePetResult,
 } from './pets/useSpousePet';
+export { usePetNames } from './pets/usePetNames';
 export { useIncomingProposals, type IncomingProposal } from './marriage/useIncomingProposals';
 export { useWinEstimate, type WinEstimateResult } from './battle/useWinEstimate';
 // Leaderboards. Ranked server-side over the merged battle record, so a page arrives
@@ -163,6 +164,17 @@ export {
     type BattleRoomNotification,
     type UseBattleRoomSocketOptions,
 } from './battle/useBattleRoomSocket';
+// Team battles (docs/plan-team-battles-3v3.md). EVM only for now: they ship on Base first.
+export {
+    defensePlanQueryKey,
+    type LiveDefensePlan,
+    type PlanRosterEntry,
+    type SaveDefensePlanVars,
+    useDefensePlan,
+} from './battle/useDefensePlan';
+export { type TeamOpponent, useTeamOpponents } from './battle/useTeamOpponents';
+export { type SubmitTeamChallengeVars, useSubmitTeamChallenge } from './battle/useSubmitTeamChallenge';
+export { type TeamBattleResult, useTeamBattleResult } from './battle/useTeamBattleResult';
 export {
     useVerifiedBattleReceipt,
     verifiedReceiptQueryKey,

@@ -195,6 +195,13 @@ export const env = {
          * setting; that arrives with the batch registry in Group I.
          */
         enabled: process.env.BATTLE_BACKEND_MODE_ENABLED?.trim().toLowerCase() === 'true',
+        /**
+         * Three-on-three team battles (docs/plan-team-battles-3v3.md). Off by default, and only
+         * meaningful with backend mode on: team battles run on the same pipeline. Gates the team
+         * write routes alone; reading plans, team battles and their receipts stays open, for the
+         * same reason backend mode's reads do.
+         */
+        teamEnabled: process.env.TEAM_BATTLES_ENABLED?.trim().toLowerCase() === 'true',
         deploymentId: process.env.BATTLE_DEPLOYMENT_ID?.trim() || 'local-dev',
         /** Comma-separated protocol chain ids, e.g. `eip155:84532,solana:devnet`. */
         chainIds: (process.env.BATTLE_CHAIN_IDS?.trim() || 'eip155:31337,solana:localnet')

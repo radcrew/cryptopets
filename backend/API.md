@@ -423,6 +423,9 @@ switching the mode off stops new battles, it does not retract receipts already i
 `GET /authorizations` for the same reason: a defender needs to see that their consent went
 stale precisely when something is off, and a mode flag should not be what hides it.
 `DELETE /sessions` is ungated too, so withdrawing a delegated key never depends on a flag.
+Saving a defence plan and submitting a team intent are also gated on `TEAM_BATTLES_ENABLED`
+(**503 `team-battles-disabled`**), and accepting a team intent is refused with the same code;
+withdrawing and reading plans are not.
 
 | POST | `/api/battle/intents` | JWT | Submit a signed battle intent (§D). |
 | POST | `/api/battle/intents/:intentHash/accept` | JWT | Freeze the snapshot, commit to a future drand round, sign the commitment, and return it synchronously (§E). |
@@ -439,6 +442,11 @@ stale precisely when something is off, and a mode flag should not be what hides 
 | GET | `/api/battle/signing-keys` | none | Every signing key this process currently publishes, active and retired (§G). |
 | GET | `/api/battle/rulesets` | none | Metadata for every published ruleset bundle. |
 | GET | `/api/battle/rulesets/:rulesetHash` | none | One ruleset's full bundle, for replaying against it. |
+| POST | `/api/battle/defense-plans` | JWT | Save a signed team-battle defence plan: the three defending pets with their home tiles and tactics, bound to the team ruleset in `GET /config`'s `team.ruleset`. Replaces the caller's earlier plan in the same transaction, so a defender has one live plan. Refused as `plan-ruleset-mismatch` when signed for other rules. The plan must be `schemaVersion: 2` with a random 32-byte `salt`, or it is refused as `malformed-plan`: the plan's hash is public, and without the salt the hidden roster could be recovered by hashing candidate rosters against it. The salt is stored and never served. |
+| DELETE | `/api/battle/defense-plans?chainId=` | JWT | Withdraw the caller's plan. Unsigned and ungated, like consent revocation. |
+| GET | `/api/battle/defense-plans?chainId=` | JWT | The caller's live plan (or null), flagged `isStale` when it no longer matches the served team ruleset. Ungated. |
+| POST | `/api/battle/team-intents` | JWT | Submit a signed team challenge: three placed pets against a defence plan's hash. Accepted through the same `/intents/:intentHash/accept` route as a duel, which routes by the intent's kind. |
+| GET | `/api/battle/team-opponents?chainId=&limit=` | JWT | Plans the caller can challenge now: live, in their window, under the served team ruleset, not the caller's own, with all three pets still the defender's. Each is `{ planHash, defenderOwner, minLevel, maxLevel, expiresAt, ready }`: the defending pets, their tiles and tactics are not served, since they are what an attacker would counter-build from, and the battle reveals them. `ready` says whether all three are off cooldown (progression-merged), which acceptance requires. A plan's roster still becomes public in the receipt of the first battle it defends. Ungated. |
 | POST | `/api/battle/verify-receipt` | none | Body `{ receiptHash }`. Checks the stored signature against a published key and that the payload is well-formed — §A's "operator signature, verified against a published key" row, nothing more. It does **not** re-run the fight, check the drand BLS signature, or recompute progression; that is the standalone verifier's job (§H), which runs with no backend access so its answer cannot depend on this process telling the truth. Passing this check is necessary, not sufficient. |
 
 ### Private chat (roadmap §2, v1)

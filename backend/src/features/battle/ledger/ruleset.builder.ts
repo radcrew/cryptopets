@@ -1,4 +1,11 @@
-import { hashRuleset, type Hex, type ItemModifier, type Ruleset, SOURCE_DEFAULT_RULESET } from '@cryptopets/protocol';
+import {
+    hashRuleset,
+    type Hex,
+    type ItemModifier,
+    type Ruleset,
+    SOURCE_DEFAULT_RULESET,
+    TEAM_SOURCE_DEFAULT_RULESET,
+} from '@cryptopets/protocol';
 
 import { getCombatCatalog, itemCatalogGeneration } from '@features/inventory';
 
@@ -31,7 +38,7 @@ import { getCombatCatalog, itemCatalogGeneration } from '@features/inventory';
  * this too. Two independent process-life caches over the same rows was a trap: whichever
  * one a caller knew to reset, the other kept answering from data that no longer existed.
  */
-let cached: { ruleset: Ruleset; hash: Hex; generation: number } | null = null;
+let cached: { ruleset: Ruleset; hash: Hex; team: Ruleset; teamHash: Hex; generation: number } | null = null;
 
 export async function servedRuleset(): Promise<Ruleset> {
     // Read before the await, not after: a reset landing mid-build then stamps this result
@@ -68,7 +75,11 @@ export async function servedRuleset(): Promise<Ruleset> {
     itemCatalog.sort((a, b) => (a.itemType < b.itemType ? -1 : a.itemType > b.itemType ? 1 : 0));
 
     const ruleset: Ruleset = { ...SOURCE_DEFAULT_RULESET, itemCatalog };
-    cached = { ruleset, hash: hashRuleset(ruleset), generation };
+    // The team ruleset is built here, from the same catalog read and stamped with the same
+    // generation, rather than in a cache of its own: two caches over one catalog is the trap
+    // the generation stamp exists to prevent.
+    const team: Ruleset = { ...TEAM_SOURCE_DEFAULT_RULESET, itemCatalog };
+    cached = { ruleset, hash: hashRuleset(ruleset), team, teamHash: hashRuleset(team), generation };
     return cached.ruleset;
 }
 
@@ -93,6 +104,27 @@ export async function servedRulesetHash(): Promise<Hex> {
     await servedRuleset();
     // Non-null: `servedRuleset` either returns from the cache or fills it.
     return cached!.hash;
+}
+
+/**
+ * The ruleset team battles fight under: layout 3, the launch team rules, and the same item
+ * catalog as `servedRuleset`.
+ *
+ * A separate ruleset rather than moving duels onto layout 3, because a different ruleset is a
+ * different `rulesetHash`, and duel consent is bound to the hash. Serving duels a new one
+ * would cancel every defender's authorization on deploy; that is the rollout's decision
+ * (Phase 6 in docs/plan-team-battles-3v3.md), not a side effect of team battles existing.
+ * Defence plans bind to this hash instead.
+ */
+export async function servedTeamRuleset(): Promise<Ruleset> {
+    await servedRuleset();
+    return cached!.team;
+}
+
+/** The hash of `servedTeamRuleset`, derived with it. */
+export async function servedTeamRulesetHash(): Promise<Hex> {
+    await servedRuleset();
+    return cached!.teamHash;
 }
 
 /**

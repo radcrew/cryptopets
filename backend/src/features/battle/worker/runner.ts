@@ -5,7 +5,6 @@ import {
     claimOutbox,
     expireOrphanedAccepts,
     failOutbox,
-    nextOutboxDueAt,
     OUTBOX_TOPICS,
 } from '@features/battle/ledger';
 
@@ -95,55 +94,35 @@ export interface BattleWorkerHandle {
     stop(): void;
 }
 
-export interface DrainOptions {
-    /** Stop starting new work after this many milliseconds. */
-    budgetMs: number;
-    /** Wait for the next due message only if it is at most this far away. */
-    maxWaitMs?: number;
-    /** Injectable for tests. */
-    sleep?: (ms: number) => Promise<void>;
-}
-
-const sleepFor = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
-
 /**
- * Runs the worker until nothing is left to do, for a host with no long-lived process.
+ * Starts polling. `workerId` should be unique per process for the outbox lock.
  *
- * A serverless function cannot keep `startBattleWorker`'s timer alive, so it calls this
- * after a request that may have queued battle work. A battle's next step is usually only
- * seconds away (the committed drand round), so it waits for a message that is due soon
- * rather than stopping and leaving the battle for the next request. Concurrent drains are
- * safe: the outbox lock gives each message to one worker.
+ * Each pass is scheduled when the previous one ends, never on a fixed interval, so passes do not
+ * overlap however slow the database is. A pass that did work usually queued that battle's next
+ * step, due now, so the next pass starts at once rather than a poll interval later; a battle has
+ * four such steps after its drand round, and waiting out the interval at each was most of its
+ * time on a fast database.
  */
-export async function drainBattleWorker(
-    workerId: string,
-    { budgetMs, maxWaitMs = 8_000, sleep = sleepFor }: DrainOptions,
-): Promise<{ processed: number }> {
-    const topics = Object.keys(HANDLERS) as (typeof OUTBOX_TOPICS)[keyof typeof OUTBOX_TOPICS][];
-    const deadline = Date.now() + budgetMs;
-    let processed = 0;
-
-    while (Date.now() < deadline) {
-        const pass = await runBattleWorkerOnce(workerId);
-        processed += pass.processed;
-        if (pass.processed > 0) continue;
-
-        const next = await nextOutboxDueAt(topics);
-        if (!next) break;
-        const wait = Math.max(next.getTime() - Date.now(), 0);
-        if (wait > maxWaitMs || Date.now() + wait >= deadline) break;
-        // A short floor, so a message that is due "now" but locked elsewhere is not spun on.
-        await sleep(Math.max(wait, 250));
-    }
-    return { processed };
-}
-
-/** Starts polling on an interval. `workerId` should be unique per process for the outbox lock. */
 export function startBattleWorker(workerId: string): BattleWorkerHandle {
-    const timer = setInterval(() => {
-        void runBattleWorkerOnce(workerId).catch((error: Error) => {
-            console.error(`[battle-worker] poll failed: ${error.message}`);
-        });
-    }, env.battle.workerPollIntervalMs);
-    return { stop: () => clearInterval(timer) };
+    let stopped = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const schedule = (delayMs: number) => {
+        if (!stopped) timer = setTimeout(() => void pass(), delayMs);
+    };
+    const pass = async () => {
+        let processed = 0;
+        try {
+            ({ processed } = await runBattleWorkerOnce(workerId));
+        } catch (error) {
+            console.error(`[battle-worker] poll failed: ${(error as Error).message}`);
+        }
+        schedule(processed > 0 ? 0 : env.battle.workerPollIntervalMs);
+    };
+    schedule(env.battle.workerPollIntervalMs);
+    return {
+        stop: () => {
+            stopped = true;
+            clearTimeout(timer);
+        },
+    };
 }

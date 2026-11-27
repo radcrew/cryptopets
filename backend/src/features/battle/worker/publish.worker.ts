@@ -1,4 +1,10 @@
-import { assertBattleReceipt, hashBattleReceipt, receiptFromWire, type WireBattleReceipt } from '@cryptopets/protocol';
+import {
+    anyReceiptFromWire,
+    assertAnyBattleReceipt,
+    hashAnyBattleReceipt,
+    type WireBattleReceipt,
+    type WireTeamBattleReceipt,
+} from '@cryptopets/protocol';
 import { BattleState } from '@generated/prisma/enums';
 
 import { prisma } from '@config/prisma';
@@ -44,7 +50,10 @@ export async function processPublishMessage(message: ClaimedMessage, nowSeconds:
         throw new Error(`battle ${battle.battleId} is signed but has no receipt row to publish`);
     }
 
-    const recomputed = hashBattleReceipt(assertBattleReceipt(receiptFromWire(receipt.payload as unknown as WireBattleReceipt)));
+    // Either kind: a team receipt re-hashes under its own layout.
+    const recomputed = hashAnyBattleReceipt(
+        assertAnyBattleReceipt(anyReceiptFromWire(receipt.payload as unknown as WireBattleReceipt | WireTeamBattleReceipt)),
+    );
     if (recomputed.toLowerCase() !== receipt.receiptHash.toLowerCase()) {
         throw new Error(
             `receipt ${receipt.receiptHash} for battle ${battle.battleId} re-hashes to ${recomputed}; ` +

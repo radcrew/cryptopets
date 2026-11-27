@@ -101,13 +101,12 @@ Backend API communication through `services/api.ts`:
 
 ## 📦 Deployment
 
-Deployed on **Vercel**. Configuration in `vercel.json`.
+Not deployed from this repo: it runs on localhost only. `pnpm build` writes a static site to
+`dist/`, which any static host can serve; route every path to `index.html`, since the app uses
+client-side routing.
 
 ```bash
-# Build
 pnpm build
-
-# The build output is optimized for Vercel
 ```
 
 ## 🤝 Contributing

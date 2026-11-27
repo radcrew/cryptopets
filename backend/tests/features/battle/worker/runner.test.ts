@@ -9,7 +9,6 @@ vi.mock('@features/battle/ledger', () => ({
     failOutbox: vi.fn(),
     abandonBattle: vi.fn(),
     expireOrphanedAccepts: vi.fn(),
-    nextOutboxDueAt: vi.fn(),
     // Must list every real topic. A missing one is not a smaller map — it registers as an
     // `undefined` key and the dispatcher claims a topic called "undefined".
     OUTBOX_TOPICS: {
@@ -37,11 +36,11 @@ vi.mock('@features/battle/worker/publish.worker', () => ({
     processPublishMessage: vi.fn(),
 }));
 
-import { abandonBattle, claimOutbox, failOutbox, nextOutboxDueAt } from '@features/battle/ledger';
+import { abandonBattle, claimOutbox, failOutbox } from '@features/battle/ledger';
 import { processAwaitBeaconMessage } from '@features/battle/worker/beacon.worker';
 import { processComputeMessage } from '@features/battle/worker/compute.worker';
 import { processVerifyMessage } from '@features/battle/worker/verify.worker';
-import { drainBattleWorker, runBattleWorkerOnce } from '@features/battle/worker/runner';
+import { runBattleWorkerOnce, startBattleWorker } from '@features/battle/worker/runner';
 
 const NOW = new Date('2026-07-26T12:00:00.000Z');
 
@@ -167,65 +166,61 @@ describe('the end of the retry road', () => {
     });
 });
 
-describe('drainBattleWorker', () => {
+describe('startBattleWorker', () => {
     const message = (id: string) => ({ id, battleId: 'btl_1', topic: 'compute', payload: {}, attempts: 1 });
 
-    it('keeps running passes while there is work, then stops when nothing is waiting', async () => {
-        vi.mocked(claimOutbox)
-            .mockResolvedValueOnce([message('m1')])
-            .mockResolvedValueOnce([message('m2')])
-            .mockResolvedValue([]);
-        vi.mocked(nextOutboxDueAt).mockResolvedValue(null);
-        const sleep = vi.fn(async () => {});
+    /** Advances fake time in small steps, letting each pass's awaits finish between them. */
+    const runFor = async (ms: number) => {
+        for (let elapsed = 0; elapsed < ms; elapsed += 50) {
+            await vi.advanceTimersByTimeAsync(50);
+            for (let i = 0; i < 20; i++) await Promise.resolve();
+        }
+    };
 
-        const result = await drainBattleWorker('w', { budgetMs: 10_000, sleep });
+    it("runs the next pass at once after one that did work, so a battle's next step does not wait out the interval", async () => {
+        vi.useFakeTimers();
+        const worker = startBattleWorker('w');
+        try {
+            const start = Date.now();
+            const passesAt: number[] = [];
+            const work = [[message('m1')], [message('m2')]];
+            vi.mocked(claimOutbox).mockImplementation(async () => {
+                passesAt.push(Date.now() - start);
+                return work.shift() ?? [];
+            });
 
-        expect(result.processed).toBe(2);
-        expect(processComputeMessage).toHaveBeenCalledTimes(2);
-        expect(sleep).not.toHaveBeenCalled();
+            await runFor(4100);
+            // The first pass waits one interval. The two that follow work start at once (Node
+            // clamps a zero delay to 1 ms), and the pass after an idle one waits a full interval.
+            expect(passesAt).toEqual([2000, 2001, 2002, 4002]);
+        } finally {
+            worker.stop();
+            vi.useRealTimers();
+        }
     });
 
-    it('waits for a message that is due soon, such as the committed drand round', async () => {
-        vi.mocked(claimOutbox).mockResolvedValueOnce([]).mockResolvedValueOnce([message('m1')]).mockResolvedValue([]);
-        vi.mocked(nextOutboxDueAt)
-            .mockResolvedValueOnce(new Date(Date.now() + 3_000))
-            .mockResolvedValue(null);
-        const sleep = vi.fn(async () => {});
+    it('never starts a pass while the previous one is still running, and stops when asked', async () => {
+        vi.useFakeTimers();
+        const worker = startBattleWorker('w');
+        try {
+            let finish: (messages: never[]) => void = () => {};
+            vi.mocked(claimOutbox)
+                .mockImplementationOnce(() => new Promise((resolve) => (finish = resolve as never)))
+                .mockResolvedValue([]);
 
-        const result = await drainBattleWorker('w', { budgetMs: 10_000, sleep });
+            await runFor(12_000); // a slow database: the first pass is still out
+            expect(claimOutbox).toHaveBeenCalledTimes(1);
+            finish([]);
+            await runFor(2100);
+            expect(claimOutbox).toHaveBeenCalledTimes(2);
 
-        expect(sleep).toHaveBeenCalledTimes(1);
-        expect(sleep.mock.calls[0]![0]).toBeGreaterThan(2_000);
-        expect(result.processed).toBe(1);
-    });
-
-    it('does not wait for a message due later than maxWaitMs', async () => {
-        vi.mocked(claimOutbox).mockResolvedValue([]);
-        vi.mocked(nextOutboxDueAt).mockResolvedValue(new Date(Date.now() + 60_000));
-        const sleep = vi.fn(async () => {});
-
-        await drainBattleWorker('w', { budgetMs: 10_000, maxWaitMs: 8_000, sleep });
-
-        expect(sleep).not.toHaveBeenCalled();
-    });
-
-    it('does not wait past its budget', async () => {
-        vi.mocked(claimOutbox).mockResolvedValue([]);
-        vi.mocked(nextOutboxDueAt).mockResolvedValue(new Date(Date.now() + 5_000));
-        const sleep = vi.fn(async () => {});
-
-        await drainBattleWorker('w', { budgetMs: 2_000, sleep });
-
-        expect(sleep).not.toHaveBeenCalled();
-    });
-
-    it('waits at least 250 ms for a message that is due now but locked elsewhere', async () => {
-        vi.mocked(claimOutbox).mockResolvedValue([]);
-        vi.mocked(nextOutboxDueAt).mockResolvedValueOnce(new Date(Date.now() - 1_000)).mockResolvedValue(null);
-        const sleep = vi.fn(async () => {});
-
-        await drainBattleWorker('w', { budgetMs: 10_000, sleep });
-
-        expect(sleep).toHaveBeenCalledWith(250);
+            worker.stop();
+            await runFor(6000);
+            expect(claimOutbox).toHaveBeenCalledTimes(2);
+        } finally {
+            worker.stop();
+            vi.useRealTimers();
+        }
     });
 });
+

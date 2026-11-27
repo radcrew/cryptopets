@@ -363,7 +363,8 @@
     }
 }
 
-.interaction-standalone--battle {
+.interaction-standalone--battle,
+.interaction-standalone--teambattle {
     --view-wash: var(--cp-wash-battle);
     --view-accent: 255 123 203;
 }

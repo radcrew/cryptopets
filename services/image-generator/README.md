@@ -379,9 +379,9 @@ machine this was written on, so alpine and layer specifics need one real
 
 ### Render
 
-Render reads only the repo-root `render.yaml`, and the
-`do-not-stop-image-generator` block now lives there. It is reproduced here
-because this is where the reasoning behind it belongs:
+Render reads only a repo-root `render.yaml`. The repo has none at the moment
+(it was removed while the project runs on localhost only), so this is the block
+to put back if the service is deployed there again, with the reasoning behind it:
 
 ```yaml
   - type: web

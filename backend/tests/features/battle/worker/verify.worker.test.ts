@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { clearPublishedRulesetCache } from '@features/battle/ledger/rulesetBundle.store';
+
 import {
     computeProgression,
     deriveBattleSeed,
@@ -26,12 +28,17 @@ vi.mock('@features/battle/ledger', async () => ({
     applyTransition: vi.fn(),
     completeOutbox: vi.fn(),
     OUTBOX_TOPICS: { sign: 'sign' },
+    ...(await vi.importActual<typeof import('@features/battle/ledger/rulesetBundle.store')>(
+        '@features/battle/ledger/rulesetBundle.store',
+    )),
     ...(await vi.importActual<typeof import('@features/battle/ledger/snapshot.codec')>(
         '@features/battle/ledger/snapshot.codec',
     )),
 }));
 
-vi.mock('@grpc-client/verifyBattle', () => ({
+// Only the network call is replaced; verifyPetInputs is a pure mapping and stays real.
+vi.mock('@grpc-client/verifyBattle', async () => ({
+    ...(await vi.importActual<object>('@grpc-client/verifyBattle')),
     callVerifyBattle: vi.fn(),
 }));
 
@@ -182,6 +189,7 @@ function goWireAgreeing() {
 }
 
 beforeEach(() => {
+    clearPublishedRulesetCache();
     vi.clearAllMocks();
     vi.mocked(prisma.battleLedger.findUnique).mockResolvedValue(BATTLE as never);
     const { json } = publishRuleset(SOURCE_DEFAULT_RULESET);
