@@ -3,6 +3,7 @@ import InteractionStandalone from '@components/pet/interactions/standalone';
 import BattlePanel from '@components/pet/interactions/panels/battle';
 import DefensePanel from '@components/pet/interactions/panels/defense';
 import { TabSwitch } from '@components/ui';
+import ArenaModes from '@components/game/arena-modes';
 
 /**
  * Top-level `/battle` page: picking a fight, and the standing consent that lets others pick
@@ -14,7 +15,7 @@ import { TabSwitch } from '@components/ui';
  * route but no sidebar entry and no link from anywhere, so nothing in the app led to it.
  *
  * Team battles are the exception, at `/team-battle`: a different activity with its own squad
- * building and defence team, reached from its own sidebar entry.
+ * building and defence team, reached from the arena's mode switch.
  */
 
 const TABS = [
@@ -29,6 +30,7 @@ const BattlePage: React.FC = () => {
 
     return (
         <InteractionStandalone action="battle" minPets={1} showWhileLoading>
+            <ArenaModes />
             <TabSwitch<TabId> options={TABS} value={tab} onChange={setTab} label="Battle arena" tone="magenta" />
 
             {/* Unmounted rather than hidden. The battle panel owns a multi-step state machine

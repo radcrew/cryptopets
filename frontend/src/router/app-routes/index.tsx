@@ -7,6 +7,7 @@ import RouteLayout from '@components/layout/route-layout';
 // so route-level splitting keeps a page's panel code (SVG art, DNA helix, …) out
 // of everyone else's first-load bundle.
 const HomePage = lazy(() => import('@pages/home'));
+const PetsPage = lazy(() => import('@pages/pets'));
 const BreedPage = lazy(() => import('@pages/breed'));
 const BattlePage = lazy(() => import('@pages/battle'));
 const TeamBattlePage = lazy(() => import('@pages/team-battle'));
@@ -34,6 +35,7 @@ const AppRoutes: React.FC = () => {
             <Routes>
                 <Route element={<RouteLayout />}>
                     <Route path="/main" element={<HomePage />} />
+                    <Route path="/pets" element={<PetsPage />} />
                     <Route path="/breed" element={<BreedPage />} />
                     {/* :roomId is optional — set once Start Battle mints a room id
                         (see useBattlePanel's handleBattle), same page either way. */}

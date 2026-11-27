@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import clsx from 'clsx';
 import { useNavigate } from 'react-router-dom';
 import { useBattleConfig, useChainCapabilities, usePetList } from '@shared/core';
 
@@ -21,15 +22,20 @@ const STARS = Array.from({ length: 48 }, (_, i) => ({
 
 const LANTERNS = [12, 34, 48, 66, 90];
 
+/** The strip of sand pets walk on, in percent of the scene's height. Full screen it sits
+ *  higher, clear of the dock that floats over the bottom of the screen. */
+const LANE = { min: 81, max: 88 };
+const FULLSCREEN_LANE = { min: 69, max: 77 };
+
 /**
  * The Quiet Shore: the home screen as a place rather than a dashboard.
  *
  * The player's own pets stroll on the sand, the Pulse beats in the sky with the real
  * drand round, and each building is a door to a page that already exists. It owns no
- * game state: everything comes from the same shared hooks the gallery and the sidebar
- * use, and the gallery still renders below it.
+ * game state: everything comes from the same shared hooks the gallery and the HUD use.
+ * Full screen it is the home page; the gallery lives at `/pets`.
  */
-const ShoreScene: React.FC = () => {
+const ShoreScene: React.FC<{ fullscreen?: boolean }> = ({ fullscreen = false }) => {
     const navigate = useNavigate();
     const { isConnected } = useChainCapabilities();
     const { pets } = usePetList();
@@ -39,7 +45,7 @@ const ShoreScene: React.FC = () => {
     const walkers = isConnected ? pets.slice(0, MAX_WALKERS) : [];
 
     return (
-        <section className={styles.shore} aria-label="The Quiet Shore">
+        <section className={clsx(styles.shore, fullscreen && styles.full)} aria-label="The Quiet Shore">
             <ShoreDefs />
             <div className={styles.sky} aria-hidden>
                 {STARS.map((s, i) => (
@@ -79,6 +85,7 @@ const ShoreScene: React.FC = () => {
                     pet={pet}
                     index={index}
                     count={walkers.length}
+                    lane={fullscreen ? FULLSCREEN_LANE : LANE}
                     open={openId === pet.id}
                     onToggle={() => setOpenId((id) => (id === pet.id ? null : pet.id))}
                     onBattle={() => navigate(BATTLE_PATH, { state: { petId: pet.id } })}

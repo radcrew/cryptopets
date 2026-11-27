@@ -157,7 +157,7 @@ button.tile:focus-visible {
 }
 
 /* Each screen is a size container, so its layout follows the room the panel actually has,
-   not the window: the dashboard's sidebar takes a different share at every width.
+   not the window: the frame around the page takes a different share at every width.
 
    It also has one width for everything on it, so the board, the details card, the actions and
    the pet row share their edges: the actions are right-aligned, and they line up with the card

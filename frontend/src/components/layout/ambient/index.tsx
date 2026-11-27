@@ -112,7 +112,6 @@ const Ambient: React.FC = () => {
     return (
         <div className={styles.ambient} aria-hidden="true">
             <canvas ref={canvasRef} className={styles.canvas} />
-            <div className={styles.grid} />
         </div>
     );
 };

@@ -1,0 +1,323 @@
+/* CSS Module — class names are local; reference via `import styles from './index.module.css'`. */
+.backdrop {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.dim {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 50% 40%, rgb(3 4 14 / 20%), rgb(3 4 14 / 55%) 75%);
+}
+
+.star {
+    position: absolute;
+    width: 2px;
+    height: 2px;
+    border-radius: 50%;
+    background: #fff;
+    opacity: 0.5;
+    animation: twinkle 3s ease-in-out infinite;
+}
+
+/* ---- The Shore at night ---- */
+.shore {
+    background: radial-gradient(ellipse 60% 45% at 62% 10%, rgb(181 140 255 / 26%), transparent 70%),
+        linear-gradient(180deg, #070a1f 0%, #121040 40%, #2a1754 62%, #3b1d58 70%);
+}
+
+.sea {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 68%;
+    height: 14%;
+    background: linear-gradient(180deg, #1c2a6b, #0c1640);
+    box-shadow: inset 0 2px 0 rgb(125 214 255 / 35%);
+}
+
+.sand {
+    position: absolute;
+    left: -12%;
+    right: -12%;
+    bottom: -36%;
+    height: 56%;
+    border-radius: 50% 50% 0 0 / 26% 26% 0 0;
+    background: radial-gradient(ellipse 70% 55% at 50% 0%, #5a466e, #3a2a4e 45%, #221833 80%);
+}
+
+/* ---- The arena ---- */
+.arena {
+    background: radial-gradient(ellipse 50% 30% at 50% 82%, rgb(255 123 203 / 22%), transparent 70%),
+        radial-gradient(ellipse 30% 60% at 20% 0%, rgb(125 214 255 / 16%), transparent 70%),
+        radial-gradient(ellipse 30% 60% at 80% 0%, rgb(181 140 255 / 16%), transparent 70%),
+        linear-gradient(180deg, #08081c 0%, #170c2c 60%, #26103a 100%);
+}
+
+.crowd {
+    position: absolute;
+    left: 0;
+    top: 6%;
+    width: 100%;
+    height: 22%;
+    opacity: 0.6;
+}
+
+.fan {
+    animation: fan-bob 1.6s ease-in-out infinite;
+}
+
+.stick {
+    transform-box: fill-box;
+    transform-origin: 50% 100%;
+    animation: stick-wave 1.2s ease-in-out infinite alternate;
+}
+
+.spot {
+    position: absolute;
+    top: -10%;
+    width: 40vw;
+    height: 120%;
+    clip-path: polygon(47% 0, 53% 0, 100% 100%, 0 100%);
+    mix-blend-mode: screen;
+    transform-origin: 50% 0;
+    filter: blur(6px);
+}
+
+.spotLeft {
+    left: -6%;
+    background: linear-gradient(180deg, rgb(255 123 203 / 26%), transparent 80%);
+    animation: sweep-left 7s ease-in-out infinite alternate;
+}
+
+.spotRight {
+    right: -6%;
+    background: linear-gradient(180deg, rgb(125 214 255 / 26%), transparent 80%);
+    animation: sweep-right 8s ease-in-out infinite alternate;
+}
+
+.banner {
+    position: absolute;
+    top: 0;
+    width: clamp(30px, 3.4vw, 50px);
+    transform-origin: 50% 0;
+    opacity: 0.8;
+    filter: drop-shadow(0 0 12px currentColor);
+    animation: sway 4s ease-in-out infinite;
+}
+
+.banner svg {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+.floor {
+    position: absolute;
+    left: 50%;
+    bottom: 4%;
+    width: min(1300px, 130vw);
+    height: 30%;
+    transform: translateX(-50%);
+    border-radius: 50%;
+    background: radial-gradient(ellipse at 50% 40%, rgb(255 123 203 / 20%), rgb(60 20 80 / 45%) 45%, transparent 70%);
+    box-shadow: inset 0 0 0 2px rgb(255 123 203 / 18%);
+}
+
+.torch {
+    position: absolute;
+    bottom: 22%;
+    width: 12px;
+    height: 64px;
+    border-radius: 3px;
+    background: linear-gradient(180deg, #6b4a2a, #2a1a10);
+}
+
+.torchLeft {
+    left: 2.5%;
+}
+
+.torchRight {
+    right: 2.5%;
+}
+
+.torch i {
+    position: absolute;
+    left: 50%;
+    top: -34px;
+    width: 28px;
+    height: 42px;
+    margin-left: -14px;
+    border-radius: 50% 50% 45% 45% / 60% 60% 40% 40%;
+    background: radial-gradient(ellipse at 50% 75%, #fff6c8 0 15%, #ffcf70 35%, #ff7a59 60%, transparent 72%);
+    box-shadow: 0 0 40px 18px rgb(255 138 80 / 28%);
+    transform-origin: 50% 100%;
+    animation: flicker 0.18s ease-in-out infinite alternate;
+}
+
+/* ---- The nest ---- */
+.nest {
+    background: radial-gradient(ellipse 40% 30% at 50% 72%, rgb(255 207 112 / 18%), transparent 70%),
+        radial-gradient(circle at 50% 0%, rgb(181 140 255 / 22%), transparent 50%),
+        linear-gradient(180deg, #0a0b24, #1a1030 60%, #120a20);
+}
+
+.rock {
+    position: absolute;
+    left: 50%;
+    bottom: -6%;
+    width: min(900px, 110vw);
+    height: 30%;
+    transform: translateX(-50%);
+    border-radius: 50% 50% 40% 40%;
+    background: radial-gradient(ellipse at 50% 20%, #3c2f55, #1c1530 70%);
+    box-shadow: inset 0 8px 20px rgb(181 140 255 / 20%);
+}
+
+/* ---- The Hall of Champions ---- */
+.hall {
+    background: radial-gradient(ellipse 50% 45% at 50% 26%, rgb(255 210 90 / 22%), transparent 70%),
+        linear-gradient(180deg, #0c0a1e, #1d1430 60%, #120c22);
+}
+
+.pillar {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 7%;
+    background: linear-gradient(90deg, #161229, #2c2450 50%, #161229);
+    box-shadow: inset 0 0 30px rgb(0 0 0 / 60%), 0 0 40px rgb(255 210 90 / 8%);
+}
+
+.pillarLeft {
+    left: 2%;
+}
+
+.pillarRight {
+    right: 2%;
+}
+
+.rays {
+    position: absolute;
+    left: 50%;
+    top: 22%;
+    width: 900px;
+    height: 900px;
+    margin: -450px 0 0 -450px;
+    border-radius: 50%;
+    background: repeating-conic-gradient(rgb(255 210 90 / 7%) 0 8deg, transparent 8deg 16deg);
+    -webkit-mask-image: radial-gradient(circle, #000 10%, transparent 62%);
+    mask-image: radial-gradient(circle, #000 10%, transparent 62%);
+    animation: spin 60s linear infinite;
+}
+
+/* ---- The market ---- */
+.market {
+    background: radial-gradient(ellipse 60% 40% at 50% 100%, rgb(255 179 71 / 18%), transparent 70%),
+        linear-gradient(180deg, #0a0b20, #1a1230 55%, #24132a);
+}
+
+.awning {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 46px;
+    background: repeating-linear-gradient(90deg, rgb(255 123 203 / 55%) 0 60px, rgb(255 210 90 / 55%) 60px 120px);
+    -webkit-mask-image: radial-gradient(circle at 30px 0, #000 34px, transparent 35px);
+    mask-image: radial-gradient(circle at 30px 0, #000 34px, transparent 35px);
+    -webkit-mask-size: 60px 46px;
+    mask-size: 60px 46px;
+    opacity: 0.7;
+}
+
+.lantern {
+    position: absolute;
+    top: 9%;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--cp-amber);
+    box-shadow: 0 0 18px 8px rgb(255 207 112 / 45%);
+    animation: lantern 2.4s ease-in-out infinite;
+}
+
+@keyframes twinkle {
+    0%,
+    100% {
+        opacity: 0.15;
+    }
+    50% {
+        opacity: 1;
+    }
+}
+
+@keyframes fan-bob {
+    50% {
+        transform: translateY(-2px);
+    }
+}
+
+@keyframes stick-wave {
+    from {
+        transform: rotate(-20deg);
+    }
+    to {
+        transform: rotate(20deg);
+    }
+}
+
+@keyframes sweep-left {
+    from {
+        transform: rotate(-26deg);
+    }
+    to {
+        transform: rotate(8deg);
+    }
+}
+
+@keyframes sweep-right {
+    from {
+        transform: rotate(26deg);
+    }
+    to {
+        transform: rotate(-8deg);
+    }
+}
+
+@keyframes sway {
+    50% {
+        transform: rotate(2.5deg) skewX(-2deg);
+    }
+}
+
+@keyframes flicker {
+    from {
+        transform: scale(1, 1) rotate(-2deg);
+    }
+    to {
+        transform: scale(0.9, 1.1) rotate(2deg);
+    }
+}
+
+@keyframes lantern {
+    0%,
+    100% {
+        opacity: 0.8;
+    }
+    40% {
+        opacity: 1;
+    }
+    60% {
+        opacity: 0.65;
+    }
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}

@@ -1,0 +1,254 @@
+/* CSS Module — class names are local; reference via `import styles from './index.module.css'`.
+   Floats over the scene: no bar of its own, just pieces with their own plates. */
+.hud {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: calc(env(safe-area-inset-top, 0px) + 12px) 16px 0;
+    pointer-events: none;
+}
+
+.hud > * {
+    pointer-events: auto;
+}
+
+.logo {
+    flex-shrink: 0;
+    font-family: var(--cp-display-font);
+    font-size: 15px;
+    line-height: 0.95;
+    letter-spacing: 0.03em;
+    text-decoration: none;
+    background: linear-gradient(180deg, #ffffff, #a6e6ff 40%, #b58cff 70%, #ff7bcb);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    filter: drop-shadow(0 3px 0 #2a1050) drop-shadow(0 0 12px rgb(181 140 255 / 50%));
+    transition: transform 0.2s var(--cp-ease-spring);
+
+    &:hover {
+        transform: rotate(-4deg) scale(1.05);
+        text-shadow: none;
+    }
+}
+
+.plate {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    padding: 5px 14px 5px 5px;
+    border-radius: 999px;
+    background: rgb(8 10 28 / 82%);
+    border: 1px solid rgb(255 210 90 / 45%);
+    box-shadow: 0 6px 20px rgb(0 0 0 / 40%);
+}
+
+.ring {
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    font-family: var(--cp-display-font);
+    font-size: 13px;
+    color: var(--cp-gold);
+    background: radial-gradient(circle, #1a1440 60%, transparent 62%),
+        conic-gradient(var(--cp-gold) 0 70%, #2a2550 70% 100%);
+}
+
+.who {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    line-height: 1.2;
+}
+
+.who b {
+    font-size: 14px;
+    white-space: nowrap;
+}
+
+.who span {
+    font-family: var(--cp-title-font);
+    font-size: 9.5px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--cp-gold);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.streak {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: rgb(8 10 28 / 82%);
+    border: 1px solid rgb(255 138 107 / 55%);
+    box-shadow: 0 6px 20px rgb(0 0 0 / 35%);
+    font-family: var(--cp-title-font);
+    font-size: 13px;
+    font-weight: 600;
+    color: #ffd0b8;
+}
+
+.streak small {
+    font-family: var(--cp-content-font);
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--cp-text-muted-dark);
+}
+
+.spacer {
+    flex: 1;
+}
+
+/* Round icon keys: quests and sound. */
+.key {
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border-radius: 50%;
+    border: 1px solid rgb(125 214 255 / 35%);
+    background: rgb(8 10 28 / 82%);
+    box-shadow: 0 6px 16px rgb(0 0 0 / 40%);
+    font-size: 18px;
+    transition: transform 0.2s var(--cp-ease-spring), border-color 0.2s ease, opacity 0.2s ease;
+
+    &:hover {
+        transform: translateY(-2px);
+        border-color: var(--cp-cyan);
+    }
+
+    &[aria-pressed='false'] {
+        opacity: 0.6;
+    }
+}
+
+.quests {
+    position: relative;
+}
+
+.questPanel {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 10px);
+    width: 260px;
+    padding: 12px 14px 14px;
+    border-radius: 18px;
+    background: linear-gradient(170deg, #141a40, #0a0d24 70%);
+    box-shadow: 0 0 0 2px rgb(181 140 255 / 45%), 0 18px 40px rgb(0 0 0 / 55%);
+    animation: drop 0.3s var(--cp-ease-spring);
+}
+
+.questTitle {
+    margin-bottom: 10px;
+    font-family: var(--cp-display-font);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--cp-violet);
+}
+
+.questList {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.questRow {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 5px;
+    font-size: 13px;
+}
+
+.questRow em {
+    font-style: normal;
+    font-family: var(--cp-title-font);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--cp-emerald);
+}
+
+.questTrack {
+    display: block;
+    height: 6px;
+    border-radius: 999px;
+    background: rgb(255 255 255 / 8%);
+    overflow: hidden;
+}
+
+.questFill {
+    display: block;
+    height: 100%;
+    border-radius: 999px;
+    background: var(--cp-gradient-line);
+}
+
+.wallet {
+    flex-shrink: 0;
+}
+
+/* AccountDropdown positions itself as a fixed corner overlay by default. In the HUD it flows
+   inline with the other pieces instead. */
+.wallet :global(.account-dropdown) {
+    position: static;
+    gap: 8px;
+}
+
+@media (max-width: 760px) {
+    .streak small,
+    .who span {
+        display: none;
+    }
+}
+
+@media (max-width: 560px) {
+    /* Too narrow for the wallet beside everything else: it takes a second row of its own. */
+    .hud {
+        flex-wrap: wrap;
+        gap: 6px;
+        padding-inline: 10px;
+    }
+
+    .wallet {
+        display: flex;
+        justify-content: flex-end;
+        width: 100%;
+    }
+
+    .who,
+    .streak {
+        display: none;
+    }
+
+    .plate {
+        padding: 3px;
+    }
+}
+
+@keyframes drop {
+    from {
+        transform: translateY(-8px) scale(0.95);
+        opacity: 0;
+    }
+}

@@ -2,12 +2,12 @@ import { type IconTone } from '@components/ui/icon';
 import {
     BATTLE_PATH,
     BREED_PATH,
-    DASHBOARD_HOME,
     INVENTORY_PATH,
     LEADERBOARD_PATH,
     LEVELUP_PATH,
     MESSAGES_PATH,
     MARRIAGE_PATH,
+    PETS_PATH,
     RENAME_PATH,
     TEAM_BATTLE_PATH,
     TRAIN_PATH,
@@ -29,7 +29,7 @@ export type NavItem = {
     label: string;
     /** URL of the Claude-Design-generated nav icon (colored SVG, viewBox 48×48). */
     iconSrc: string;
-    /** Drives the active border-left / glow accent (see sidebar/index.css). */
+    /** The tile's accent colour in the dock's More sheet. */
     tone: IconTone;
     /** Route this item navigates to. Omitted for deferred (not-yet-built) items. */
     path?: string;
@@ -38,7 +38,7 @@ export type NavItem = {
      *
      * Nothing sets it today — Shard Forge was the last one and has been removed, and
      * Inventory now has a real route. Kept because the roadmap has more features queued
-     * behind it (crates, marketplace, quests) and the sidebar already knows how to draw one.
+     * behind it (crates, marketplace, quests) and the More sheet already knows how to draw one.
      */
     deferred?: boolean;
     /** Shown only while the backend accepts team battles, so a switched-off feature has no door. */
@@ -46,12 +46,13 @@ export type NavItem = {
 };
 
 /**
- * Left-nav actions, ordered to match the redesign mock. Icons are the
- * Claude-Design-generated SVGs (`src/assets/nav-icons/`). Every item is wired to a real
- * route; see `deferred` above for the disabled state, which nothing currently uses.
+ * Every page in the game, as tiles in the dock's More sheet, so a page the dock has no key
+ * for is still one tap away. Icons are the Claude-Design-generated SVGs
+ * (`src/assets/nav-icons/`). Every item is wired to a real route; see `deferred` above for
+ * the disabled state, which nothing currently uses.
  */
 export const NAV_ITEMS: readonly NavItem[] = [
-    { id: 'gallery', label: 'Gallery', iconSrc: galleryIcon, tone: 'cyan', path: DASHBOARD_HOME },
+    { id: 'gallery', label: 'My Pets', iconSrc: galleryIcon, tone: 'cyan', path: PETS_PATH },
     { id: 'battle', label: 'Battle Arena', iconSrc: battleIcon, tone: 'magenta', path: BATTLE_PATH },
     {
         id: 'team-battle',

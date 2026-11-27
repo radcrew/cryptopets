@@ -16,7 +16,7 @@ const SILENT: SoundContextValue = { muted: true, toggleMuted: () => {}, play: ()
 
 const SoundContext = createContext<SoundContextValue>(SILENT);
 
-/** A stated preference, so it survives a reload, like the sidebar pin. */
+/** A stated preference, so it survives a reload. */
 const STORAGE_KEY = 'cp.sound.muted';
 
 const readStored = (): boolean => {

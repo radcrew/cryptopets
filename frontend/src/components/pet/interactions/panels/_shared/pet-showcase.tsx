@@ -4,7 +4,7 @@ import styles from './pet-showcase.module.css';
 
 export type ShowcaseAccent = 'violet' | 'cyan' | 'amber';
 
-/** Matches the `Tones` palette, so a panel's hero agrees with its sidebar entry. */
+/** Matches the `Tones` palette, so a panel's hero agrees with its tile in the More sheet. */
 const ACCENT_RGB: Record<ShowcaseAccent, string> = {
     violet: '181 140 255',
     cyan: '125 214 255',

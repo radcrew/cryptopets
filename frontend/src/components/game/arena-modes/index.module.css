@@ -1,0 +1,36 @@
+/* CSS Module — class names are local; reference via `import styles from './index.module.css'`. */
+.modes {
+    display: flex;
+    align-self: center;
+    gap: 4px;
+    flex-shrink: 0;
+    margin-bottom: 14px;
+    padding: 4px;
+    border-radius: 999px;
+    background: rgb(8 10 28 / 88%);
+    box-shadow: inset 0 0 0 1px rgb(255 123 203 / 45%), 0 8px 20px rgb(0 0 0 / 40%);
+}
+
+.mode {
+    padding: 8px 18px;
+    border: 0;
+    border-radius: 999px;
+    background: none;
+    color: var(--cp-text-muted-dark);
+    font-family: var(--cp-display-font);
+    font-size: 13px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    white-space: nowrap;
+
+    &:hover {
+        color: #fff;
+        box-shadow: none;
+    }
+}
+
+.here {
+    color: #fff;
+    background: linear-gradient(180deg, #ff9ad8, #d6409c);
+    box-shadow: 0 0 16px rgb(255 123 203 / 50%);
+}

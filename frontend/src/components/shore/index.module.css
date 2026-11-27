@@ -2,7 +2,7 @@
    Layers, back to front: sky, the Pulse, sea, sand, places, pets. The horizon sits at
    56% from the top, which the places in parts/places.module.css are anchored to. */
 /* A size container, so the places and pets scale with the scene rather than the window:
-   with the sidebar pinned, the scene is far narrower than the viewport. */
+   a scene is not always as wide as the viewport. */
 .shore {
     container: shore / inline-size;
     position: relative;
@@ -12,6 +12,21 @@
     margin-bottom: var(--cp-spacing-md);
     border-radius: 24px;
     box-shadow: 0 0 0 1px rgb(181 140 255 / 25%), 0 20px 50px rgb(0 0 0 / 45%);
+}
+
+/* The home screen: edge to edge under the HUD and the dock, places raised to clear the dock. */
+.full {
+    --place-floor: 35%;
+    flex: 1;
+    height: auto;
+    min-height: 0;
+    margin: 0;
+    border-radius: 0;
+    box-shadow: none;
+}
+
+.full .pulse {
+    top: 9%;
 }
 
 .sky {

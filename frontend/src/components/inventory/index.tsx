@@ -159,7 +159,7 @@ const Inventory: React.FC = () => {
      * Equipment lives here rather than on its own route. Escrow takes an equipped item out of
      * the wallet, so it leaves the bag, and with `/equip` reachable only from an item in the
      * bag a player who equipped everything had no way back to the screen that takes it off.
-     * Hanging it off Inventory, which is always in the sidebar, removes that trap.
+     * Hanging it off Inventory, which always has a key on the dock, removes that trap.
      *
      * One state rather than a tab plus a separate pet id: the pet only means anything while
      * the equipment half is showing, and as its own value it was never cleared — so a later

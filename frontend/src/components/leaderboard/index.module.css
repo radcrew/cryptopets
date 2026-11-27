@@ -205,6 +205,8 @@
 /* Game dressing: the cards stand like plinths with a solid step under them, and rise in on
    load, second and third either side of the leader. */
 .podiumCard {
+    /* Visible, so the medal straddling the top edge and the crown above it are not cut off. */
+    overflow: visible;
     border-radius: 18px 18px 8px 8px;
     box-shadow: 0 8px 0 rgb(from var(--medal) r g b / 26%), 0 18px 30px rgb(0 0 0 / 45%);
     transform-origin: bottom;

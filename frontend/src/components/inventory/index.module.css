@@ -9,7 +9,7 @@
 
    Rarity is the one colour that carries meaning, and it comes from the same
    `getRarityColor` the pet cards use, exposed per card as `--rarity`. Amber is the page's
-   own accent, matching the sidebar entry, and never competes with a rarity: the accent
+   own accent, matching its tile in the dock's More sheet, and never competes with a rarity: the accent
    belongs to the chrome, the rarity to the contents. */
 
 /* Ends at the bottom of the window rather than at the bottom of its rows, so a long bag

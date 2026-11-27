@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import InteractionStandalone from '@components/pet/interactions/standalone';
 import TeamPanel from '@components/pet/interactions/panels/team';
 import NeonButton from '@components/ui/neon-button';
+import ArenaModes from '@components/game/arena-modes';
 import { BATTLE_PATH } from '@constants/interactionRoutes';
 import { useBattleConfig } from '@shared/core';
 
@@ -11,9 +12,9 @@ import { useBattleConfig } from '@shared/core';
  * your own (docs/plan-team-battles-3v3.md).
  *
  * Its own route rather than a tab of `/battle`, because it is its own activity: a squad to
- * build and place, and a defence team to keep, neither of which a duel has. The sidebar entry
- * appears only while the backend accepts team battles; this page says so itself when reached
- * by address while they are switched off.
+ * build and place, and a defence team to keep, neither of which a duel has. Its doors (the
+ * arena's mode switch, the Shore's camp, the More sheet) appear only while the backend accepts
+ * team battles; this page says so itself when reached by address while they are switched off.
  */
 const TeamBattlePage: React.FC = () => {
     const navigate = useNavigate();
@@ -21,6 +22,7 @@ const TeamBattlePage: React.FC = () => {
 
     return (
         <InteractionStandalone action="teambattle" minPets={1} showWhileLoading>
+            <ArenaModes />
             {config?.team?.enabled ? (
                 <TeamPanel />
             ) : isLoading ? (

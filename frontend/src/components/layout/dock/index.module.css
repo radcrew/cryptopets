@@ -1,0 +1,296 @@
+/* CSS Module — class names are local; reference via `import styles from './index.module.css'`.
+   The keys are glossy tiles with a solid depth edge that press down, like the prototype's. */
+.dock {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 0 16px calc(env(safe-area-inset-bottom, 0px) + 16px);
+    pointer-events: none;
+}
+
+.dock > * {
+    pointer-events: auto;
+}
+
+.keys {
+    display: flex;
+    align-items: flex-end;
+    gap: clamp(8px, 1.4vw, 16px);
+}
+
+.key {
+    --tile: linear-gradient(160deg, #8fd8ff, #2f63c9);
+    --tile-depth: #132f6e;
+    --tile-edge: #7dd6ff;
+
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: clamp(56px, 7.4vmin, 76px);
+    aspect-ratio: 1;
+    padding: 0;
+    border: 0;
+    border-radius: 20px;
+    background: var(--tile);
+    box-shadow: inset 0 2px 0 rgb(255 255 255 / 40%), inset 0 -5px 0 rgb(0 0 0 / 22%),
+        0 6px 0 var(--tile-depth), 0 14px 22px rgb(0 0 0 / 50%);
+    transition: transform 0.15s var(--cp-ease-spring), box-shadow 0.15s ease, filter 0.2s ease;
+
+    &::before {
+        content: '';
+        position: absolute;
+        left: 7%;
+        right: 7%;
+        top: 5%;
+        height: 44%;
+        border-radius: 14px 14px 50% 50% / 14px 14px 30% 30%;
+        background: linear-gradient(180deg, rgb(255 255 255 / 42%), rgb(255 255 255 / 0%));
+        pointer-events: none;
+    }
+
+    & svg {
+        position: relative;
+        width: 64%;
+        height: 64%;
+        margin-top: -10%;
+        filter: drop-shadow(0 3px 1px rgb(0 0 0 / 40%));
+        transition: transform 0.3s var(--cp-ease-spring);
+    }
+
+    &:hover {
+        transform: translateY(-4px);
+        border-color: transparent;
+        box-shadow: inset 0 2px 0 rgb(255 255 255 / 40%), inset 0 -5px 0 rgb(0 0 0 / 22%),
+            0 8px 0 var(--tile-depth), 0 16px 24px rgb(0 0 0 / 50%);
+    }
+
+    &:hover svg {
+        transform: translateY(-2px) rotate(-7deg) scale(1.1);
+    }
+
+    &:active {
+        transform: translateY(5px);
+        box-shadow: inset 0 2px 0 rgb(255 255 255 / 40%), inset 0 -3px 0 rgb(0 0 0 / 22%),
+            0 1px 0 var(--tile-depth), 0 4px 10px rgb(0 0 0 / 50%);
+    }
+
+    &:focus-visible {
+        outline: 3px solid #fff;
+        outline-offset: 4px;
+    }
+}
+
+/* The page you are on: lifted and glowing. */
+.key.here {
+    transform: translateY(-6px);
+    box-shadow: inset 0 2px 0 rgb(255 255 255 / 40%), inset 0 -5px 0 rgb(0 0 0 / 22%),
+        0 8px 0 var(--tile-depth), 0 0 26px var(--tile-edge), 0 16px 24px rgb(0 0 0 / 50%);
+}
+
+.label {
+    position: absolute;
+    left: 50%;
+    bottom: -9px;
+    transform: translateX(-50%);
+    padding: 2px 9px;
+    border-radius: 999px;
+    border: 1.5px solid var(--tile-edge);
+    background: #120a26;
+    box-shadow: 0 3px 8px rgb(0 0 0 / 50%);
+    font-family: var(--cp-display-font);
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    color: #fff;
+}
+
+.pets {
+    --tile: linear-gradient(160deg, #ffb3e3, #c0378a);
+    --tile-depth: #5e1342;
+    --tile-edge: #ff7bcb;
+}
+
+.nest {
+    --tile: linear-gradient(160deg, #ffd88a, #c9772a);
+    --tile-depth: #6e3a0c;
+    --tile-edge: #ffcf70;
+}
+
+.battle {
+    --tile: linear-gradient(160deg, #ff9ad8, #8a3fd9);
+    --tile-depth: #3a1050;
+    --tile-edge: #ff7bcb;
+
+    width: clamp(70px, 9.6vmin, 98px);
+    border-radius: 26px;
+}
+
+/* A slow halo, so the way into a fight is the thing on screen that is always alive. */
+.battle::after {
+    content: '';
+    position: absolute;
+    inset: -7px;
+    border-radius: 30px;
+    border: 2px solid rgb(255 123 203 / 60%);
+    animation: halo 1.8s ease-out infinite;
+    pointer-events: none;
+}
+
+.bag {
+    --tile: linear-gradient(160deg, #3fe0b0, #0d7a62);
+    --tile-depth: #064a3a;
+    --tile-edge: #3fe0b0;
+}
+
+.ranks {
+    --tile: linear-gradient(160deg, #ffe78a, #d98f12);
+    --tile-depth: #6e4205;
+    --tile-edge: #ffd25a;
+}
+
+.more {
+    --tile: linear-gradient(160deg, #5a6aa8, #262d5e);
+    --tile-depth: #10142e;
+    --tile-edge: #a6b4ff;
+}
+
+/* Every page, as tiles above the dock. */
+.sheet {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+    width: min(560px, 100%);
+    padding: 14px;
+    border-radius: 22px;
+    background: linear-gradient(170deg, rgb(20 26 64 / 96%), rgb(10 13 36 / 97%) 70%);
+    box-shadow: 0 0 0 2px rgb(181 140 255 / 45%), 0 0 40px rgb(181 140 255 / 15%), 0 24px 60px rgb(0 0 0 / 60%);
+    animation: rise 0.3s var(--cp-ease-spring);
+}
+
+.place {
+    --tone: var(--cp-cyan);
+
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 6px;
+    border-radius: 16px;
+    border: 1px solid transparent;
+    background: rgb(255 255 255 / 4%);
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.2;
+    text-align: center;
+    transition: transform 0.2s var(--cp-ease-spring), background 0.2s ease, border-color 0.2s ease;
+
+    &:hover:not(:disabled) {
+        transform: translateY(-3px);
+        background: color-mix(in srgb, var(--tone) 14%, transparent);
+        border-color: color-mix(in srgb, var(--tone) 50%, transparent);
+        box-shadow: none;
+    }
+
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+}
+
+.place.here {
+    border-color: var(--tone);
+    background: color-mix(in srgb, var(--tone) 18%, transparent);
+}
+
+.placeIcon {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 13px;
+    font-size: 24px;
+    background: linear-gradient(160deg, color-mix(in srgb, var(--tone) 55%, transparent), color-mix(in srgb, var(--tone) 15%, transparent));
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 30%), 0 3px 0 rgb(0 0 0 / 45%);
+}
+
+.soon {
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--cp-text-light-dark);
+}
+
+.cyan {
+    --tone: var(--cp-cyan);
+}
+
+.violet {
+    --tone: var(--cp-violet);
+}
+
+.magenta {
+    --tone: var(--cp-magenta);
+}
+
+.amber {
+    --tone: var(--cp-amber);
+}
+
+.emerald {
+    --tone: var(--cp-emerald);
+}
+
+@media (max-width: 560px) {
+    .dock {
+        padding-inline: 8px;
+    }
+
+    .keys {
+        gap: 6px;
+    }
+
+    .key {
+        width: 50px;
+        border-radius: 15px;
+    }
+
+    .battle {
+        width: 64px;
+        border-radius: 20px;
+    }
+
+    .label {
+        font-size: 8.5px;
+        padding: 1px 6px;
+    }
+
+    .sheet {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@keyframes halo {
+    from {
+        transform: scale(0.95);
+        opacity: 1;
+    }
+    to {
+        transform: scale(1.18);
+        opacity: 0;
+    }
+}
+
+@keyframes rise {
+    from {
+        transform: translateY(12px) scale(0.96);
+        opacity: 0;
+    }
+}

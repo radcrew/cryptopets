@@ -20,7 +20,7 @@ type Place = {
     opens: string;
     path: string;
     Art: React.FC;
-    /** Shown only while the backend accepts team battles, as in the sidebar. */
+    /** Shown only while the backend accepts team battles, as in the More sheet. */
     requiresTeamBattles?: boolean;
 };
 

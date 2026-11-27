@@ -4,7 +4,7 @@
 
 .dashboard-panel.pet-interactions {
     --zi-card-bg: linear-gradient(180deg, rgb(10 16 32 / 92%), rgb(6 10 22 / 94%));
-    --zi-surface-bg: rgb(5 13 30 / 78%);
+    --zi-surface-bg: rgb(5 13 30 / 55%);
     --zi-text: #f6f3ff;
     --zi-text-muted: rgb(195 210 255 / 70%);
     --zi-border: var(--cp-border-soft);

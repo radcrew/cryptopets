@@ -1,13 +1,12 @@
 /* CSS Module — class names are local; reference via `import styles from './index.module.css'`.
-   Ambient shell background: particle canvas + grid overlay. Fills its positioned
-   parent, sits behind content, never captures pointer. */
+   Ambient particles drifting up over the scene. Transparent, so the scene shows through;
+   fills its positioned parent, sits behind content, never captures pointer. */
 .ambient {
     position: absolute;
     inset: 0;
     z-index: 0;
     overflow: hidden;
     pointer-events: none;
-    background: var(--cp-base-bg);
 }
 
 .canvas {
@@ -18,13 +17,3 @@
     display: block;
 }
 
-.grid {
-    position: absolute;
-    inset: 0;
-    background: repeating-linear-gradient(
-            0deg,
-            var(--cp-grid-line) 0 1px,
-            transparent 1px 48px
-        ),
-        repeating-linear-gradient(90deg, var(--cp-grid-line) 0 1px, transparent 1px 48px);
-}

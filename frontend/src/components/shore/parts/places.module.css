@@ -67,7 +67,7 @@
 .nest {
     --tag: var(--cp-amber);
     left: 17%;
-    bottom: 31%;
+    bottom: var(--place-floor, 31%);
     width: clamp(66px, 8cqw, 100px);
     aspect-ratio: 120 / 110;
 }
@@ -75,7 +75,7 @@
 .training {
     --tag: var(--cp-cyan);
     left: 31%;
-    bottom: 31%;
+    bottom: var(--place-floor, 31%);
     width: clamp(58px, 7cqw, 88px);
     aspect-ratio: 120 / 130;
 }
@@ -83,7 +83,7 @@
 .bag {
     --tag: var(--cp-emerald);
     left: 57%;
-    bottom: 31%;
+    bottom: var(--place-floor, 31%);
     width: clamp(84px, 9cqw, 120px);
     aspect-ratio: 150 / 124;
 }
@@ -91,7 +91,7 @@
 .team {
     --tag: var(--cp-violet);
     right: 21%;
-    bottom: 31%;
+    bottom: var(--place-floor, 31%);
     width: clamp(92px, 10cqw, 136px);
     aspect-ratio: 170 / 124;
 }
@@ -99,12 +99,12 @@
 .arena {
     --tag: var(--cp-magenta);
     right: 2%;
-    bottom: 31%;
+    bottom: var(--place-floor, 31%);
     width: clamp(136px, 17cqw, 220px);
     aspect-ratio: 220 / 150;
 }
 
-/* Too many doors for a narrow beach: these three stay one click away in the sidebar. */
+/* Too many doors for a narrow beach: these three stay one tap away in the dock's More sheet. */
 @container shore (max-width: 820px) {
     .training,
     .bag,

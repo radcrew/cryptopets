@@ -60,8 +60,11 @@ export const STANDALONE_INTERACTION_HEADERS: Record<
     teambattle: { Icon: BattleIcon, label: 'Team Battle' },
 };
 
-/** Dashboard home (idle gallery). */
+/** Home: the Shore, the scene every feature is a door from. */
 export const DASHBOARD_HOME = '/main';
+
+/** The player's pet collection (the gallery). */
+export const PETS_PATH = '/pets';
 
 /** Top-level interaction routes (e.g. /breed) — interaction UI only. */
 export const BREED_PATH = '/breed';

@@ -46,7 +46,7 @@ const DashboardPanel: React.FC<DashboardPanelProps> = ({
                             onClick={back}
                             aria-label="Back"
                         >
-                            ← Back
+                            ‹ Back
                         </button>
                     ) : null}
                     <div className="intro">
