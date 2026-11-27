@@ -63,17 +63,10 @@ beforeEach(() => {
     });
 });
 
-/**
- * Renders the panel with a pet already chosen, which is what the slot rows require.
- *
- * `PetSelect` is a trigger plus a portalled listbox rather than a native select, so the
- * options exist only once it is open and `selectOptions` does not apply. Same helper shape
- * the rename and marriage panel tests use.
- */
+/** Renders the panel with Rex chosen from the tray of portraits, which the slot rows require. */
 async function renderWithPet() {
     render(<EquipPanel />);
-    await userEvent.click(screen.getByRole('combobox'));
-    await userEvent.click(await screen.findByRole('option', { name: /Rex/ }));
+    await userEvent.click(screen.getByRole('radio', { name: /Rex/ }));
 }
 
 describe('slots', () => {

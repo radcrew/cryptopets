@@ -189,86 +189,9 @@
 
 /* =============================================================================
    Per-view theming for standalone interaction screens (battle, breed, …).
-   `interaction-standalone--<action>` sets a wash + accent; the shared chrome
-   below left-aligns the title bar to match the redesign mock.
+   `interaction-standalone--<action>` sets each page's accent, which trims its
+   banner and tints its tray.
    ============================================================================= */
-/* Placeholder for the pet slot before a pet is chosen.
- *
- * Built from the filled state's own classes in each panel, so the empty and filled
- * cards are the same height by construction. Only the bars and the glyph are new.
- *
- * It occupies exactly the space the real pet block will, which is the point: the slot is
- * never empty, so the panel does not reshape when a pet is picked and nothing around it
- * moves. That also lets the two-column rule below apply unconditionally rather than
- * switching layouts on selection.
- */
-.pet-slot-glyph {
-    font-weight: 700;
-    color: rgb(195 210 255 / 45%);
-}
-
-.skeleton-bar {
-    /* Inline-block so it can sit inside the same text rows the filled state uses and
-       still take a width and height. */
-    display: inline-block;
-    vertical-align: middle;
-    height: 12px;
-    border-radius: 999px;
-    background: linear-gradient(
-        90deg,
-        rgb(125 214 255 / 8%),
-        rgb(125 214 255 / 18%),
-        rgb(125 214 255 / 8%)
-    );
-    background-size: 200% 100%;
-    animation: cp-skeleton 1.6s ease-in-out infinite;
-}
-
-/* Fixed widths, not percentages: these sit inside shrink-to-fit rows (the showcase is a
-   centred flex column), where a percentage resolves against a zero-width parent and the
-   bar disappears. */
-.skeleton-bar.wide {
-    width: 132px;
-}
-
-.skeleton-bar.narrow {
-    width: 84px;
-}
-
-.skeleton-bar.full {
-    width: 100%;
-    min-width: 120px;
-}
-
-.pet-slot-hint {
-    margin: 4px 0 0;
-    font-size: 12px;
-    color: rgb(195 210 255 / 55%);
-}
-
-@keyframes cp-skeleton {
-    0% {
-        background-position: 200% 0;
-    }
-    100% {
-        background-position: -200% 0;
-    }
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .skeleton-bar {
-        animation: none;
-    }
-}
-
-/* Breed lays its own tabs and parent columns out, so it takes only the pinned action:
-   on the spouse tab the button lives here rather than in the DNA centre. */
-.dashboard-panel.pet-interactions.interaction-standalone--breed .action-controls {
-    margin-top: auto;
-    padding-top: 18px;
-    border-top: 1px solid var(--zi-border);
-}
-
 /* ==========================================================================
    Single-pet action screens (level up, train, rename): the pet on its stage, the
    roster as a tray beneath it, and the action as one big key under that.

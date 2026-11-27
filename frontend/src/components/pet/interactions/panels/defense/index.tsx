@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
+import clsx from 'clsx';
 import NeonButton from '@components/ui/neon-button';
+import PetArt from '@components/pet/pet-art';
 import {
+    getRarityColor,
     useChainCapabilities,
     useDefenseAuthorization,
     useBattleSession,
@@ -77,7 +80,7 @@ const DefensePanel: React.FC<DefensePanelProps> = ({ isStandaloneView = true }) 
 
     return (
         <>
-            <div className="interface">
+            <div className={clsx('interface', styles.post)}>
                 {!isStandaloneView && (
                     <>
                         <h4>🛡️ Allow Challenges</h4>
@@ -85,33 +88,120 @@ const DefensePanel: React.FC<DefensePanelProps> = ({ isStandaloneView = true }) 
                     </>
                 )}
 
-                {/* Above the controls, because it changes what the buttons mean. Signing
-                    again when a grant went stale is a repair, not a duplicate, and a player
-                    who cannot see the difference reads the same button two ways. */}
-                {status.kind === 'stale' && (
-                    <p className={styles.stale} role="status">
-                        The battle rules changed since you allowed challenges, so your consent
-                        no longer covers anything and your pets cannot be challenged. Allow
-                        challenges again to restore it.
-                    </p>
+                {/* The gate's sign, above the controls because it changes what they mean.
+                    Signing again when a grant went stale is a repair, not a duplicate, and a
+                    player who cannot see the difference reads the same key two ways. */}
+                {status.kind !== 'unknown' && (
+                    <div className={clsx(styles.gate, styles[status.kind])} role="status">
+                        <span className={styles.shield} aria-hidden>
+                            {status.kind === 'active' ? '🛡️' : status.kind === 'stale' ? '⚠️' : '🔒'}
+                        </span>
+                        <span className={styles.gateText}>
+                            <b>
+                                {status.kind === 'active'
+                                    ? 'The gate is open'
+                                    : status.kind === 'stale'
+                                      ? 'The rules changed'
+                                      : 'The gate is closed'}
+                            </b>
+                            <small>
+                                {status.kind === 'active'
+                                    ? 'Your pets can be challenged under the current rules.'
+                                    : status.kind === 'stale'
+                                      ? 'The battle rules changed since you allowed challenges, so your consent no longer covers anything and your pets cannot be challenged. Allow challenges again to restore it.'
+                                      : 'You have not allowed challenges, so nobody can battle your pets.'}
+                            </small>
+                        </span>
+                    </div>
                 )}
-                {status.kind === 'active' && (
-                    <p className={styles.active} role="status">
-                        Your pets can be challenged under the current rules.
-                    </p>
+
+                {/* Who may be challenged: every pet, or the ones tapped below. */}
+                <div className={styles.choice} role="radiogroup" aria-label="Which pets can be challenged">
+                    <button
+                        type="button"
+                        role="radio"
+                        aria-checked={allPets}
+                        className={clsx(styles.choiceKey, allPets && styles.choiceOn)}
+                        onClick={() => setAllPets(true)}
+                    >
+                        <b>All my pets</b>
+                        <small>Including ones I get later</small>
+                    </button>
+                    <button
+                        type="button"
+                        role="radio"
+                        aria-checked={!allPets}
+                        className={clsx(styles.choiceKey, !allPets && styles.choiceOn)}
+                        onClick={() => setAllPets(false)}
+                    >
+                        <b>Chosen pets</b>
+                        <small>Only the ones I tap below</small>
+                    </button>
+                </div>
+
+                {!allPets && (
+                    <ul className={styles.guards} aria-label="Pets that can be challenged">
+                        {pets.map((pet) => {
+                            const on = selected.includes(pet.id);
+                            return (
+                                <li key={pet.id}>
+                                    <button
+                                        type="button"
+                                        className={clsx(styles.guard, on && styles.guardOn)}
+                                        style={{ '--rc': getRarityColor(pet.rarity) } as React.CSSProperties}
+                                        aria-pressed={on}
+                                        onClick={() => toggle(pet.id)}
+                                    >
+                                        <span className={styles.guardFace}>
+                                            <PetArt pet={pet} fill />
+                                            {on && (
+                                                <span className={styles.guardTick} aria-hidden>
+                                                    ✓
+                                                </span>
+                                            )}
+                                        </span>
+                                        <span className={styles.guardName}>{pet.name}</span>
+                                        <small>Level {pet.level}</small>
+                                    </button>
+                                </li>
+                            );
+                        })}
+                        {pets.length === 0 && (
+                            <li className={styles.empty}>{petsLoading ? 'Loading your pets…' : 'No pets to authorize yet.'}</li>
+                        )}
+                    </ul>
                 )}
-                {status.kind === 'none' && (
-                    <p className={styles.inactive} role="status">
-                        You have not allowed challenges, so nobody can battle your pets.
-                    </p>
-                )}
+
+                <p className={styles.terms}>
+                    Valid 30 days, up to 50 battles per day. You can withdraw at any time, and a
+                    rules change ends it automatically.
+                </p>
+
+                <div className="action-controls">
+                    <NeonButton
+                        tone="emerald"
+                        onClick={handleGrant}
+                        disabled={isPending || nothingChosen || !isConnected}
+                    >
+                        {isPending ? 'Signing...' : 'Allow Challenges'}
+                    </NeonButton>
+                    <NeonButton tone="magenta" onClick={handleRevoke} disabled={isPending || !isConnected}>
+                        Withdraw
+                    </NeonButton>
+                </div>
+
+                {error && <p className={styles.error}>{error.message}</p>}
 
                 {/* Delegated battle signing (§D). Separate from consent above, and the two
                     are easy to confuse: that one lets *others* challenge you, this one
                     lets you start battles without a wallet prompt each time. */}
                 {session.supported && (
                     <div className={styles.session}>
+                        <span className={styles.sessionIcon} aria-hidden>
+                            🗝️
+                        </span>
                         <span className={styles.sessionLabel}>
+                            <b>Battle session</b>
                             {session.key
                                 ? 'Battles are signed for this tab, so no wallet prompt each time.'
                                 : 'Approve a battle session to stop confirming every fight in your wallet.'}
@@ -136,60 +226,6 @@ const DefensePanel: React.FC<DefensePanelProps> = ({ isStandaloneView = true }) 
                     </div>
                 )}
                 {session.error && <p className={styles.error}>{session.error.message}</p>}
-
-                <div className="picker">
-                    <div className="field">
-                        <label htmlFor="defense-all">
-                            <input
-                                id="defense-all"
-                                type="checkbox"
-                                checked={allPets}
-                                onChange={(e) => setAllPets(e.target.checked)}
-                            />
-                            {' '}All my pets, including ones I get later
-                        </label>
-                    </div>
-
-                    {!allPets && (
-                        <div className={styles.petList}>
-                            {pets.map((pet) => (
-                                <label key={pet.id} className={styles.petRow}>
-                                    <input
-                                        type="checkbox"
-                                        checked={selected.includes(pet.id)}
-                                        onChange={() => toggle(pet.id)}
-                                    />
-                                    {' '}{pet.name} (Level {pet.level})
-                                </label>
-                            ))}
-                            {pets.length === 0 && (
-                                <p className={styles.empty}>
-                                    {petsLoading ? 'Loading your pets…' : 'No pets to authorize yet.'}
-                                </p>
-                            )}
-                        </div>
-                    )}
-                </div>
-
-                <p className={styles.terms}>
-                    Valid 30 days, up to 50 battles per day. You can withdraw at any time, and a
-                    rules change ends it automatically.
-                </p>
-
-                <div className="action-controls">
-                    <NeonButton
-                        tone="emerald"
-                        onClick={handleGrant}
-                        disabled={isPending || nothingChosen || !isConnected}
-                    >
-                        {isPending ? 'Signing...' : 'Allow Challenges'}
-                    </NeonButton>
-                    <NeonButton tone="magenta" onClick={handleRevoke} disabled={isPending || !isConnected}>
-                        Withdraw
-                    </NeonButton>
-                </div>
-
-                {error && <p className={styles.error}>{error.message}</p>}
             </div>
 
             {success && (

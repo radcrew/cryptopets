@@ -1,88 +1,87 @@
 /* CSS Module — class names are local; reference via `import styles from './index.module.css'`.
-   Equip panel: one row per slot, below the shared ring-avatar hero. Shared chrome
-   (.interface/.picker/.field) stays global in interactions.css and is referenced as
-   plain strings from the tsx.
+   Equip panel: the pet's three gear slots on the card beside its pedestal, like a character
+   screen. Shared chrome (.interface/.picker/.field) stays global in interactions.css and is
+   referenced as plain strings from the tsx.
 
    All three slots are always drawn, empty or not, so the rows form a fixed shape a player
    can scan rather than a list that grows as they gear up. An empty slot is information;
    a missing one reads as a pet that has no slots. */
 
-.petName {
-    font-family: var(--cp-title-font);
-    font-size: 18px;
-    font-weight: 800;
-    letter-spacing: 1.5px;
-    color: var(--cp-amber, #fbbf24);
-    text-shadow: 0 0 18px rgb(251 191 36 / 55%), 0 0 36px rgb(251 191 36 / 25%);
-    line-height: 1.2;
-}
-
-.sub {
-    font-size: 11px;
-    color: rgb(195 210 255 / 45%);
-}
-
 .slots {
     display: flex;
     flex-direction: column;
     gap: 10px;
-    margin: 16px 0 0;
+    margin: 0;
     padding: 0;
     list-style: none;
 }
 
-/* Label, contents, action — in that order and at fixed widths, so the three rows line up
-   as a column rather than each sizing itself to its own item name. */
+/* Label, contents, action: in that order and at fixed widths, so the three rows line up as
+   a column rather than each sizing itself to its own item name. */
 .slot {
     display: grid;
-    grid-template-columns: 72px 1fr auto;
+    grid-template-columns: 70px minmax(0, 1fr) auto;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
+    padding: 8px;
+    border-radius: 14px;
+    background: rgb(0 0 0 / 25%);
 }
 
+/* The slot's name on a small amber tag. */
 .slotLabel {
-    font-size: 11px;
-    letter-spacing: 0.08em;
+    justify-self: start;
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: rgb(255 207 112 / 16%);
+    font: 400 10px var(--cp-display-font);
+    letter-spacing: 0.06em;
     text-transform: uppercase;
-    color: rgb(195 210 255 / 55%);
+    color: var(--cp-gold);
 }
 
 .equipped {
     display: flex;
     flex-direction: column;
     gap: 1px;
-    padding: 6px 10px;
-    border-radius: 8px;
-    /* The rarity is a left edge here for the same reason it is on the bag's cards: a full
-       border on five tiers turns a stack of rows into a colour chart. */
-    border-left: 3px solid var(--rarity, rgb(255 255 255 / 20%));
-    background: rgb(255 255 255 / 4%);
     min-width: 0;
+    padding: 6px 10px;
+    border-radius: 10px;
+    /* The rarity rings the worn item, the way it rings a pet. */
+    background: color-mix(in srgb, var(--rarity, #fff) 12%, transparent);
+    box-shadow: inset 0 0 0 2px var(--rarity, rgb(255 255 255 / 20%));
 }
 
 .equippedName {
-    font-size: 13px;
-    font-weight: 600;
     overflow: hidden;
+    font-size: 13px;
+    font-weight: 700;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
 .equippedEffect {
     font-size: 11px;
-    color: rgb(110 231 183 / 85%);
+    color: rgb(110 231 183 / 90%);
 }
 
 .select {
     width: 100%;
     min-width: 0;
-    padding: 7px 10px;
-    border-radius: 8px;
-    border: 1px solid rgb(255 255 255 / 15%);
-    background: rgb(0 0 0 / 30%);
+    box-sizing: border-box;
+    padding: 8px 12px;
+    border: 0;
+    border-radius: 999px;
+    background-color: rgb(4 8 24 / 85%);
+    box-shadow: inset 0 0 0 2px rgb(255 207 112 / 30%);
     color: inherit;
     font: inherit;
     font-size: 13px;
+}
+
+.select:focus {
+    outline: none;
+    box-shadow: inset 0 0 0 2px var(--cp-gold), 0 0 12px rgb(255 207 112 / 30%);
 }
 
 .select:disabled {
@@ -90,7 +89,7 @@
 }
 
 .note {
-    margin: 10px 0 0;
-    font-size: 12px;
-    color: rgb(195 210 255 / 50%);
+    margin: 0;
+    font-size: 12.5px;
+    color: #c9cbe0;
 }

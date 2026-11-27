@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
     describeItemEffect,
-    getPetClass,
     getRarityColor,
     SLOT,
     useChainCapabilities,
@@ -15,12 +14,11 @@ import {
 import TransactionStatus from '@components/common/transaction-status';
 import NeonButton from '@components/ui/neon-button';
 import Icon, { ShieldIcon } from '@components/ui/icon';
-import PetArt from '@components/pet/pet-art';
-import PetSelect from '@components/ui/pet-select';
+import PetPicker from '@components/ui/pet-picker';
+import PetStage, { StageKicker } from '@components/game/pet-stage';
 import { Tones } from '@constants/tones';
 import { useNotifyError } from '@hooks/useNotifyError';
 import { useTxErrorToast } from '@hooks/useTxErrorToast';
-import PetShowcase from '../_shared/pet-showcase';
 import styles from './index.module.css';
 
 /**
@@ -133,125 +131,114 @@ const EquipPanel: React.FC<EquipPanelProps> = ({ initialPetId = null }) => {
                 </h4>
                 <p>Fit your pet with gear. Stats apply in backend battles.</p>
 
-                <div className="interaction-visual">
-                    {selectedPetObj ? (
-                        <PetShowcase avatar={<PetArt pet={selectedPetObj} />} accent="amber">
-                            <div className={styles.petName}>{selectedPetObj.name}</div>
-                            <div className={styles.sub}>
-                                {getPetClass(selectedPetObj.dna)} · Lv.{selectedPetObj.level}
-                            </div>
-                        </PetShowcase>
-                    ) : (
-                        <PetShowcase avatar={<span className="pet-slot-glyph">?</span>} accent="amber">
-                            <div className={styles.petName}>
-                                <span className="skeleton-bar wide" />
-                            </div>
-                            <div className={styles.sub}>
-                                <span className="skeleton-bar narrow" />
-                            </div>
-                        </PetShowcase>
+                {/* The pet on its pedestal, its three gear slots beside it like a character
+                    screen. Always drawn, with a "?" before a pet is chosen, so nothing moves. */}
+                <PetStage
+                    className="interaction-visual"
+                    pet={selectedPetObj}
+                    tone="amber"
+                    emptyHint="Pick a pet from your roster below."
+                >
+                    <StageKicker>Gear</StageKicker>
+                    {!canEquip && (
+                        // Said out loud rather than shown as a dead control: on Solana there is
+                        // no item contract yet, and on EVM the address may simply be unset.
+                        <p className={styles.note}>Equipping is not available on this deployment yet.</p>
                     )}
-                </div>
+                    {canEquip && !selectedPet && <p className={styles.note}>Choose a pet to see what it wears.</p>}
+                    {selectedPet && canEquip && (
+                        <ul className={styles.slots}>
+                            {SLOTS.map(({ index, label }) => {
+                                const equipped = bySlot.get(index);
+                                const options = bySlotChoices.get(index) ?? [];
+                                return (
+                                    <li key={index} className={styles.slot}>
+                                        <span className={styles.slotLabel}>{label}</span>
+
+                                        {equipped ? (
+                                            <>
+                                                <span
+                                                    className={styles.equipped}
+                                                    style={
+                                                        {
+                                                            '--rarity': getRarityColor(equipped.item.rarity),
+                                                        } as React.CSSProperties
+                                                    }
+                                                >
+                                                    <span className={styles.equippedName}>
+                                                        {equipped.item.name}
+                                                    </span>
+                                                    <span className={styles.equippedEffect}>
+                                                        {describeItemEffect(equipped.item.effect)}
+                                                    </span>
+                                                </span>
+                                                <NeonButton
+                                                    tone="magenta"
+                                                    size="sm"
+                                                    onClick={() => void handleUnequip(index)}
+                                                    disabled={isPending}
+                                                >
+                                                    Unequip
+                                                </NeonButton>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <select
+                                                    className={styles.select}
+                                                    aria-label={`${label} to equip`}
+                                                    value={choice[index] ?? ''}
+                                                    onChange={(event) =>
+                                                        setChoice((current) => ({
+                                                            ...current,
+                                                            [index]: event.target.value,
+                                                        }))
+                                                    }
+                                                    disabled={options.length === 0}
+                                                >
+                                                    <option value="">
+                                                        {options.length === 0
+                                                            ? 'Nothing for this slot'
+                                                            : 'Choose an item…'}
+                                                    </option>
+                                                    {options.map((item) => (
+                                                        <option key={item.itemType} value={item.itemType}>
+                                                            {item.name}
+                                                            {describeItemEffect(item.effect)
+                                                                ? ` — ${describeItemEffect(item.effect)}`
+                                                                : ''}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                                <NeonButton
+                                                    tone="emerald"
+                                                    size="sm"
+                                                    onClick={() => void handleEquip(index)}
+                                                    disabled={isPending || !choice[index]}
+                                                >
+                                                    Equip
+                                                </NeonButton>
+                                            </>
+                                        )}
+                                    </li>
+                                );
+                            })}
+                        </ul>
+                    )}
+                </PetStage>
 
                 <div className="picker">
                     <div className="field">
-                        <label htmlFor="equip-pet">Select Pet</label>
-                        <PetSelect
-                            id="equip-pet"
+                        <span className="field-label">Your roster</span>
+                        <PetPicker
                             pets={pets.map((pet) => ({ id: String(pet.id), pet }))}
                             value={selectedPet}
                             onChange={setSelectedPet}
-                            placeholder="Select pet..."
-                            disabled={pets.length === 0}
+                            label="Pet to equip"
+                            emptyHint="You have no pets yet."
                         />
-                        {pets.length === 0 && <p className={styles.note}>You have no pets yet.</p>}
                     </div>
                 </div>
 
-                {!canEquip && (
-                    // Said out loud rather than shown as a dead control: on Solana there is
-                    // no item contract yet, and on EVM the address may simply be unset.
-                    <p className={styles.note}>
-                        Equipping is not available on this deployment yet.
-                    </p>
-                )}
-
-                {selectedPet && canEquip && (
-                    <ul className={styles.slots}>
-                        {SLOTS.map(({ index, label }) => {
-                            const equipped = bySlot.get(index);
-                            const options = bySlotChoices.get(index) ?? [];
-                            return (
-                                <li key={index} className={styles.slot}>
-                                    <span className={styles.slotLabel}>{label}</span>
-
-                                    {equipped ? (
-                                        <>
-                                            <span
-                                                className={styles.equipped}
-                                                style={
-                                                    {
-                                                        '--rarity': getRarityColor(equipped.item.rarity),
-                                                    } as React.CSSProperties
-                                                }
-                                            >
-                                                <span className={styles.equippedName}>
-                                                    {equipped.item.name}
-                                                </span>
-                                                <span className={styles.equippedEffect}>
-                                                    {describeItemEffect(equipped.item.effect)}
-                                                </span>
-                                            </span>
-                                            <NeonButton
-                                                tone="magenta"
-                                                onClick={() => void handleUnequip(index)}
-                                                disabled={isPending}
-                                            >
-                                                Unequip
-                                            </NeonButton>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <select
-                                                className={styles.select}
-                                                aria-label={`${label} to equip`}
-                                                value={choice[index] ?? ''}
-                                                onChange={(event) =>
-                                                    setChoice((current) => ({
-                                                        ...current,
-                                                        [index]: event.target.value,
-                                                    }))
-                                                }
-                                                disabled={options.length === 0}
-                                            >
-                                                <option value="">
-                                                    {options.length === 0
-                                                        ? 'Nothing for this slot'
-                                                        : 'Choose an item…'}
-                                                </option>
-                                                {options.map((item) => (
-                                                    <option key={item.itemType} value={item.itemType}>
-                                                        {item.name}
-                                                        {describeItemEffect(item.effect)
-                                                            ? ` — ${describeItemEffect(item.effect)}`
-                                                            : ''}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                            <NeonButton
-                                                tone="emerald"
-                                                onClick={() => void handleEquip(index)}
-                                                disabled={isPending || !choice[index]}
-                                            >
-                                                Equip
-                                            </NeonButton>
-                                        </>
-                                    )}
-                                </li>
-                            );
-                        })}
-                    </ul>
-                )}
 
                 {selectedPet && canEquip && slotsLoading && (
                     <p className={styles.note}>Reading this pet’s gear…</p>

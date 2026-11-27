@@ -192,12 +192,21 @@ button.tile:focus-visible {
     flex-direction: column;
 }
 
+/* A column's name on a pennant tag. */
 .columnHeading {
-    display: flex;
+    display: inline-flex;
     align-items: center;
+    align-self: flex-start;
     gap: 0.4rem;
-    margin: 0 0 0.4rem;
-    font-size: 0.95rem;
+    margin: 0 0 0.5rem;
+    padding: 4px 12px;
+    border-radius: 999px;
+    background: rgb(181 140 255 / 20%);
+    box-shadow: inset 0 0 0 1px rgb(181 140 255 / 45%);
+    font: 400 11px var(--cp-display-font);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #fff;
 }
 
 /* A heading with its actions on the same line, which saves the page a row of buttons. */
@@ -220,10 +229,9 @@ button.tile:focus-visible {
     flex: 1 1 auto;
     min-height: 11rem;
     overflow: hidden;
-    border: 1px solid rgb(125 214 255 / 22%);
-    border-radius: 12px;
-    background: linear-gradient(135deg, rgb(12 22 48 / 90%), rgb(4 10 26 / 90%));
-    box-shadow: inset 0 0 24px rgb(125 214 255 / 5%);
+    border-radius: 20px;
+    background: linear-gradient(170deg, rgb(23 29 72 / 90%), rgb(10 13 36 / 94%));
+    box-shadow: 0 0 0 2px rgb(125 214 255 / 30%), 0 12px 26px rgb(0 0 0 / 40%);
 }
 
 .detailsBody {
@@ -292,10 +300,10 @@ button.tile:focus-visible {
 }
 
 .chip {
-    padding: 1px 8px;
-    border: 1px solid rgb(125 214 255 / 25%);
+    padding: 2px 9px;
     border-radius: 999px;
-    background: rgb(5 13 30 / 70%);
+    background: rgb(181 140 255 / 16%);
+    box-shadow: inset 0 0 0 1px rgb(181 140 255 / 35%);
     font-size: 0.72rem;
 }
 
@@ -317,13 +325,31 @@ button.tile:focus-visible {
     font-size: 0.85rem;
 }
 
-.tacticRow .select {
-    flex: 1 1 auto;
+.tacticRow /* Glass pills for the plan's few inputs and the tactic pickers. */
+.select {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    padding: 7px 12px;
+    border: 0;
+    border-radius: 999px;
+    background-color: rgb(4 8 24 / 85%);
+    box-shadow: inset 0 0 0 2px rgb(125 214 255 / 28%);
+    color: inherit;
+    font: inherit;
+    font-size: 13px;
+}
+
+.select:focus {
+    outline: none;
+    box-shadow: inset 0 0 0 2px var(--cp-cyan), 0 0 12px rgb(125 214 255 / 30%);
 }
 
 .fieldLabel {
-    opacity: 0.7;
-    font-size: 0.8rem;
+    font: 400 10.5px var(--cp-display-font);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--cp-cyan);
 }
 
 /* Matches the equip panel's select, the app's other native dropdown. */
@@ -375,11 +401,10 @@ button.tile:focus-visible {
     display: flex;
     flex-direction: column;
     gap: 0.6rem;
-    padding: 0.85rem 1rem;
-    border: 1px solid rgb(125 214 255 / 22%);
-    border-radius: 12px;
-    background: linear-gradient(135deg, rgb(12 22 48 / 90%), rgb(4 10 26 / 90%));
-    box-shadow: inset 0 0 24px rgb(125 214 255 / 5%);
+    padding: 0.9rem 1.1rem;
+    border-radius: 20px;
+    background: linear-gradient(170deg, rgb(23 29 72 / 90%), rgb(10 13 36 / 94%));
+    box-shadow: 0 0 0 2px rgb(181 140 255 / 30%), 0 12px 26px rgb(0 0 0 / 40%);
     text-align: left;
 }
 
