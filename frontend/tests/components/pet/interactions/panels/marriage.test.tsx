@@ -66,19 +66,17 @@ vi.mock('@shared/core', () => ({
     useSpousePet: () => ({ name: undefined, level: undefined }),
     useSearchPets: () => ({ results: [], isLoading: false, error: null, refetch: vi.fn() }),
     getPetAvatar: () => '🐉',
+    getPetClass: () => 'Warrior',
+    getRarityColor: () => '#ff7bcb',
     // No art service in these tests: PetArt renders the emoji alone.
     petArtUrl: () => null,
 }));
 
 import MarriagePanel from '@components/pet/interactions/panels/marriage';
 
-/**
- * Picks one of the player's pets from `PetSelect`: a trigger plus a portalled listbox,
- * so the options exist only once it is open and `selectOptions` does not apply.
- */
+/** Picks one of the player's pets from the tray of portraits under the altar. */
 async function choosePet(name: string) {
-    await userEvent.click(screen.getByRole('combobox'));
-    await userEvent.click(await screen.findByRole('option', { name: new RegExp(name) }));
+    await userEvent.click(screen.getByRole('radio', { name: new RegExp(name) }));
 }
 
 beforeEach(() => {
@@ -106,17 +104,19 @@ describe('MarriagePanel', () => {
         expect(screen.getByText('Connect a wallet to use marriage.')).toBeInTheDocument();
     });
 
-    it('renders the propose tab with a pet select and partner search', async () => {
+    it('renders the altar: a tray of your pets, the partner search and the proposal key', async () => {
         render(<MarriagePanel />);
-        expect(screen.getByRole('combobox')).toBeInTheDocument();
         expect(screen.getByPlaceholderText('Search by name or ID…')).toBeInTheDocument();
         expect(screen.getByRole('button', { name: /Send Proposal/ })).toBeInTheDocument();
 
         // Each pet is shown, not just named: the art is how a player recognises which
         // one they are marrying.
-        await userEvent.click(screen.getByRole('combobox'));
-        expect(await screen.findByRole('option', { name: /Rex/ })).toBeInTheDocument();
-        expect(screen.getByRole('option', { name: /Blaze/ })).toBeInTheDocument();
+        expect(screen.getByRole('radio', { name: /Rex/ })).toBeInTheDocument();
+        expect(screen.getByRole('radio', { name: /Blaze/ })).toBeInTheDocument();
+
+        // The chosen pet takes its place at the altar.
+        await choosePet('Rex');
+        expect(screen.getAllByText('Rex').length).toBeGreaterThan(1);
     });
 
     it('disables Send Proposal when no pet or partner is selected', () => {

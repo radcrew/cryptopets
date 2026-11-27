@@ -1,10 +1,12 @@
 import React, { useMemo, useState } from 'react';
 import { type OpponentPet, type Pet, type PetChain } from '@shared/core';
 import { AuthActionButton } from '@components/common';
+import PetStage from '@components/game/pet-stage';
+import PetPicker from '@components/ui/pet-picker';
 import PetSearchDropdown from '@components/ui/pet-search-dropdown';
-import PetSelect from '@components/ui/pet-select';
 import OutgoingProposalRow from './outgoing-proposal-row';
 import styles from '../index.module.css';
+import altar from '../altar.module.css';
 
 export type ProposeTabProps = {
     chainPets: Pet[];
@@ -19,7 +21,7 @@ export type ProposeTabProps = {
     onCancelProposal: (petId: string) => void;
 };
 
-/** Compose a new proposal and review proposals already sent. */
+/** Compose a new proposal at the altar, and review proposals already sent. */
 const ProposeTab: React.FC<ProposeTabProps> = ({
     chainPets,
     chain,
@@ -33,6 +35,9 @@ const ProposeTab: React.FC<ProposeTabProps> = ({
     const [myPet, setMyPet] = useState('');
     const petOptions = useMemo(() => chainPets.map((p) => ({ id: p.id, pet: p })), [chainPets]);
     const [partnerId, setPartnerId] = useState('');
+    const myPetObj = chainPets.find((p) => p.id === myPet) ?? null;
+    // The partner may be anyone's pet: the chain roster is where its art comes from.
+    const partnerPet = (partnerId && petById.get(partnerId)) || null;
 
     const handlePropose = async () => {
         const ok = await onPropose(myPet, partnerId);
@@ -45,41 +50,55 @@ const ProposeTab: React.FC<ProposeTabProps> = ({
     return (
         <div className={styles.tabPanel}>
             <p className={styles.tabHint}>
-                Select one of your pets, then search for your partner&apos;s pet to send a marriage
-                proposal.
+                Choose one of your pets, then find your partner&apos;s pet to propose.
             </p>
-            <div className="picker">
-                <div className="field">
-                    <label htmlFor="propose-my-pet">Your pet</label>
-                    <PetSelect
-                        id="propose-my-pet"
-                        pets={petOptions}
-                        value={myPet}
-                        onChange={setMyPet}
-                        placeholder="Select your pet..."
-                        disabled={busy || chainPets.length === 0}
-                    />
+            {/* The altar: your pet on one side, the partner's on the other, the proposal between. */}
+            <div className={altar.scene}>
+                <PetStage pet={myPetObj} tone="magenta" emptyHint="Choose your pet below." />
+                <div className={altar.arch}>
+                    <span className={altar.heart} aria-hidden>
+                        💗
+                    </span>
+                    <AuthActionButton
+                        className={styles.proposeButton}
+                        tone="magenta"
+                        disabled={busy || !myPet || !partnerId}
+                        onClick={() => void handlePropose()}
+                    >
+                        {isProposing ? 'Proposing...' : '💍 Send Proposal'}
+                    </AuthActionButton>
                 </div>
-                <div className="field">
-                    <label htmlFor="propose-partner-pet">Partner&apos;s pet</label>
-                    <PetSearchDropdown
-                        id="propose-partner-pet"
-                        chain={chain}
-                        value={partnerId}
-                        onChange={setPartnerId}
-                        placeholder="Search by name or ID…"
-                        disabled={busy}
-                        excludeIds={myPet ? [myPet] : []}
+                <div className={altar.side}>
+                    <PetStage
+                        pet={partnerPet}
+                        tone="magenta"
+                        emptyHint={partnerId ? `Pet #${partnerId}` : "Find your partner's pet."}
                     />
+                    <label className={altar.search} htmlFor="propose-partner-pet">
+                        <span>Partner&apos;s pet</span>
+                        <PetSearchDropdown
+                            id="propose-partner-pet"
+                            chain={chain}
+                            value={partnerId}
+                            onChange={setPartnerId}
+                            placeholder="Search by name or ID…"
+                            disabled={busy}
+                            excludeIds={myPet ? [myPet] : []}
+                        />
+                    </label>
                 </div>
-                <AuthActionButton
-                    className={styles.proposeButton}
-                    tone="amber"
-                    disabled={busy || !myPet || !partnerId}
-                    onClick={() => void handlePropose()}
-                >
-                    {isProposing ? 'Proposing...' : '💍 Send Proposal'}
-                </AuthActionButton>
+            </div>
+
+            <div className={altar.tray}>
+                <span className={altar.trayLabel}>Your pets</span>
+                <PetPicker
+                    pets={petOptions}
+                    value={myPet}
+                    onChange={setMyPet}
+                    disabled={busy}
+                    label="Your pet"
+                    emptyHint="You have no pets on this chain yet."
+                />
             </div>
 
             {chainPets.length > 0 && (

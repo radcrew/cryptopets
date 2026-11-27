@@ -48,24 +48,48 @@
     overflow-y: auto;
 }
 
+/* A thread as a sealed letter: parchment-dark paper, a wax seal at its edge. */
 .threadButton {
+    position: relative;
     width: 100%;
     display: flex;
     flex-direction: column;
     gap: 2px;
-    padding: 10px 12px;
-    border-radius: 10px;
-    border: 1px solid rgb(148 163 184 / 14%);
-    background: var(--cp-surface);
+    padding: 12px 14px 12px 52px;
+    border: 0;
+    border-radius: 14px;
+    background: linear-gradient(170deg, #2a2348, #17122e 70%);
+    box-shadow: inset 0 0 0 1px rgb(233 216 184 / 16%), 0 6px 14px rgb(0 0 0 / 35%);
     color: inherit;
     font: inherit;
     text-align: left;
     cursor: pointer;
+    transition: transform 0.2s var(--cp-ease-spring), box-shadow 0.2s ease;
+}
+
+.threadButton::before {
+    content: '♥';
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    transform: translateY(-50%);
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #ff6f8a, #a3203e 70%);
+    box-shadow: 0 0 0 3px rgb(163 32 62 / 45%), 0 3px 6px rgb(0 0 0 / 45%);
+    color: rgb(255 220 228 / 80%);
+    font-size: 14px;
+}
+
+.threadButton:hover {
+    transform: translateX(3px);
 }
 
 .threadButton.isActive {
-    border-color: rgb(181 140 255 / 45%);
-    background: rgb(181 140 255 / 7%);
+    box-shadow: inset 0 0 0 2px rgb(181 140 255 / 70%), 0 0 22px -6px rgb(181 140 255 / 70%), 0 6px 14px rgb(0 0 0 / 35%);
 }
 
 .threadName {
@@ -82,14 +106,15 @@
     white-space: nowrap;
 }
 
+/* The open letter case. */
 .conversation {
     display: flex;
     flex-direction: column;
     min-width: 0;
     min-height: 0;
-    border-radius: 10px;
-    border: 1px solid rgb(148 163 184 / 14%);
-    background: var(--cp-surface);
+    border-radius: 22px;
+    background: linear-gradient(170deg, rgb(23 29 72 / 90%), rgb(10 13 36 / 94%));
+    box-shadow: 0 0 0 2px rgb(181 140 255 / 40%), 0 16px 34px rgb(0 0 0 / 45%);
 }
 
 .conversationHeader {
@@ -97,7 +122,7 @@
     align-items: baseline;
     gap: 10px;
     padding: 12px 18px;
-    border-bottom: 1px solid rgb(148 163 184 / 12%);
+    border-bottom: 1px solid rgb(181 140 255 / 18%);
 }
 
 .conversationTitle {
@@ -105,6 +130,7 @@
     align-items: center;
     gap: 8px;
     font-size: 0.95rem;
+    font-weight: 700;
 }
 
 /* Presence. Grey is the resting state and green is the exception, so a thread that is
@@ -264,9 +290,9 @@
    transcript. */
 .composer {
     display: flex;
-    gap: 8px;
-    padding: 12px 18px;
-    border-top: 1px solid rgb(148 163 184 / 12%);
+    gap: 10px;
+    padding: 12px 16px 14px;
+    border-top: 1px solid rgb(181 140 255 / 18%);
     flex-shrink: 0;
     /* The box grows upward from the bottom edge, so the Send button stays on the last
        line rather than floating beside the middle of a long draft. */
@@ -280,10 +306,11 @@
        this the padding lands twice and an empty box stands 16px taller than the single
        line it holds. */
     box-sizing: border-box;
-    padding: 8px 12px;
-    border-radius: 8px;
-    border: 1px solid rgb(148 163 184 / 22%);
-    background: transparent;
+    padding: 10px 14px;
+    border: 0;
+    border-radius: 18px;
+    background: rgb(4 8 24 / 85%);
+    box-shadow: inset 0 0 0 2px rgb(181 140 255 / 30%);
     color: inherit;
     font: inherit;
     font-size: 0.9rem;
@@ -298,14 +325,22 @@
     scrollbar-color: rgb(181 140 255 / 28%) transparent;
 }
 
+.composer textarea:focus {
+    outline: none;
+    box-shadow: inset 0 0 0 2px var(--cp-violet), 0 0 14px rgb(181 140 255 / 30%);
+}
+
+/* Send: a chunky violet key, standing on its edge. */
 .composer button {
-    padding: 8px 16px;
-    border-radius: 8px;
-    border: 1px solid rgb(181 140 255 / 38%);
-    background: rgb(181 140 255 / 10%);
-    color: inherit;
-    font: inherit;
-    font-size: 0.85rem;
+    padding: 11px 18px;
+    border: 0;
+    border-radius: 14px;
+    background: linear-gradient(180deg, #cfb3ff, #8a62ff);
+    box-shadow: inset 0 2px 0 rgb(255 255 255 / 35%), 0 4px 0 #43278f;
+    color: #fff;
+    font: 400 0.8rem var(--cp-display-font);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
     cursor: pointer;
 }
 

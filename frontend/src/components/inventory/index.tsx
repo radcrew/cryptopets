@@ -21,7 +21,7 @@ import SessionGate from '@components/common/session-gate';
 import ItemArt, { hasItemArt } from '@components/item/item-art';
 import Celebration from '@components/game/celebration';
 import EquipPanel from '@components/pet/interactions/panels/equip';
-import PetSelect from '@components/ui/pet-select';
+import PetPicker from '@components/ui/pet-picker';
 import Icon, { MuscleIcon, RefreshIcon } from '@components/ui/icon';
 import InfoTooltip from '@components/ui/info-tooltip';
 import NeonButton from '@components/ui/neon-button';
@@ -431,6 +431,8 @@ const Inventory: React.FC = () => {
                         </section>
                     ) : null}
 
+                    {/* The bag itself: stitched leather, its pouches one category each. */}
+                    <div className={styles.backpack}>
                     {isLoading ? (
                         <p className={styles.muted}>Loading your items…</p>
                     ) : grouped.length === 0 && equippedEntries.length === 0 ? (
@@ -477,18 +479,13 @@ const Inventory: React.FC = () => {
 
                             {pets.length > 0 ? (
                                 <div className={styles.petPicker}>
-                                    {/* A label element, not a wrapping <label>: PetSelect is a
-                                        portalled listbox rather than a native <select>, so
-                                        there is no form control for a wrapper to label. */}
-                                    <label className={styles.petPickerLabel} htmlFor="inventory-pet">
-                                        Use items on
-                                    </label>
-                                    <PetSelect
-                                        id="inventory-pet"
+                                    <span className={styles.petPickerLabel}>Use items on</span>
+                                    <PetPicker
+                                        layout="strip"
+                                        label="Use items on"
                                         pets={pets.map((pet) => ({ id: String(pet.id), pet }))}
                                         value={selectedPet ?? ''}
                                         onChange={setPetId}
-                                        placeholder="Select pet..."
                                     />
                                 </div>
                             ) : null}
@@ -513,6 +510,7 @@ const Inventory: React.FC = () => {
                             ))}
                         </>
                     )}
+                    </div>
                     </>
                     )}
                 </div>

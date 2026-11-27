@@ -37,13 +37,15 @@
     overflow-y: auto;
 }
 
+/* The plaques hang down the middle of the Hall rather than across the whole wall. */
 .list {
     list-style: none;
-    margin: 0;
+    width: min(860px, 100%);
+    margin: 0 auto;
     padding: 0;
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 8px;
 }
 
 /* ── Podium ────────────────────────────────────────────────────────────────────
@@ -283,35 +285,44 @@
 /* ── Ledger ────────────────────────────────────────────────────────────────────
    Fixed track widths so ranks, records and rates line up down the column; only the name
    track flexes. The meter spans the full width on its own row beneath. */
+/* A champion's plaque: a polished bar, the rank on a shield at its left end. */
 .row {
     position: relative;
     display: grid;
-    grid-template-columns: 2.6rem 2.2rem minmax(0, 1fr) 6.5rem 3.2rem;
+    grid-template-columns: 2.8rem 2.6rem minmax(0, 1fr) 6.5rem 3.2rem;
     align-items: center;
     gap: 10px;
-    padding: 9px 12px 11px;
-    border-radius: 10px;
-    border: 1px solid rgb(148 163 184 / 14%);
-    background: var(--cp-surface);
+    padding: 9px 14px 12px 8px;
+    border-radius: 16px;
+    background: linear-gradient(180deg, rgb(40 46 104 / 82%), rgb(16 19 52 / 88%));
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 12%), 0 0 0 1px rgb(255 207 112 / 18%), 0 6px 14px rgb(0 0 0 / 35%);
+    transition: transform 0.2s var(--cp-ease-spring);
+}
+
+.row:hover {
+    transform: translateX(4px);
 }
 
 /* The connected wallet's own rows, so a player finds themselves without reading
    every address. */
 .row.isYou {
-    border-color: rgb(251 191 36 / 55%);
-    background: rgb(251 191 36 / 8%);
+    background: linear-gradient(180deg, rgb(120 86 30 / 70%), rgb(60 40 16 / 80%));
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 14%), 0 0 0 2px rgb(255 207 112 / 70%), 0 0 22px -6px rgb(255 207 112 / 60%);
 }
 
-/* The rank at display size: it is what the reader came for, so the row text is quieter
+/* The rank on a gold shield: it is what the reader came for, so the row text is quieter
    than it rather than the other way round. */
 .rank {
-    font-family: var(--cp-title-font);
-    font-size: 1.35rem;
-    font-weight: 700;
+    display: grid;
+    place-items: center;
+    width: 2.5rem;
+    height: 2.8rem;
+    font: 400 1.05rem var(--cp-display-font);
     line-height: 1;
-    color: rgb(255 207 112 / 55%);
+    color: #2a1600;
     font-variant-numeric: tabular-nums;
-    text-align: center;
+    background: linear-gradient(180deg, #ffe08a, #c98a2e);
+    clip-path: polygon(0 0, 100% 0, 100% 70%, 50% 100%, 0 70%);
 }
 
 /* Win rate as a hairline under the row. A column of percentages has to be read one at a
@@ -334,9 +345,16 @@
 }
 
 .avatar {
-    font-size: 1.4rem;
+    display: grid;
+    place-items: center;
+    width: 2.4rem;
+    height: 2.4rem;
+    overflow: hidden;
+    border-radius: 50%;
+    background: radial-gradient(circle at 50% 40%, #1d2250, #0a0d24);
+    box-shadow: 0 0 0 2px rgb(255 207 112 / 55%);
+    font-size: 1.5rem;
     line-height: 1;
-    text-align: center;
 }
 
 .name {
@@ -364,11 +382,17 @@
 }
 
 .wins {
-    color: rgb(52 211 153);
+    border-radius: 8px;
+    padding: 1px 7px;
+    background: rgb(18 212 154 / 16%);
+    color: #74f7c8;
 }
 
 .losses {
-    color: rgb(251 113 133);
+    border-radius: 8px;
+    padding: 1px 7px;
+    background: rgb(255 92 122 / 14%);
+    color: #ff9ab0;
 }
 
 .rate {
@@ -394,18 +418,18 @@
     gap: 4px;
 }
 
-/* Square-ish, so a run of page numbers reads as a strip rather than as a row of
-   differently-sized buttons: "1" and "10" would otherwise be different widths. */
+/* Round keys, so a run of page numbers reads as a strip: "1" and "10" are the same size. */
 .pager button {
     box-sizing: border-box;
-    min-width: 32px;
-    padding: 5px 8px;
-    border-radius: 8px;
-    border: 1px solid rgb(148 163 184 / 25%);
-    background: transparent;
+    min-width: 36px;
+    height: 36px;
+    padding: 0 8px;
+    border: 0;
+    border-radius: 999px;
+    background: rgb(8 10 28 / 78%);
+    box-shadow: inset 0 0 0 1px rgb(255 207 112 / 30%);
     color: inherit;
-    font: inherit;
-    font-size: 0.85rem;
+    font: 400 0.85rem var(--cp-display-font);
     cursor: pointer;
 }
 
@@ -415,13 +439,14 @@
 }
 
 .pager button:hover:not(:disabled):not(.isCurrent) {
-    border-color: rgb(255 207 112 / 45%);
+    box-shadow: inset 0 0 0 2px rgb(255 207 112 / 55%);
 }
 
-/* Amber, matching the board's own accent. */
+/* Gold, matching the Hall's own accent. */
 .pager button.isCurrent {
-    border-color: rgb(255 207 112 / 55%);
-    background: rgb(255 207 112 / 14%);
+    background: linear-gradient(180deg, #ffe08a, #ffad3b);
+    box-shadow: 0 3px 0 #8a4a12;
+    color: #2a1600;
     cursor: default;
 }
 
@@ -466,18 +491,20 @@
 /* Search. One box for whichever board is showing — the two search different things, so
    the placeholder says which, and switching boards clears it. */
 .search {
-    margin-bottom: 12px;
+    width: min(560px, 100%);
+    margin: 0 auto 12px;
     flex-shrink: 0;
 }
 
 .search input {
     box-sizing: border-box;
     width: 100%;
-    min-height: 40px;
-    padding: 8px 14px;
-    border: 1px solid rgb(148 163 184 / 25%);
-    border-radius: 8px;
-    background: rgb(4 10 26 / 96%);
+    min-height: 44px;
+    padding: 8px 18px 8px 42px;
+    border: 0;
+    border-radius: 999px;
+    background: rgb(8 10 28 / 78%) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffcf70' stroke-width='2.4' stroke-linecap='round'%3E%3Ccircle cx='10.5' cy='10.5' r='6.5'/%3E%3Cpath d='M15.5 15.5 21 21'/%3E%3C/svg%3E") no-repeat 16px center / 18px;
+    box-shadow: inset 0 0 0 2px rgb(255 207 112 / 30%);
     color: inherit;
     font: inherit;
     font-size: 0.9rem;
@@ -490,11 +517,10 @@
 }
 
 .search input:hover {
-    border-color: rgb(255 207 112 / 40%);
+    box-shadow: inset 0 0 0 2px rgb(255 207 112 / 50%);
 }
 
 .search input:focus {
     outline: none;
-    border-color: var(--cp-amber);
-    box-shadow: 0 0 0 2px rgb(255 207 112 / 30%);
+    box-shadow: inset 0 0 0 2px var(--cp-amber), 0 0 16px rgb(255 207 112 / 30%);
 }

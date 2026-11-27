@@ -1,0 +1,107 @@
+/* CSS Module — class names are local; reference via `import styles from './altar.module.css'`.
+   The altar: two pets on magenta pedestals, and between them a flowered arch with a beating
+   heart and the key that sends the proposal. */
+.scene {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 220px) minmax(0, 1fr);
+    align-items: center;
+    gap: 16px;
+    margin: 6px 0 16px;
+
+    @media (max-width: 820px) {
+        grid-template-columns: minmax(0, 1fr);
+        justify-items: center;
+    }
+}
+
+.side {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+/* A rose-gold arch over the heart. */
+.arch {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 16px;
+    width: 100%;
+    max-width: 220px;
+    min-height: 200px;
+    padding: 30px 14px 16px;
+}
+
+.arch::before {
+    content: '';
+    position: absolute;
+    inset: 0 10px 50px;
+    border: 8px solid #e88fbf;
+    border-bottom: 0;
+    border-radius: 110px 110px 0 0;
+    box-shadow: 0 0 18px rgb(255 123 203 / 45%), inset 0 0 18px rgb(255 123 203 / 25%);
+}
+
+.heart {
+    position: relative;
+    font-size: 56px;
+    line-height: 1;
+    filter: drop-shadow(0 0 16px rgb(255 123 203 / 70%));
+    animation: beat 1.4s ease-in-out infinite;
+}
+
+.search {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: min(260px, 100%);
+    font: 400 11px var(--cp-display-font);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #ff9ad8;
+}
+
+.tray {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: min(760px, 100%);
+    margin: 0 auto 6px;
+    padding: 12px 16px 14px;
+    border-radius: 22px;
+    background: rgb(8 10 28 / 62%);
+    box-shadow: inset 0 0 0 1px rgb(255 123 203 / 30%), 0 12px 28px rgb(0 0 0 / 35%);
+}
+
+.trayLabel {
+    font: 400 11px var(--cp-display-font);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #ff9ad8;
+    text-align: center;
+}
+
+@keyframes beat {
+    0%,
+    100% {
+        transform: scale(1);
+    }
+    15% {
+        transform: scale(1.18);
+    }
+    30% {
+        transform: scale(1);
+    }
+    45% {
+        transform: scale(1.1);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .heart {
+        animation: none;
+    }
+}
