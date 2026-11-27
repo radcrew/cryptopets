@@ -6,6 +6,7 @@ import {
     LEADERBOARD_PATH,
     LEDGER_PATH,
     LEVELUP_PATH,
+    MARKET_PATH,
     MESSAGES_PATH,
     MARRIAGE_PATH,
     PETS_PATH,
@@ -27,6 +28,7 @@ import messagesIcon from '@assets/nav-icons/messages.svg';
 import leaderboardIcon from '@assets/nav-icons/leaderboard.svg';
 import towerIcon from '@assets/nav-icons/tower.svg';
 import ledgerIcon from '@assets/nav-icons/ledger.svg';
+import marketIcon from '@assets/nav-icons/market.svg';
 
 export type NavItem = {
     id: string;
@@ -93,4 +95,5 @@ export const NAV_ITEMS: readonly NavItem[] = [
     },
     { id: 'ledger', label: 'Ledger Stones', iconSrc: ledgerIcon, tone: 'violet', path: LEDGER_PATH },
     { id: 'tower', label: 'The Tower', iconSrc: towerIcon, tone: 'cyan', path: TOWER_PATH, soon: true },
+    { id: 'market', label: 'Night Market', iconSrc: marketIcon, tone: 'amber', path: MARKET_PATH, soon: true },
 ];

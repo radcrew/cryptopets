@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none">
+  <defs>
+    <linearGradient id="m-wood" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#c08a5a"/>
+      <stop offset="1" stop-color="#6e4422"/>
+    </linearGradient>
+    <radialGradient id="m-glow" cx=".5" cy=".5" r=".5">
+      <stop offset="0" stop-color="#ffd25a" stop-opacity=".9"/>
+      <stop offset="1" stop-color="#ffd25a" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect x="8" y="14" width="3" height="30" fill="url(#m-wood)"/>
+  <rect x="37" y="14" width="3" height="30" fill="url(#m-wood)"/>
+  <rect x="5" y="9" width="38" height="5" rx="2" fill="#3a1d58"/>
+  <path d="M6 13 h6 v6 a3 3 0 0 1 -6 0 z" fill="#ff7bcb"/>
+  <path d="M12 13 h6 v6 a3 3 0 0 1 -6 0 z" fill="#ffd25a"/>
+  <path d="M18 13 h6 v6 a3 3 0 0 1 -6 0 z" fill="#ff7bcb"/>
+  <path d="M24 13 h6 v6 a3 3 0 0 1 -6 0 z" fill="#ffd25a"/>
+  <path d="M30 13 h6 v6 a3 3 0 0 1 -6 0 z" fill="#ff7bcb"/>
+  <path d="M36 13 h6 v6 a3 3 0 0 1 -6 0 z" fill="#ffd25a"/>
+  <circle cx="24" cy="29" r="9" fill="url(#m-glow)"/>
+  <path d="M24 22 l6 7 -6 7 -6 -7 z" fill="#ffd25a" stroke="#8a5a10" stroke-width="1"/>
+  <path d="M24 22 l2.5 7 -2.5 7" fill="#fff" fill-opacity=".35"/>
+  <rect x="6" y="36" width="36" height="8" rx="2" fill="url(#m-wood)"/>
+  <rect x="6" y="35" width="36" height="2.5" rx="1" fill="#e0aa78"/>
+</svg>

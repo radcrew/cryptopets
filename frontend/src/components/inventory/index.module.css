@@ -57,6 +57,13 @@
        and a fixed grid would leave a single potion stranded in a narrow column. */
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
     gap: 12px;
+
+    /* A phone's panel is narrower than two 150px slots, which left one slot the width of the
+       screen per row. A bag should read as a grid of slots, so they shrink to fit two. */
+    @media (max-width: 480px) {
+        grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+        gap: 10px;
+    }
 }
 
 /* An inventory slot: art with four corners on it — rarity, what it does, how many, and what

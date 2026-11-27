@@ -1,0 +1,228 @@
+/* CSS Module — class names are local; reference via `import styles from './index.module.css'`.
+   A night market: lantern-lit stalls in a grid, each framed in its listing's rarity colour,
+   with the trainer's own stall and the steps of a trade on the side. */
+.layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 260px);
+    align-items: start;
+    gap: 22px;
+
+    @media (max-width: 820px) {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+.main {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-width: 0;
+}
+
+.toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.tabs {
+    display: inline-flex;
+    gap: 4px;
+    padding: 4px;
+    border-radius: 999px;
+    background: rgb(8 10 28 / 70%);
+    box-shadow: inset 0 0 0 1px rgb(255 210 90 / 25%);
+}
+
+.tab {
+    border: 0;
+    border-radius: 999px;
+    padding: 6px 14px;
+    background: none;
+    color: #c9cbe0;
+    font: 400 11px var(--cp-display-font);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.tabOn {
+    color: #2a1600;
+    background: linear-gradient(180deg, #ffe08a, #ffad3b);
+    box-shadow: 0 2px 0 #8a4a12;
+}
+
+.sort {
+    border-radius: 999px;
+    padding: 7px 14px;
+    background: rgb(8 10 28 / 70%);
+    box-shadow: inset 0 0 0 1px rgb(125 214 255 / 30%);
+    font-size: 12.5px;
+    color: #c9cbe0;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 170px), 1fr));
+    gap: 14px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    @media (max-width: 480px) {
+        grid-template-columns: repeat(auto-fill, minmax(min(100%, 130px), 1fr));
+        gap: 10px;
+    }
+}
+
+/* A stall: rarity-framed art under a lantern glow, then the name, the seller and the price. */
+.listing {
+    --rc: #8b4513;
+
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 10px 10px 12px;
+    border-radius: 18px;
+    background: radial-gradient(circle at 50% 0%, rgb(255 210 90 / 14%), transparent 55%),
+        linear-gradient(170deg, #141a40, #0a0d24 70%);
+    box-shadow: 0 0 0 2px var(--rc), 0 0 20px -8px var(--rc), 0 10px 22px rgb(0 0 0 / 45%);
+}
+
+.art {
+    position: relative;
+    display: grid;
+    place-items: center;
+    aspect-ratio: 1;
+    overflow: hidden;
+    margin-bottom: 4px;
+    border-radius: 12px;
+    background: radial-gradient(circle at 50% 45%, #1d2250, #0a0d24);
+}
+
+/* The art fills the frame; the rarity banner rides on top of it. */
+.art > :first-child {
+    width: 100%;
+}
+
+.petArt {
+    display: grid;
+    place-items: center;
+    font-size: clamp(44px, 9vw, 64px);
+    line-height: 1;
+}
+
+.rarity {
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    border-radius: 999px;
+    padding: 2px 8px;
+    background: var(--rc);
+    color: #10081f;
+    font: 400 9px var(--cp-display-font);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.name {
+    font-size: 14px;
+    color: #f2f0ff;
+}
+
+.sub,
+.seller {
+    font-size: 12px;
+    color: var(--cp-text-muted-dark);
+}
+
+.buyRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 6px;
+}
+
+.price {
+    font: 400 13px var(--cp-display-font);
+    color: var(--cp-gold);
+    white-space: nowrap;
+}
+
+.buy,
+.list {
+    border: 0;
+    border-radius: 12px;
+    padding: 7px 14px;
+    background: linear-gradient(180deg, #74f7c8, #0d9a72);
+    box-shadow: inset 0 2px 0 rgb(255 255 255 / 35%), 0 4px 0 #064a3a;
+    color: #fff;
+    font: 400 11px var(--cp-display-font);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.side {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.card {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 14px 16px;
+    border-radius: 18px;
+    background: linear-gradient(170deg, #141a40, #0a0d24 70%);
+    box-shadow: 0 0 0 2px rgb(255 210 90 / 30%);
+}
+
+.heading {
+    margin: 0;
+    font-family: var(--cp-display-font);
+    font-size: 14px;
+    font-weight: 400;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--cp-gold);
+}
+
+.muted {
+    margin: 0;
+    font-size: 13px;
+    color: var(--cp-text-muted-dark);
+}
+
+.steps {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 13px;
+    text-align: left;
+    color: #d6d8ea;
+}
+
+.steps li {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.step {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: linear-gradient(180deg, #ffe08a, #ffad3b);
+    color: #2a1600;
+    font: 400 11px var(--cp-display-font);
+}

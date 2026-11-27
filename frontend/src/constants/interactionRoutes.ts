@@ -69,6 +69,9 @@ export const PETS_PATH = '/pets';
 /** A preview of the planned Tower mode. */
 export const TOWER_PATH = '/tower';
 
+/** A preview of the planned marketplace (roadmap §7). */
+export const MARKET_PATH = '/market';
+
 /** The player's recent battles as Ledger Stones, each checked in the browser. Read-only. */
 export const LEDGER_PATH = '/ledger';
 

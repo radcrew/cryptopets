@@ -7,6 +7,7 @@ import {
     INVENTORY_PATH,
     LEADERBOARD_PATH,
     LEDGER_PATH,
+    MARKET_PATH,
     MARRIAGE_PATH,
     TEAM_BATTLE_PATH,
 } from '@constants/interactionRoutes';
@@ -23,6 +24,7 @@ const SCENE_BY_PATH: [string, Scene][] = [
     // The stones stand on the Hall of Champions' floor: the record of every fight.
     [LEDGER_PATH, 'hall'],
     [INVENTORY_PATH, 'market'],
+    [MARKET_PATH, 'market'],
 ];
 
 /** The place a page happens in; anything without a place of its own is on the Shore at night. */
