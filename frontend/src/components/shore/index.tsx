@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import clsx from 'clsx';
 import { useNavigate } from 'react-router-dom';
-import { useBattleConfig, useChainCapabilities, usePetList } from '@shared/core';
+import { useBattleConfig, useChainCapabilities, usePetList, type Pet } from '@shared/core';
 
 import PulseOrb from '@components/game/pulse-orb';
+import CompanionPreview from '@components/pet/companion-preview';
 import { BATTLE_PATH } from '@constants/interactionRoutes';
 import Places from './parts/places';
 import ShoreDefs from './parts/shore-defs';
@@ -41,6 +42,7 @@ const ShoreScene: React.FC<{ fullscreen?: boolean }> = ({ fullscreen = false }) 
     const { pets } = usePetList();
     const { data: battleConfig } = useBattleConfig();
     const [openId, setOpenId] = useState<string | null>(null);
+    const [talkingTo, setTalkingTo] = useState<Pet | null>(null);
 
     const walkers = isConnected ? pets.slice(0, MAX_WALKERS) : [];
 
@@ -89,8 +91,11 @@ const ShoreScene: React.FC<{ fullscreen?: boolean }> = ({ fullscreen = false }) 
                     open={openId === pet.id}
                     onToggle={() => setOpenId((id) => (id === pet.id ? null : pet.id))}
                     onBattle={() => navigate(BATTLE_PATH, { state: { petId: pet.id } })}
+                    onTalk={() => setTalkingTo(pet)}
                 />
             ))}
+
+            {talkingTo && <CompanionPreview pet={talkingTo} onClose={() => setTalkingTo(null)} />}
 
             {!isConnected && (
                 <p className={styles.sign}>Connect your wallet and your pets will come out to play.</p>

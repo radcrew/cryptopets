@@ -118,6 +118,29 @@
     white-space: nowrap;
 }
 
+/* Near either end of the beach the card opens inward, or the scene's edge would cut it off. */
+.cardStart,
+.cardEnd {
+    transform: none;
+    animation-name: pop-edge;
+}
+
+.cardStart {
+    left: 0;
+    transform-origin: left bottom;
+}
+
+.cardEnd {
+    left: auto;
+    right: 0;
+    transform-origin: right bottom;
+}
+
+.cardKeys {
+    display: flex;
+    gap: 6px;
+}
+
 .cardName {
     font-size: 15px;
 }
@@ -150,6 +173,13 @@
 @keyframes pop {
     from {
         transform: translateX(-50%) scale(0.6);
+        opacity: 0;
+    }
+}
+
+@keyframes pop-edge {
+    from {
+        transform: scale(0.6);
         opacity: 0;
     }
 }

@@ -1,0 +1,237 @@
+/* CSS Module — class names are local; reference via `import styles from './index.module.css'`.
+   A companion panel over the page: the pet framed in its rarity colour, speaking in a bubble,
+   a proposal waiting on the player's signature, and a journal citing Ledger Stones. */
+.veil {
+    position: fixed;
+    inset: 0;
+    z-index: var(--cp-z-modal);
+    display: grid;
+    place-items: center;
+    overflow-y: auto;
+    padding: 16px;
+    background: radial-gradient(circle at 50% 30%, rgb(181 140 255 / 18%), transparent 55%), rgb(3 4 14 / 78%);
+    backdrop-filter: blur(3px);
+    animation: fade 0.3s ease;
+}
+
+.close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 40px;
+    height: 40px;
+    border: 0;
+    border-radius: 50%;
+    background: rgb(8 10 28 / 85%);
+    box-shadow: inset 0 0 0 1px rgb(181 140 255 / 40%);
+    color: #c9cbe0;
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.panel {
+    --rc: #8b4513;
+
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    width: min(520px, 100%);
+    padding: 20px 20px 22px;
+    border-radius: 22px;
+    background: linear-gradient(170deg, #141a40, #0a0d24 70%);
+    box-shadow: 0 0 0 2px var(--rc), 0 0 40px -10px var(--rc), 0 30px 70px rgb(0 0 0 / 60%);
+    animation: rise 0.45s var(--cp-ease-spring);
+}
+
+.head {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.portrait {
+    position: relative;
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 64px;
+    height: 64px;
+    overflow: hidden;
+    border-radius: 50%;
+    background: radial-gradient(circle at 50% 40%, #1d2250, #0a0d24);
+    box-shadow: 0 0 0 3px var(--rc), 0 0 16px -2px var(--rc);
+    font-size: 36px;
+    animation: bob 2.4s ease-in-out infinite;
+}
+
+.title {
+    margin: 0;
+    font: 400 clamp(18px, 3vw, 22px) var(--cp-display-font);
+    letter-spacing: 0.04em;
+    color: #f2f0ff;
+}
+
+.meta {
+    font-size: 12.5px;
+    color: var(--cp-text-muted-dark);
+}
+
+.body {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    text-align: left;
+}
+
+.traits {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.trait {
+    border-radius: 999px;
+    padding: 3px 10px;
+    background: rgb(181 140 255 / 16%);
+    box-shadow: inset 0 0 0 1px rgb(181 140 255 / 40%);
+    color: #ddd0ff;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+/* The pet speaks; the bubble's one sharp corner points up at its portrait. */
+.says {
+    position: relative;
+    margin: 4px 0 0;
+    padding: 12px 14px;
+    border-radius: 6px 18px 18px 18px;
+    background: rgb(255 255 255 / 8%);
+    box-shadow: inset 0 0 0 1px rgb(125 214 255 / 30%);
+    color: #eef0ff;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.proposal {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 12px 14px;
+    border-radius: 16px;
+    background: rgb(255 210 90 / 8%);
+    box-shadow: inset 0 0 0 1px rgb(255 210 90 / 35%);
+}
+
+.proposal b {
+    font-size: 15px;
+    color: #fff3cf;
+}
+
+.proposal small {
+    font-size: 12px;
+    color: var(--cp-text-muted-dark);
+}
+
+.kicker {
+    font: 400 10px var(--cp-display-font);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--cp-gold);
+}
+
+.keys {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 6px;
+}
+
+.approve,
+.decline {
+    border: 0;
+    border-radius: 12px;
+    padding: 8px 14px;
+    font: 400 11px var(--cp-display-font);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.approve {
+    background: linear-gradient(180deg, #74f7c8, #0d9a72);
+    box-shadow: inset 0 2px 0 rgb(255 255 255 / 35%), 0 4px 0 #064a3a;
+    color: #fff;
+}
+
+.decline {
+    background: rgb(255 255 255 / 10%);
+    color: #c9cbe0;
+}
+
+.journal {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.journalTitle {
+    margin: 0;
+    font: 700 14px var(--cp-lore-font);
+    letter-spacing: 0.06em;
+    color: #e2d8ff;
+}
+
+.entry {
+    padding: 10px 12px;
+    border-radius: 12px;
+    background: rgb(0 0 0 / 25%);
+    font-size: 13px;
+    color: #d6d8ea;
+}
+
+.entry time {
+    font-size: 11px;
+    color: var(--cp-text-muted-dark);
+}
+
+.entry p {
+    margin: 2px 0 6px;
+    line-height: 1.45;
+}
+
+.cite {
+    display: inline-block;
+    border-radius: 999px;
+    padding: 2px 9px;
+    background: rgb(181 140 255 / 14%);
+    color: #cbb8ff;
+    font-size: 11.5px;
+}
+
+@keyframes fade {
+    from {
+        opacity: 0;
+    }
+}
+
+@keyframes rise {
+    from {
+        opacity: 0;
+        transform: translateY(24px) scale(0.96);
+    }
+}
+
+@keyframes bob {
+    50% {
+        transform: translateY(-3px);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .veil,
+    .panel,
+    .portrait {
+        animation: none;
+    }
+}

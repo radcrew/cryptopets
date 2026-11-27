@@ -10,6 +10,12 @@ import styles from './shore-pet.module.css';
 const X_MIN = 6;
 const X_MAX = 94;
 
+/**
+ * Within this far of either end, a pet's card opens inward instead of centred on it. A card
+ * is about 180px wide, and a quarter of the narrowest phone scene is about 90px, half of that.
+ */
+const EDGE = 25;
+
 type Spot = { x: number; y: number };
 /** The strip of sand pets walk on, in percent of the scene's height. */
 export type Lane = { min: number; max: number };
@@ -66,12 +72,16 @@ type ShorePetProps = {
     open: boolean;
     onToggle: () => void;
     onBattle: () => void;
+    /** Opens the preview of the planned AI companions. */
+    onTalk: () => void;
 };
 
-const ShorePet: React.FC<ShorePetProps> = ({ pet, index, count, lane, open, onToggle, onBattle }) => {
+const ShorePet: React.FC<ShorePetProps> = ({ pet, index, count, lane, open, onToggle, onBattle, onTalk }) => {
     const [start] = useState(() => startSpot(pet.id, index, count, lane));
     const walk = useWander(start, lane, open);
     const color = getRarityColor(pet.rarity);
+    // The pet stands still while its card is open, so this is read where the card will stay.
+    const opensFrom = walk.spot.x < EDGE ? styles.cardStart : walk.spot.x > 100 - EDGE ? styles.cardEnd : undefined;
 
     return (
         <div
@@ -98,15 +108,20 @@ const ShorePet: React.FC<ShorePetProps> = ({ pet, index, count, lane, open, onTo
                 <span className={styles.name}>{pet.name}</span>
             </button>
             {open && (
-                <div className={styles.card} role="group" aria-label={`${pet.name} details`}>
+                <div className={clsx(styles.card, opensFrom)} role="group" aria-label={`${pet.name} details`}>
                     <b className={styles.cardName}>{pet.name}</b>
                     <span className={styles.cardMeta}>
                         <span style={{ color }}>{getRarityName(pet.rarity)}</span> · Lv {pet.level} · {pet.winCount}W{' '}
                         {pet.lossCount}L
                     </span>
-                    <NeonButton tone="magenta" size="sm" onClick={onBattle}>
-                        Battle
-                    </NeonButton>
+                    <span className={styles.cardKeys}>
+                        <NeonButton tone="magenta" size="sm" onClick={onBattle}>
+                            Battle
+                        </NeonButton>
+                        <NeonButton tone="violet" size="sm" onClick={onTalk} aria-label={`Talk with ${pet.name}, coming soon`}>
+                            Talk
+                        </NeonButton>
+                    </span>
                 </div>
             )}
         </div>

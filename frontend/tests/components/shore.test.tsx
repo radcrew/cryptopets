@@ -80,6 +80,21 @@ describe('ShoreScene', () => {
         expect(screen.getByText('at /battle with 7')).toBeInTheDocument();
     });
 
+    it("opens a pet's companion preview from Talk, labelled as coming soon", async () => {
+        usePetList.mockReturnValue({ pets: [pet('7', 'Sparring')] });
+        renderShore();
+
+        await userEvent.click(screen.getByRole('button', { name: 'Sparring, level 2' }));
+        await userEvent.click(screen.getByRole('button', { name: 'Talk with Sparring, coming soon' }));
+        const panel = screen.getByRole('dialog', { name: 'Talk with Sparring' });
+        // The rules travel with the preview, not only in the roadmap.
+        expect(panel).toHaveTextContent('your wallet signs every action, and personality never changes a fight');
+        expect(screen.getByText('Approve and sign').closest('[inert]')).not.toBeNull();
+
+        await userEvent.keyboard('{Escape}');
+        expect(screen.queryByRole('dialog')).toBeNull();
+    });
+
     it('caps the walkers so the beach never turns into a crowd', () => {
         usePetList.mockReturnValue({ pets: Array.from({ length: 12 }, (_, i) => pet(String(i), `Pet ${i}`)) });
         renderShore();
