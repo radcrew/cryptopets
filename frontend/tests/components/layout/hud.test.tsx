@@ -18,7 +18,10 @@ const usePlayerRank = vi.fn(
         },
 );
 
+const auth = { isAuthenticated: true };
+
 vi.mock('@shared/core', () => ({
+    useAuth: () => auth,
     useChainCapabilities: () => useChainCapabilities(),
     usePlayerRank: (chain: string | null) => usePlayerRank(chain),
     shortAddress: (a: string) => `${a.slice(0, 6)}…${a.slice(-4)}`,
@@ -40,6 +43,7 @@ const renderHud = () =>
 
 beforeEach(() => {
     localStorage.clear();
+    auth.isAuthenticated = true;
     useChainCapabilities.mockReturnValue({
         isConnected: true,
         activeKind: 'evm',
@@ -65,6 +69,14 @@ describe('Hud player plate', () => {
     it('says unranked when no pet has fought', () => {
         renderHud();
         expect(screen.getByText(/Unranked/)).toBeInTheDocument();
+    });
+
+    it('asks a signed-out player to sign in, rather than calling them unranked', () => {
+        // Signed out, the rank is never read, so there is no answer yet, not a null one.
+        auth.isAuthenticated = false;
+        renderHud();
+        expect(screen.getByText('Sign in to see your rank')).toBeInTheDocument();
+        expect(screen.queryByText(/Unranked/)).toBeNull();
     });
 
     it('draws no plate while the rank is loading, rather than a zero', () => {

@@ -36,7 +36,12 @@ const petList = {
     error: null as unknown,
     refetch: vi.fn(),
 };
-const capabilities = { isConnected: true };
+const capabilities = { isConnected: true, activeKind: 'evm', walletAddress: '0xme' };
+const auth = { isAuthenticated: true };
+const standing = {
+    rank: null as { rank: number; winCount: number } | null,
+    leaders: [] as { rank: number; owner: string; winCount: number }[],
+};
 
 vi.mock('@shared/core', () => ({
     getGeneration: () => 0,
@@ -51,7 +56,12 @@ vi.mock('@shared/core', () => ({
     getPetSkill: () => null,
     getRarityColor: () => 'rgb(1, 2, 3)',
     getRarityName: () => 'Rare',
+    sameAccount: (a: string, b: string) => a === b,
+    shortAddress: (a: string) => `${a.slice(0, 4)}…`,
+    useAuth: () => auth,
     useChainCapabilities: () => capabilities,
+    usePlayerRank: () => ({ rank: standing.rank, isLoading: false }),
+    usePlayerLeaderboard: () => ({ entries: standing.leaders, isLoading: false }),
     usePetCooldowns: () => ({ statusFor: () => cooldownStatus }),
     usePetList: () => petList,
     // No gear in these cases: an empty map is what a bare roster looks like, and the badges
@@ -85,6 +95,8 @@ const aPet = (over: Record<string, unknown> = {}) => ({
 beforeEach(() => {
     vi.clearAllMocks();
     capabilities.isConnected = true;
+    auth.isAuthenticated = true;
+    Object.assign(standing, { rank: null, leaders: [] });
     Object.assign(petList, { pets: [], isLoading: false, error: null });
     Object.assign(cooldownStatus, {
         onCooldown: false,
@@ -162,6 +174,38 @@ describe('PetGallery', () => {
 
         await userEvent.keyboard('{Escape}');
         expect(screen.queryByRole('dialog')).toBeNull();
+    });
+
+    it('shows the real rank and the real top of the player board, marking the player', async () => {
+        standing.rank = { rank: 2, winCount: 9 };
+        standing.leaders = [
+            { rank: 1, owner: '0xaaaa', winCount: 12 },
+            { rank: 2, owner: '0xme', winCount: 9 },
+        ];
+        renderGallery();
+
+        expect(screen.getByText('#2', { selector: 'div' })).toBeInTheDocument();
+        expect(screen.getByText('Global rank')).toBeInTheDocument();
+        expect(screen.getByText('You').closest('li')).toHaveTextContent(/^#2\s*You\s*9 wins$/);
+        expect(screen.getByText('0xaa…')).toBeInTheDocument();
+
+        await userEvent.click(screen.getByRole('button', { name: 'See all ›' }));
+        expect(navigateSpy).toHaveBeenCalledWith('/leaderboard');
+    });
+
+    it('asks a signed-out player to sign in rather than showing a rank or a board', () => {
+        auth.isAuthenticated = false;
+        renderGallery();
+
+        expect(screen.getByText('Sign in to rank')).toBeInTheDocument();
+        expect(screen.getByText('Sign in to see who leads.')).toBeInTheDocument();
+        expect(screen.queryByText('Unranked')).toBeNull();
+    });
+
+    it('says the board is empty rather than inventing one', () => {
+        renderGallery();
+        expect(screen.getByText('Unranked')).toBeInTheDocument();
+        expect(screen.getByText(/No battles on record yet/)).toBeInTheDocument();
     });
 
     it('shows a cooldown status when the pet is not ready', () => {

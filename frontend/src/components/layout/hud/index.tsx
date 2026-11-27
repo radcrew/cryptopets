@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { shortAddress, useChainCapabilities, usePlayerRank } from '@shared/core';
+import { shortAddress, useAuth, useChainCapabilities, usePlayerRank } from '@shared/core';
 
 import Icon, { SoundOffIcon, SoundOnIcon } from '@components/ui/icon';
 import AccountDropdown from '@components/wallet/account-dropdown';
@@ -19,7 +19,7 @@ const QUESTS = [
     { label: '🥚 Breed a new pet', reward: '+100 XP', progress: 0 },
 ] as const;
 
-/** The week, for the streak row; the lit days are illustrative, like the streak chip. */
+/** The week, for the streak row; the lit days are illustrative, inside a panel marked Coming soon. */
 const WEEK = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 const SAMPLE_STREAK = 3;
 
@@ -32,6 +32,7 @@ const SAMPLE_STREAK = 3;
  */
 const PlayerPlate: React.FC = () => {
     const { activeKind, walletAddress } = useChainCapabilities();
+    const { isAuthenticated } = useAuth();
     const { rank, isLoading } = usePlayerRank(activeKind);
 
     if (isLoading) return null;
@@ -44,9 +45,13 @@ const PlayerPlate: React.FC = () => {
             <span className={styles.who}>
                 <b>{walletAddress ? `Trainer ${shortAddress(walletAddress)}` : 'Trainer'}</b>
                 <span>
-                    {rank
-                        ? `Rank #${rank.rank} · ${rank.winCount} win${rank.winCount === 1 ? '' : 's'}`
-                        : 'Unranked · win a fight to join'}
+                    {/* The board is read only when signed in. Signed out, nobody has asked yet,
+                        which is not the same answer as unranked. */}
+                    {!isAuthenticated
+                        ? 'Sign in to see your rank'
+                        : rank
+                          ? `Rank #${rank.rank} · ${rank.winCount} win${rank.winCount === 1 ? '' : 's'}`
+                          : 'Unranked · win a fight to join'}
                 </span>
             </span>
         </div>
@@ -138,9 +143,10 @@ const Hud: React.FC = () => {
             </Link>
             {isConnected && <PlayerPlate />}
             {isConnected && (
-                // Placeholder: there is no streak data yet; the figure is illustrative.
-                <span className={styles.streak} title="Day streak">
-                    <span aria-hidden>🔥</span> 7 <small>day streak</small>
+                // No streak is recorded yet, so the chip makes no claim about one: daily
+                // streaks arrive with daily quests, which the quests scroll previews.
+                <span className={styles.streak} title="Daily streaks are coming with daily quests">
+                    <span aria-hidden>🔥</span> <small>Streaks soon</small>
                 </span>
             )}
             <span className={styles.spacer} />

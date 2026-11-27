@@ -9,16 +9,8 @@ import SendPetModal from '@components/pet/transfer/send-pet-modal';
 import StoryPreview from '@components/pet/story-preview';
 import { usePetGallery } from '@hooks/pet-gallery/usePetGallery';
 import PetCard from './parts/pet-card';
+import { Leaders, RankStat } from './parts/standing';
 import styles from './index.module.css';
-
-/** Placeholder leaderboard rows — pending real ranking data (plan §8 Q3). */
-const LEADERBOARD_PLACEHOLDER = [
-    { rank: 1, name: 'CryptoKing', wins: 842, tier: 'Diamond', me: false },
-    { rank: 2, name: 'DragonMstr', wins: 721, tier: 'Diamond', me: false },
-    { rank: 3, name: 'You', wins: 649, tier: 'Gold', me: true },
-    { rank: 4, name: 'PetLegend', wins: 511, tier: 'Gold', me: false },
-    { rank: 5, name: 'BreedKing', wins: 402, tier: 'Platinum', me: false },
-] as const;
 
 const PetGallery: React.FC = () => {
     const {
@@ -67,7 +59,7 @@ const PetGallery: React.FC = () => {
 
     return (
         <div className={styles.idle}>
-            {/* Stat strip — Pets & Wins are real; Global rank is a placeholder */}
+            {/* Stat strip: the player's pets, wins and rank, all read from real data. */}
             <div className={styles.stats}>
                 <div className={clsx(styles.stat, styles.cyan)}>
                     <span className={styles.statIcon} aria-hidden>
@@ -91,26 +83,12 @@ const PetGallery: React.FC = () => {
                     <span className={styles.statIcon} aria-hidden>
                         🏆
                     </span>
-                    <div className={styles.statBody}>
-                        <div className={styles.statValue}>#3</div>
-                        <div className={styles.statLabel}>Global Rank</div>
-                    </div>
+                    <RankStat />
                 </div>
             </div>
 
-            {/* Leaderboard — full-width row below the stats (placeholder ranking data) */}
-            <div className={styles.leaderboard}>
-                <div className={styles.leaderboardTitle}>🏆 Leaderboard</div>
-                <ul className={styles.leaderboardList}>
-                    {LEADERBOARD_PLACEHOLDER.map((row) => (
-                        <li key={row.rank} className={clsx(styles.lbRow, row.me && styles.isMe)}>
-                            <span className={styles.lbRank}>#{row.rank}</span>
-                            <span className={styles.lbName}>{row.name}</span>
-                            <span className={styles.lbTier}>{row.tier}</span>
-                        </li>
-                    ))}
-                </ul>
-            </div>
+            {/* The top of the player board, full width below the stats. */}
+            <Leaders />
 
             {isLoading && (
                 <div className="loading-container">
