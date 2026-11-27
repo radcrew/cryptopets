@@ -7,6 +7,7 @@ import Dock from '@components/layout/dock';
 import Hud from '@components/layout/hud';
 import SceneBackdrop, { sceneFor } from '@components/layout/scene-backdrop';
 import NetworkGate from '@components/wallet/network-gate';
+import { PartyProvider } from '@contexts/party';
 import { DASHBOARD_HOME } from '@constants/interactionRoutes';
 import styles from './index.module.css';
 
@@ -27,16 +28,18 @@ const AppShell: React.FC<AppShellProps> = ({ children }) => {
     const home = pathname === DASHBOARD_HOME;
 
     return (
-        <div className={styles.shell}>
-            <SceneBackdrop scene={sceneFor(pathname)} dim={!home} />
-            <Ambient />
-            <main className={clsx(styles.stage, home && styles.full)}>
-                <NetworkGate />
-                {children}
-            </main>
-            <Hud />
-            <Dock />
-        </div>
+        <PartyProvider>
+            <div className={styles.shell}>
+                <SceneBackdrop scene={sceneFor(pathname)} dim={!home} />
+                <Ambient />
+                <main className={clsx(styles.stage, home && styles.full)}>
+                    <NetworkGate />
+                    {children}
+                </main>
+                <Hud />
+                <Dock />
+            </div>
+        </PartyProvider>
     );
 };
 

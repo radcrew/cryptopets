@@ -9,13 +9,11 @@ import {
     MARKET_PATH,
     MESSAGES_PATH,
     MARRIAGE_PATH,
-    PETS_PATH,
     TOWER_PATH,
     RENAME_PATH,
     TEAM_BATTLE_PATH,
     TRAIN_PATH,
 } from '@constants/interactionRoutes';
-import galleryIcon from '@assets/nav-icons/gallery.svg';
 import battleIcon from '@assets/nav-icons/battle.svg';
 import teamBattleIcon from '@assets/nav-icons/team-battle.svg';
 import breedIcon from '@assets/nav-icons/breed.svg';
@@ -63,7 +61,6 @@ export type NavItem = {
  * the disabled state, which nothing currently uses.
  */
 export const NAV_ITEMS: readonly NavItem[] = [
-    { id: 'gallery', label: 'My Pets', iconSrc: galleryIcon, tone: 'cyan', path: PETS_PATH },
     { id: 'battle', label: 'Battle Arena', iconSrc: battleIcon, tone: 'magenta', path: BATTLE_PATH },
     {
         id: 'team-battle',

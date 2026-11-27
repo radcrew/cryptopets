@@ -63,9 +63,6 @@ export const STANDALONE_INTERACTION_HEADERS: Record<
 /** Home: the Shore, the scene every feature is a door from. */
 export const DASHBOARD_HOME = '/main';
 
-/** The player's pet collection (the gallery). */
-export const PETS_PATH = '/pets';
-
 /** A preview of the planned Tower mode. */
 export const TOWER_PATH = '/tower';
 

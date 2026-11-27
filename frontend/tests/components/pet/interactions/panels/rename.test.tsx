@@ -3,7 +3,9 @@ import { act, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 const navigate = vi.fn();
-vi.mock('react-router-dom', () => ({ useNavigate: () => navigate }));
+// The pet a page was opened for, as a pet's sheet on the Shore hands it over.
+const location = { state: null as { petId?: string } | null };
+vi.mock('react-router-dom', () => ({ useNavigate: () => navigate, useLocation: () => location }));
 vi.mock('@constants/interactionRoutes', () => ({ DASHBOARD_HOME: '/dashboard' }));
 
 const notifyError = vi.fn();

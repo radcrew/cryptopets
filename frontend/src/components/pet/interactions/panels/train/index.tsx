@@ -15,6 +15,7 @@ import {
     type Pet,
 } from '@shared/core';
 import { useNotifyError } from '@hooks/useNotifyError';
+import { usePetChoice } from '@hooks/usePetChoice';
 import { useTxErrorToast } from '@hooks/useTxErrorToast';
 import Icon, { CheckIcon } from '@components/ui/icon';
 import { Tones } from '@constants/tones';
@@ -32,7 +33,8 @@ const TrainPanel: React.FC<TrainPanelProps> = ({ isStandaloneView = true }) => {
     const { pets, refetch } = usePetList();
     const notifyError = useNotifyError();
 
-    const [selectedPet, setSelectedPet] = useState<string>('');
+    const readyPets = useMemo(() => getReadyPetsUnified(pets), [pets]);
+    const [selectedPet, setSelectedPet] = usePetChoice(useMemo(() => readyPets.map(({ id }) => id), [readyPets]));
     const [success, setSuccess] = useState<string | null>(null);
     /** The pet to celebrate, as it was before training, so its XP bar can fill from there. */
     const [trained, setTrained] = useState<Pet | null>(null);
@@ -53,7 +55,6 @@ const TrainPanel: React.FC<TrainPanelProps> = ({ isStandaloneView = true }) => {
     } = useTrainPet({
         onSuccess: handleTrainComplete,
     });
-    const readyPets = useMemo(() => getReadyPetsUnified(pets), [pets]);
     const fees = useFees();
     const selectedPetObj = readyPets.find(({ id }) => id === selectedPet)?.pet ?? null;
     const selectedLevel = selectedPetObj?.level;

@@ -10,10 +10,6 @@
     transition-timing-function: ease-in-out;
 }
 
-.pet.open {
-    z-index: 5;
-}
-
 .token {
     position: absolute;
     inset: 0;
@@ -51,8 +47,7 @@
     transition: box-shadow 0.2s ease;
 }
 
-.token:hover .frame,
-.open .frame {
+.token:hover .frame {
     box-shadow: 0 0 28px 2px var(--rc), 0 8px 14px rgb(0 0 0 / 45%);
 }
 
@@ -98,58 +93,6 @@
     text-shadow: 0 2px 4px #000, 0 0 10px var(--rc);
 }
 
-/* The pet's card, floating above it. */
-.card {
-    position: absolute;
-    left: 50%;
-    bottom: calc(100% + 12px);
-    transform: translateX(-50%);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 6px;
-    min-width: 150px;
-    padding: 10px 14px 14px;
-    border-radius: 16px;
-    background: linear-gradient(170deg, #141a40, #0a0d24 70%);
-    box-shadow: 0 0 0 2px var(--rc), 0 0 24px color-mix(in srgb, var(--rc) 40%, transparent),
-        0 14px 30px rgb(0 0 0 / 55%);
-    animation: pop 0.35s var(--cp-ease-spring);
-    white-space: nowrap;
-}
-
-/* Near either end of the beach the card opens inward, or the scene's edge would cut it off. */
-.cardStart,
-.cardEnd {
-    transform: none;
-    animation-name: pop-edge;
-}
-
-.cardStart {
-    left: 0;
-    transform-origin: left bottom;
-}
-
-.cardEnd {
-    left: auto;
-    right: 0;
-    transform-origin: right bottom;
-}
-
-.cardKeys {
-    display: flex;
-    gap: 6px;
-}
-
-.cardName {
-    font-size: 15px;
-}
-
-.cardMeta {
-    font-size: 12px;
-    color: var(--cp-text-muted-dark);
-}
-
 @keyframes bob {
     0%,
     100% {
@@ -167,19 +110,5 @@
     }
     50% {
         transform: translateY(-5px) rotate(3deg);
-    }
-}
-
-@keyframes pop {
-    from {
-        transform: translateX(-50%) scale(0.6);
-        opacity: 0;
-    }
-}
-
-@keyframes pop-edge {
-    from {
-        transform: scale(0.6);
-        opacity: 0;
     }
 }

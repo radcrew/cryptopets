@@ -10,6 +10,7 @@ import {
     useRenamePet,
 } from '@shared/core';
 import { useNotifyError } from '@hooks/useNotifyError';
+import { usePetChoice } from '@hooks/usePetChoice';
 import { useTxErrorToast } from '@hooks/useTxErrorToast';
 import Icon, { CheckIcon, QuillIcon } from '@components/ui/icon';
 import { Tones } from '@constants/tones';
@@ -29,7 +30,17 @@ const RenamePanel: React.FC<RenamePanelProps> = ({ isStandaloneView = true }) =>
     const { pets, refetch } = usePetList();
     const notifyError = useNotifyError();
 
-    const [selectedPet, setSelectedPet] = useState<string>('');
+    const readyPets = useMemo(() => getReadyPetsUnified(pets), [pets]);
+    const selectablePets = useMemo(
+        () =>
+            renameMinLevel > 1
+                ? readyPets.filter(({ pet }) => pet.level >= renameMinLevel)
+                : readyPets,
+        [readyPets, renameMinLevel],
+    );
+    const [selectedPet, setSelectedPet] = usePetChoice(
+        useMemo(() => selectablePets.map(({ id }) => id), [selectablePets]),
+    );
     const [newName, setNewName] = useState('');
     const [success, setSuccess] = useState<string | null>(null);
 
@@ -50,17 +61,8 @@ const RenamePanel: React.FC<RenamePanelProps> = ({ isStandaloneView = true }) =>
     } = useRenamePet({
         onSuccess: handleRenameComplete,
     });
-    const readyPets = useMemo(() => getReadyPetsUnified(pets), [pets]);
 
     useTxErrorToast(hookError);
-
-    const selectablePets = useMemo(
-        () =>
-            renameMinLevel > 1
-                ? readyPets.filter(({ pet }) => pet.level >= renameMinLevel)
-                : readyPets,
-        [readyPets, renameMinLevel],
-    );
 
     /**
      * Why the pet list is empty, said out loud.

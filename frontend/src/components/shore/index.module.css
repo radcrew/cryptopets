@@ -152,6 +152,31 @@
     color: var(--cp-text-body-dark);
 }
 
+div.sign {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: max-content;
+    max-width: calc(100% - 32px);
+    border-radius: 22px;
+    padding: 10px 12px 10px 18px;
+}
+
+.summon {
+    border: 0;
+    border-radius: 14px;
+    padding: 9px 16px;
+    background: linear-gradient(180deg, #ffe08a, #ffad3b);
+    box-shadow: inset 0 2px 0 rgb(255 255 255 / 35%), 0 4px 0 #8a4a12;
+    color: #2a1600;
+    font: 400 12px var(--cp-display-font);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    cursor: pointer;
+}
+
 @keyframes twinkle {
     0%,
     100% {

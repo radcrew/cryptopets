@@ -9,7 +9,9 @@ const mocks = vi.hoisted(() => ({
     navigate: vi.fn(),
 }));
 
-vi.mock('react-router-dom', () => ({ useNavigate: () => mocks.navigate }));
+// The pet a page was opened for, as a pet's sheet on the Shore hands it over.
+const location = { state: null as { petId?: string } | null };
+vi.mock('react-router-dom', () => ({ useNavigate: () => mocks.navigate, useLocation: () => location }));
 vi.mock('@constants/interactionRoutes', () => ({ DASHBOARD_HOME: '/dashboard' }));
 vi.mock('@hooks/useNotifyError', () => ({ useNotifyError: () => mocks.notifyError }));
 vi.mock('@hooks/useTxErrorToast', () => ({ useTxErrorToast: vi.fn() }));
@@ -62,6 +64,7 @@ beforeEach(() => {
     Object.assign(train, { isPending: false, error: null });
     petList.pets = [{ id: '1', name: 'Rex', level: 3 }];
     capturedOnSuccess = undefined;
+    location.state = null;
 });
 
 /**
@@ -78,6 +81,21 @@ describe('TrainPanel', () => {
         expect(screen.getByRole('radio', { name: /Rex/ })).toBeInTheDocument();
         expect(screen.getByRole('radio', { name: /Lv 3/ })).toBeInTheDocument();
         expect(screen.queryByRole('combobox')).toBeNull();
+    });
+
+    it('arrives with the pet it was opened for already chosen', () => {
+        location.state = { petId: '1' };
+        render(<TrainPanel />);
+        expect(screen.getByRole('radio', { name: /Rex/ })).toBeChecked();
+        expect(screen.getByRole('button', { name: /Train/ })).toBeEnabled();
+    });
+
+    it('arrives with nothing chosen when the pet it was opened for cannot train', () => {
+        // Not among the ready pets, say on cooldown: choosing it would only fail.
+        location.state = { petId: '9' };
+        render(<TrainPanel />);
+        expect(screen.getByRole('radio', { name: /Rex/ })).not.toBeChecked();
+        expect(screen.getByRole('button', { name: 'Train' })).toBeDisabled();
     });
 
     it('disables the Train button when no pet is selected', () => {

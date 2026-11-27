@@ -1,0 +1,214 @@
+/* CSS Module — class names are local; reference via `import styles from './party-drawer.module.css'`.
+   The party slides up from the dock: a tray of pet portraits, each ringed in its rarity colour. */
+.veil {
+    position: fixed;
+    inset: 0;
+    z-index: var(--cp-z-modal);
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding: 16px 16px calc(env(safe-area-inset-bottom, 0px) + 16px);
+    background: rgb(3 4 14 / 55%);
+    animation: fade 0.25s ease;
+}
+
+.drawer {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: min(760px, 100%);
+    max-height: min(72vh, 640px);
+    padding: 16px 18px 20px;
+    border-radius: 26px;
+    background: linear-gradient(170deg, #171d48, #0a0d24 72%);
+    box-shadow: 0 0 0 2px rgb(125 214 255 / 45%), 0 0 50px -10px rgb(125 214 255 / 45%), 0 -10px 60px rgb(0 0 0 / 55%);
+    animation: slide 0.4s var(--cp-ease-spring);
+}
+
+.head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.title {
+    margin: 0;
+    font: 400 clamp(18px, 3vw, 22px) var(--cp-display-font);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #fff;
+    text-shadow: 0 3px 0 #2a1050;
+}
+
+.count {
+    font-size: 12.5px;
+    color: var(--cp-text-muted-dark);
+}
+
+.close {
+    flex: none;
+    width: 38px;
+    height: 38px;
+    border: 0;
+    border-radius: 50%;
+    background: rgb(255 255 255 / 10%);
+    color: #fff;
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
+    gap: 14px 10px;
+    overflow-y: auto;
+    margin: 0;
+    padding: 6px 2px 4px;
+    list-style: none;
+}
+
+.pet,
+.summon {
+    display: flex;
+    width: 100%;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    border: 0;
+    padding: 0;
+    background: none;
+    color: #eef0ff;
+    cursor: pointer;
+}
+
+.face {
+    --size: 72px;
+
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: var(--size);
+    height: var(--size);
+    border-radius: 50%;
+    overflow: hidden;
+    background: radial-gradient(circle at 50% 40%, #1d2250, #0a0d24);
+    box-shadow: 0 0 0 3px var(--rc), 0 0 16px -4px var(--rc), 0 6px 12px rgb(0 0 0 / 45%);
+    transition: transform 0.25s var(--cp-ease-spring);
+}
+
+.pet:hover .face,
+.pet:focus-visible .face {
+    transform: translateY(-4px) scale(1.06);
+}
+
+.pet:focus-visible {
+    outline: none;
+}
+
+.pet:focus-visible .face {
+    box-shadow: 0 0 0 3px #fff, 0 0 0 6px var(--rc), 0 0 22px var(--rc);
+}
+
+.emoji {
+    font-size: 40px;
+    line-height: 1;
+}
+
+.resting {
+    position: absolute;
+    right: 2px;
+    bottom: 2px;
+    display: grid;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: rgb(8 10 28 / 90%);
+    font-size: 12px;
+}
+
+/* The level, a gold badge tucked under the portrait. */
+.lv {
+    position: relative;
+    z-index: 1;
+    margin-top: -12px;
+    border-radius: 999px;
+    padding: 1px 8px;
+    background: linear-gradient(180deg, #ffe08a, #ffad3b);
+    box-shadow: 0 2px 0 #8a4a12;
+    color: #2a1600;
+    font: 400 10px var(--cp-display-font);
+}
+
+.name {
+    max-width: 100%;
+    overflow: hidden;
+    font-size: 12.5px;
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.summon .plus {
+    display: grid;
+    place-items: center;
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    border: 2px dashed rgb(255 210 90 / 70%);
+    background: radial-gradient(circle, rgb(255 210 90 / 20%), transparent 70%);
+    color: var(--cp-gold);
+    font: 400 34px var(--cp-display-font);
+    transition: transform 0.25s var(--cp-ease-spring);
+}
+
+.summon:hover .plus {
+    transform: rotate(90deg) scale(1.06);
+}
+
+.summon .name {
+    color: var(--cp-gold);
+}
+
+.note {
+    margin: 12px 0;
+    text-align: center;
+    color: #c9cbe0;
+}
+
+.retry {
+    border: 0;
+    border-radius: 999px;
+    padding: 4px 12px;
+    background: rgb(255 255 255 / 12%);
+    color: #fff;
+    cursor: pointer;
+}
+
+@keyframes fade {
+    from {
+        opacity: 0;
+    }
+}
+
+@keyframes slide {
+    from {
+        opacity: 0;
+        transform: translateY(60px);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .veil,
+    .drawer {
+        animation: none;
+    }
+
+    .face,
+    .summon .plus {
+        transition: none;
+    }
+}

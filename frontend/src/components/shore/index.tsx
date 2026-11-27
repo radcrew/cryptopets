@@ -1,17 +1,15 @@
-import React, { useState } from 'react';
+import React from 'react';
 import clsx from 'clsx';
-import { useNavigate } from 'react-router-dom';
-import { useBattleConfig, useChainCapabilities, usePetList, type Pet } from '@shared/core';
+import { useBattleConfig, useChainCapabilities, usePetList } from '@shared/core';
 
 import PulseOrb from '@components/game/pulse-orb';
-import CompanionPreview from '@components/pet/companion-preview';
-import { BATTLE_PATH } from '@constants/interactionRoutes';
+import { useParty } from '@contexts/party';
 import Places from './parts/places';
 import ShoreDefs from './parts/shore-defs';
 import ShorePet from './parts/shore-pet';
 import styles from './index.module.css';
 
-/** More than this and the beach turns into a crowd; the gallery below shows everyone. */
+/** More than this and the beach turns into a crowd; the party (the dock's Pets key) has everyone. */
 const MAX_WALKERS = 8;
 
 /** Fixed rather than random so the sky is the same on every render and every visit. */
@@ -33,16 +31,14 @@ const FULLSCREEN_LANE = { min: 69, max: 77 };
  *
  * The player's own pets stroll on the sand, the Pulse beats in the sky with the real
  * drand round, and each building is a door to a page that already exists. It owns no
- * game state: everything comes from the same shared hooks the gallery and the HUD use.
- * Full screen it is the home page; the gallery lives at `/pets`.
+ * game state: everything comes from the same shared hooks the HUD and the party use.
+ * Tapping a pet opens its sheet. Full screen, it is the home page.
  */
 const ShoreScene: React.FC<{ fullscreen?: boolean }> = ({ fullscreen = false }) => {
-    const navigate = useNavigate();
     const { isConnected } = useChainCapabilities();
-    const { pets } = usePetList();
+    const { pets, isLoading } = usePetList();
     const { data: battleConfig } = useBattleConfig();
-    const [openId, setOpenId] = useState<string | null>(null);
-    const [talkingTo, setTalkingTo] = useState<Pet | null>(null);
+    const { openPet, openSummon } = useParty();
 
     const walkers = isConnected ? pets.slice(0, MAX_WALKERS) : [];
 
@@ -88,14 +84,18 @@ const ShoreScene: React.FC<{ fullscreen?: boolean }> = ({ fullscreen = false }) 
                     index={index}
                     count={walkers.length}
                     lane={fullscreen ? FULLSCREEN_LANE : LANE}
-                    open={openId === pet.id}
-                    onToggle={() => setOpenId((id) => (id === pet.id ? null : pet.id))}
-                    onBattle={() => navigate(BATTLE_PATH, { state: { petId: pet.id } })}
-                    onTalk={() => setTalkingTo(pet)}
+                    onOpen={() => openPet(String(pet.id))}
                 />
             ))}
 
-            {talkingTo && <CompanionPreview pet={talkingTo} onClose={() => setTalkingTo(null)} />}
+            {isConnected && !isLoading && pets.length === 0 && (
+                <div className={styles.sign}>
+                    <span>The beach is empty. Summon your first pet!</span>
+                    <button type="button" className={styles.summon} onClick={openSummon}>
+                        Summon a pet
+                    </button>
+                </div>
+            )}
 
             {!isConnected && (
                 <p className={styles.sign}>Connect your wallet and your pets will come out to play.</p>

@@ -6,7 +6,7 @@ import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 // Mocked rather than provider-wrapped, like the sidebar test: these tests are about the
 // scene's doors and pets, not about wallets or queries.
 const useChainCapabilities = vi.fn(() => ({ isConnected: true }));
-const usePetList = vi.fn(() => ({ pets: [] as unknown[] }));
+const usePetList = vi.fn(() => ({ pets: [] as unknown[], isLoading: false }));
 const useBattleConfig = vi.fn(() => ({ data: { team: { enabled: false } } }));
 
 vi.mock('@shared/core', () => ({
@@ -18,6 +18,8 @@ vi.mock('@shared/core', () => ({
     getRarityName: () => 'Rare',
 }));
 vi.mock('@components/pet/pet-art', () => ({ default: () => <span>art</span> }));
+const party = vi.hoisted(() => ({ openParty: vi.fn(), openPet: vi.fn(), openSummon: vi.fn() }));
+vi.mock('@contexts/party', () => ({ useParty: () => party }));
 
 import ShoreScene from '@components/shore';
 
@@ -43,7 +45,7 @@ const renderShore = () =>
 beforeEach(() => {
     vi.clearAllMocks();
     useChainCapabilities.mockReturnValue({ isConnected: true });
-    usePetList.mockReturnValue({ pets: [] });
+    usePetList.mockReturnValue({ pets: [], isLoading: false });
     useBattleConfig.mockReturnValue({ data: { team: { enabled: false } } });
 });
 
@@ -69,41 +71,35 @@ describe('ShoreScene', () => {
         expect(screen.getByRole('button', { name: /^Team 3v3:/ })).toBeInTheDocument();
     });
 
-    it('opens a pet card on tap, and its Battle button preselects that pet in the arena', async () => {
-        usePetList.mockReturnValue({ pets: [pet('7', 'Sparring'), pet('9', 'Yasu')] });
+    it("opens a pet's sheet on tap", async () => {
+        usePetList.mockReturnValue({ pets: [pet('7', 'Sparring'), pet('9', 'Yasu')], isLoading: false });
         renderShore();
 
         await userEvent.click(screen.getByRole('button', { name: 'Sparring, level 2' }));
-        expect(screen.getByRole('group', { name: 'Sparring details' })).toHaveTextContent('Lv 2');
-
-        await userEvent.click(screen.getByRole('button', { name: 'Battle' }));
-        expect(screen.getByText('at /battle with 7')).toBeInTheDocument();
+        expect(party.openPet).toHaveBeenCalledWith('7');
     });
 
-    it("opens a pet's companion preview from Talk, labelled as coming soon", async () => {
-        usePetList.mockReturnValue({ pets: [pet('7', 'Sparring')] });
+    it('invites a summon when the player has no pets yet', async () => {
         renderShore();
+        await userEvent.click(screen.getByRole('button', { name: 'Summon a pet' }));
+        expect(party.openSummon).toHaveBeenCalled();
+    });
 
-        await userEvent.click(screen.getByRole('button', { name: 'Sparring, level 2' }));
-        await userEvent.click(screen.getByRole('button', { name: 'Talk with Sparring, coming soon' }));
-        const panel = screen.getByRole('dialog', { name: 'Talk with Sparring' });
-        // The rules travel with the preview, not only in the roadmap.
-        expect(panel).toHaveTextContent('your wallet signs every action, and personality never changes a fight');
-        expect(screen.getByText('Approve and sign').closest('[inert]')).not.toBeNull();
-
-        await userEvent.keyboard('{Escape}');
-        expect(screen.queryByRole('dialog')).toBeNull();
+    it('waits for the pets before calling the beach empty', () => {
+        usePetList.mockReturnValue({ pets: [], isLoading: true });
+        renderShore();
+        expect(screen.queryByText(/The beach is empty/)).toBeNull();
     });
 
     it('caps the walkers so the beach never turns into a crowd', () => {
-        usePetList.mockReturnValue({ pets: Array.from({ length: 12 }, (_, i) => pet(String(i), `Pet ${i}`)) });
+        usePetList.mockReturnValue({ pets: Array.from({ length: 12 }, (_, i) => pet(String(i), `Pet ${i}`)), isLoading: false });
         renderShore();
         expect(screen.getAllByRole('button', { name: /, level 2$/ })).toHaveLength(8);
     });
 
     it('invites a signed-out visitor in instead of showing pets', () => {
         useChainCapabilities.mockReturnValue({ isConnected: false });
-        usePetList.mockReturnValue({ pets: [pet('7', 'Sparring')] });
+        usePetList.mockReturnValue({ pets: [pet('7', 'Sparring')], isLoading: false });
         renderShore();
         expect(screen.queryByRole('button', { name: /, level 2$/ })).toBeNull();
         expect(screen.getByText(/your pets will come out to play/)).toBeInTheDocument();

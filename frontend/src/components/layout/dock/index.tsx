@@ -9,17 +9,18 @@ import {
     DASHBOARD_HOME,
     INVENTORY_PATH,
     LEADERBOARD_PATH,
-    PETS_PATH,
     TEAM_BATTLE_PATH,
 } from '@constants/interactionRoutes';
 import { NAV_ITEMS } from '@components/layout/nav-items';
+import { useParty } from '@contexts/party';
 import { BagIcon, DockDefs, MoreIcon, NestIcon, PawIcon, SwordsIcon, TrophyIcon } from './icons';
 import styles from './index.module.css';
 
 type DockKey = {
     id: 'pets' | 'nest' | 'battle' | 'bag' | 'ranks';
     label: string;
-    path: string;
+    /** Where the key goes. Absent on the Pets key, which opens the party over the page. */
+    path?: string;
     Icon: React.FC;
     /** Other paths that light this key, such as team battles under Battle. */
     alsoOn?: string[];
@@ -27,7 +28,7 @@ type DockKey = {
 
 /** The five places a player goes most, as keys; the rest sit one tap away under More. */
 const KEYS: readonly DockKey[] = [
-    { id: 'pets', label: 'Pets', path: PETS_PATH, Icon: PawIcon },
+    { id: 'pets', label: 'Pets', Icon: PawIcon },
     { id: 'nest', label: 'Nest', path: BREED_PATH, Icon: NestIcon },
     { id: 'battle', label: 'Battle', path: BATTLE_PATH, Icon: SwordsIcon, alsoOn: [TEAM_BATTLE_PATH] },
     { id: 'bag', label: 'Bag', path: INVENTORY_PATH, Icon: BagIcon },
@@ -43,6 +44,7 @@ const isOn = (pathname: string, path: string) => pathname === path || pathname.s
 const Dock: React.FC = () => {
     const navigate = useNavigate();
     const { pathname } = useLocation();
+    const { openParty } = useParty();
     const { data: battleConfig } = useBattleConfig();
     const teamBattles = Boolean(battleConfig?.team?.enabled);
     const [sheetOpen, setSheetOpen] = useState(false);
@@ -108,14 +110,15 @@ const Dock: React.FC = () => {
 
             <div className={styles.keys}>
                 {KEYS.map(({ id, label, path, Icon, alsoOn }) => {
-                    const here = isOn(pathname, path) || Boolean(alsoOn?.some((p) => isOn(pathname, p)));
+                    const here = path != null && (isOn(pathname, path) || Boolean(alsoOn?.some((p) => isOn(pathname, p))));
                     return (
                         <button
                             key={id}
                             type="button"
                             className={clsx(styles.key, styles[id], here && styles.here)}
-                            onClick={() => navigate(path)}
+                            onClick={() => (path ? navigate(path) : openParty())}
                             aria-current={here ? 'page' : undefined}
+                            aria-haspopup={path ? undefined : 'dialog'}
                         >
                             <Icon />
                             <span className={styles.label}>{label}</span>

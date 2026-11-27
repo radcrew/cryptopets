@@ -7,7 +7,6 @@ import RouteLayout from '@components/layout/route-layout';
 // so route-level splitting keeps a page's panel code (SVG art, DNA helix, …) out
 // of everyone else's first-load bundle.
 const HomePage = lazy(() => import('@pages/home'));
-const PetsPage = lazy(() => import('@pages/pets'));
 const TowerPage = lazy(() => import('@pages/tower'));
 const BreedPage = lazy(() => import('@pages/breed'));
 const BattlePage = lazy(() => import('@pages/battle'));
@@ -24,7 +23,7 @@ const MarketPage = lazy(() => import('@pages/market'));
 // SCRATCH — remove after visual verification.
 const BattleOverlayPreview = lazy(() => import('@pages/__preview/battle-overlay-preview'));
 
-/** Matches the loading state used elsewhere (pet-gallery, interaction standalone). */
+/** Matches the loading state used elsewhere (interaction standalone). */
 const RouteFallback: React.FC = () => (
     <div className="loading-container">
         <div className="loading-spinner" />
@@ -38,7 +37,8 @@ const AppRoutes: React.FC = () => {
             <Routes>
                 <Route element={<RouteLayout />}>
                     <Route path="/main" element={<HomePage />} />
-                    <Route path="/pets" element={<PetsPage />} />
+                    {/* The collection page became the party, opened from the dock's Pets key. */}
+                    <Route path="/pets" element={<Navigate to="/main" replace />} />
                     <Route path="/tower" element={<TowerPage />} />
                     <Route path="/breed" element={<BreedPage />} />
                     {/* :roomId is optional — set once Start Battle mints a room id

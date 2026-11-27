@@ -1,20 +1,14 @@
 import React, { useEffect, useRef, useState } from 'react';
 import clsx from 'clsx';
-import { getRarityColor, getRarityName, type Pet } from '@shared/core';
+import { getRarityColor, type Pet } from '@shared/core';
 
 import PetArt from '@components/pet/pet-art';
-import NeonButton from '@components/ui/neon-button';
 import styles from './shore-pet.module.css';
 
 /** The width of the beach pets walk across, in percent of the scene. */
 const X_MIN = 6;
 const X_MAX = 94;
 
-/**
- * Within this far of either end, a pet's card opens inward instead of centred on it. A card
- * is about 180px wide, and a quarter of the narrowest phone scene is about 90px, half of that.
- */
-const EDGE = 25;
 
 type Spot = { x: number; y: number };
 /** The strip of sand pets walk on, in percent of the scene's height. */
@@ -34,15 +28,14 @@ type Walk = { spot: Spot; seconds: number; facingLeft: boolean; walking: boolean
 
 /**
  * A short stroll, a rest of a few seconds, then another stroll. Slow on purpose: the
- * Shore should feel lived in, not busy. Paused while the pet's card is open so it does
- * not walk away from the player reading it, and never moves under reduced motion.
+ * Shore should feel lived in, not busy. Never moves under reduced motion.
  */
-const useWander = (start: Spot, lane: Lane, paused: boolean): Walk => {
+const useWander = (start: Spot, lane: Lane): Walk => {
     const [walk, setWalk] = useState<Walk>({ spot: start, seconds: 0, facingLeft: false, walking: false });
     const spot = useRef(start);
 
     useEffect(() => {
-        if (paused || prefersStill()) return;
+        if (prefersStill()) return;
         let timer: ReturnType<typeof setTimeout>;
         const stroll = () => {
             const from = spot.current;
@@ -59,7 +52,7 @@ const useWander = (start: Spot, lane: Lane, paused: boolean): Walk => {
         };
         timer = setTimeout(stroll, 1000 + Math.random() * 4000);
         return () => clearTimeout(timer);
-    }, [paused, lane]);
+    }, [lane]);
 
     return walk;
 };
@@ -69,23 +62,19 @@ type ShorePetProps = {
     index: number;
     count: number;
     lane: Lane;
-    open: boolean;
-    onToggle: () => void;
-    onBattle: () => void;
-    /** Opens the preview of the planned AI companions. */
-    onTalk: () => void;
+    /** Opens the pet's sheet. */
+    onOpen: () => void;
 };
 
-const ShorePet: React.FC<ShorePetProps> = ({ pet, index, count, lane, open, onToggle, onBattle, onTalk }) => {
+/** One of the player's pets, strolling on the sand. Tapping it opens its sheet. */
+const ShorePet: React.FC<ShorePetProps> = ({ pet, index, count, lane, onOpen }) => {
     const [start] = useState(() => startSpot(pet.id, index, count, lane));
-    const walk = useWander(start, lane, open);
+    const walk = useWander(start, lane);
     const color = getRarityColor(pet.rarity);
-    // The pet stands still while its card is open, so this is read where the card will stay.
-    const opensFrom = walk.spot.x < EDGE ? styles.cardStart : walk.spot.x > 100 - EDGE ? styles.cardEnd : undefined;
 
     return (
         <div
-            className={clsx(styles.pet, walk.walking && styles.walking, walk.facingLeft && styles.facingLeft, open && styles.open)}
+            className={clsx(styles.pet, walk.walking && styles.walking, walk.facingLeft && styles.facingLeft)}
             style={
                 {
                     left: `${walk.spot.x}%`,
@@ -98,8 +87,8 @@ const ShorePet: React.FC<ShorePetProps> = ({ pet, index, count, lane, open, onTo
             <button
                 type="button"
                 className={styles.token}
-                onClick={onToggle}
-                aria-expanded={open}
+                onClick={onOpen}
+                aria-haspopup="dialog"
                 aria-label={`${pet.name}, level ${pet.level}`}
             >
                 <span className={styles.frame}>
@@ -107,23 +96,6 @@ const ShorePet: React.FC<ShorePetProps> = ({ pet, index, count, lane, open, onTo
                 </span>
                 <span className={styles.name}>{pet.name}</span>
             </button>
-            {open && (
-                <div className={clsx(styles.card, opensFrom)} role="group" aria-label={`${pet.name} details`}>
-                    <b className={styles.cardName}>{pet.name}</b>
-                    <span className={styles.cardMeta}>
-                        <span style={{ color }}>{getRarityName(pet.rarity)}</span> · Lv {pet.level} · {pet.winCount}W{' '}
-                        {pet.lossCount}L
-                    </span>
-                    <span className={styles.cardKeys}>
-                        <NeonButton tone="magenta" size="sm" onClick={onBattle}>
-                            Battle
-                        </NeonButton>
-                        <NeonButton tone="violet" size="sm" onClick={onTalk} aria-label={`Talk with ${pet.name}, coming soon`}>
-                            Talk
-                        </NeonButton>
-                    </span>
-                </div>
-            )}
         </div>
     );
 };

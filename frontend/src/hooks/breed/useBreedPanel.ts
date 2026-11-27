@@ -11,6 +11,7 @@ import {
     type TxLifecycle,
 } from '@shared/core';
 import { formatTxHashHint } from '@hooks/usePetError';
+import { usePetChoice } from '@hooks/usePetChoice';
 import { usePetErrorToast } from '@hooks/usePetErrorToast';
 import type { OwnPetsTabProps } from '@components/pet/interactions/panels/breed/parts/own-pets-tab';
 import type { WithSpouseTabProps } from '@components/pet/interactions/panels/breed/parts/with-spouse-tab';
@@ -54,7 +55,6 @@ export const useBreedPanel = (): UseBreedPanel => {
     const autoSwitched = useRef(false);
 
     // ── My Pets tab state ──────────────────────────────────────────────────────
-    const [ownPet1, setOwnPet1] = useState('');
     const [ownPet2, setOwnPet2] = useState('');
     const [ownChildName, setOwnChildName] = useState('');
 
@@ -63,6 +63,8 @@ export const useBreedPanel = (): UseBreedPanel => {
     const [spouseChildName, setSpouseChildName] = useState('');
 
     const allPets = useMemo(() => pets.map((pet) => ({ id: pet.id, pet })), [pets]);
+    // The first parent can arrive chosen, from a pet's sheet on the Shore.
+    const [ownPet1, setOwnPet1] = usePetChoice(useMemo(() => allPets.map(({ id }) => id), [allPets]));
 
     // Auto-switch to "With Spouse" tab when user has fewer than 2 own pets —
     // they can't use the "My Pets" tab anyway, and they likely have a married pet.
@@ -128,7 +130,7 @@ export const useBreedPanel = (): UseBreedPanel => {
             setSpouseChildName('');
             void refetch();
         },
-        [pets, refetch],
+        [pets, refetch, setOwnPet1],
     );
 
     const hatchling = useMemo(

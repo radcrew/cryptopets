@@ -5,6 +5,8 @@ import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 
 const useBattleConfig = vi.fn(() => ({ data: { team: { enabled: false } } }));
 vi.mock('@shared/core', () => ({ useBattleConfig: () => useBattleConfig() }));
+const party = vi.hoisted(() => ({ openParty: vi.fn(), openPet: vi.fn(), openSummon: vi.fn() }));
+vi.mock('@contexts/party', () => ({ useParty: () => party }));
 
 import Dock from '@components/layout/dock';
 
@@ -34,6 +36,13 @@ describe('Dock keys', () => {
         expect(screen.getByText('at /breed')).toBeInTheDocument();
     });
 
+    it('opens the party from the Pets key, over the page you are on', async () => {
+        renderDock('/inventory');
+        await userEvent.click(screen.getByRole('button', { name: 'Pets' }));
+        expect(party.openParty).toHaveBeenCalled();
+        expect(screen.getByText('at /inventory')).toBeInTheDocument();
+    });
+
     it('marks the key for the page you are on, battle included for team battles', () => {
         renderDock('/team-battle');
         expect(screen.getByRole('button', { name: 'Battle' })).toHaveAttribute('aria-current', 'page');
@@ -46,7 +55,7 @@ describe('Dock More sheet', () => {
         renderDock();
         await openSheet();
         const sheet = screen.getByRole('dialog', { name: 'All places' });
-        for (const name of ['The Shore', 'My Pets', 'Level Up', 'Training Ground', 'Marriage', 'Rename Pet', 'Messages', 'Leaderboard']) {
+        for (const name of ['The Shore', 'Level Up', 'Training Ground', 'Marriage', 'Rename Pet', 'Messages', 'Leaderboard']) {
             expect(within(sheet).getByRole('button', { name })).toBeInTheDocument();
         }
     });
