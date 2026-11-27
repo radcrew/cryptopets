@@ -98,6 +98,29 @@
 }
 
 /* =============================================================================
+   Interaction states: one look for hover, press, focus and selection everywhere.
+   Hover lifts a thing by --cp-lift and brightens its ring. Press pushes it back
+   down. Keyboard focus draws a --cp-focus-ring outline. A chosen thing gets a white
+   ring inside its own colour and a stronger glow; it does not grow, because growing
+   inside a scrolling list pushes past the list's edge and gets cut off.
+   A list that scrolls keeps --cp-bleed of padding on every side, room for the lift
+   and the glow, so neither is clipped.
+   ============================================================================= */
+:root {
+    --cp-focus-ring: #7dd6ff;
+    --cp-lift: -3px;
+    --cp-bleed: 14px;
+
+    /* A text field or select: a rounded dark well with a cyan ring that brightens on hover
+       and lights up when typing. The ring is an inset shadow, so it never shifts layout. */
+    --cp-field-radius: 14px;
+    --cp-field-bg: rgb(8 10 28 / 85%);
+    --cp-field-ring: inset 0 0 0 2px rgb(125 214 255 / 28%);
+    --cp-field-ring-hover: inset 0 0 0 2px rgb(125 214 255 / 50%);
+    --cp-field-ring-focus: inset 0 0 0 2px var(--cp-cyan), 0 0 16px rgb(125 214 255 / 30%);
+}
+
+/* =============================================================================
    Semantic tokens (layout shell, gallery, modals)
    ============================================================================= */
 :root {

@@ -47,26 +47,13 @@
     color: var(--cp-text-muted-dark);
 }
 
-.close {
-    flex: none;
-    width: 38px;
-    height: 38px;
-    border: 0;
-    border-radius: 50%;
-    background: rgb(255 255 255 / 10%);
-    color: #fff;
-    font-size: 22px;
-    line-height: 1;
-    cursor: pointer;
-}
-
 .grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
     gap: 14px 10px;
     overflow-y: auto;
-    margin: 0;
-    padding: 6px 2px 4px;
+    margin: 0 calc(-1 * var(--cp-bleed));
+    padding: var(--cp-bleed);
     list-style: none;
 }
 
@@ -96,20 +83,27 @@
     overflow: hidden;
     background: radial-gradient(circle at 50% 40%, #1d2250, #0a0d24);
     box-shadow: 0 0 0 3px var(--rc), 0 0 16px -4px var(--rc), 0 6px 12px rgb(0 0 0 / 45%);
+    transition: box-shadow 0.2s ease;
+}
+
+.pet,
+.summon {
+    border-radius: 16px;
     transition: transform 0.25s var(--cp-ease-spring);
 }
 
-.pet:hover .face,
-.pet:focus-visible .face {
-    transform: translateY(-4px) scale(1.06);
+.pet:hover,
+.summon:hover {
+    transform: translateY(var(--cp-lift));
 }
 
-.pet:focus-visible {
-    outline: none;
+.pet:active,
+.summon:active {
+    transform: none;
 }
 
-.pet:focus-visible .face {
-    box-shadow: 0 0 0 3px #fff, 0 0 0 6px var(--rc), 0 0 22px var(--rc);
+.pet:hover .face {
+    box-shadow: 0 0 0 3px var(--rc), 0 0 22px var(--rc), 0 8px 14px rgb(0 0 0 / 45%);
 }
 
 .emoji {
@@ -166,7 +160,7 @@
 }
 
 .summon:hover .plus {
-    transform: rotate(90deg) scale(1.06);
+    transform: rotate(90deg);
 }
 
 .summon .name {
@@ -207,6 +201,8 @@
         animation: none;
     }
 
+    .pet,
+    .summon,
     .face,
     .summon .plus {
         transition: none;

@@ -10,7 +10,6 @@
     --zi-border: var(--cp-border-soft);
     --zi-border-strong: var(--cp-border-strong);
     --zi-glow-soft: 0 0 0 1px rgb(125 214 255 / 14%), inset 0 0 18px rgb(125 214 255 / 6%);
-    --zi-focus: 0 0 0 2px var(--cp-cyan), 0 0 12px rgb(125 214 255 / 32%);
 
     /* All standalone interaction panels fill the padded content slot (same policy
        as the battle showdown), so every panel shares the uniform slot padding
@@ -82,32 +81,28 @@
                 appearance: none;
                 -webkit-appearance: none;
                 padding: 11px 38px 11px 14px;
-                border: 1px solid rgb(125 214 255 / 28%);
-                border-radius: 4px;
+                border: 0;
+                border-radius: var(--cp-field-radius);
                 font-size: 13px;
                 font-weight: 500;
                 letter-spacing: 0.25px;
-                background-color: rgb(4 10 26 / 96%);
+                background-color: var(--cp-field-bg);
                 background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6' fill='none'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%237dd6ff' stroke-opacity='.55' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
                 background-repeat: no-repeat;
                 background-position: calc(100% - 13px) center;
                 background-size: 11px auto;
                 color: var(--zi-text);
                 cursor: pointer;
-                transition: border-color 0.2s ease, box-shadow 0.2s ease;
-                box-shadow: inset 0 0 20px rgb(125 214 255 / 4%),
-                    inset 0 1px 0 rgb(125 214 255 / 8%);
+                transition: box-shadow 0.2s ease;
+                box-shadow: var(--cp-field-ring);
 
                 &:hover {
-                    border-color: rgb(125 214 255 / 55%);
-                    box-shadow: inset 0 0 20px rgb(125 214 255 / 7%),
-                        0 0 10px rgb(125 214 255 / 14%);
+                    box-shadow: var(--cp-field-ring-hover);
                 }
 
                 &:focus {
                     outline: none;
-                    border-color: var(--cp-cyan);
-                    box-shadow: var(--zi-focus);
+                    box-shadow: var(--cp-field-ring-focus);
                 }
 
                 option {
@@ -118,17 +113,16 @@
 
             input:not(.psd-input) {
                 padding: 11px 14px;
-                border: 1px solid rgb(125 214 255 / 28%);
-                border-radius: 4px;
+                border: 0;
+                border-radius: var(--cp-field-radius);
                 font-size: 13px;
                 font-weight: 500;
                 letter-spacing: 0.25px;
-                background: rgb(4 10 26 / 96%);
+                background: var(--cp-field-bg);
                 color: var(--zi-text);
                 caret-color: var(--cp-cyan);
-                transition: border-color 0.2s ease, box-shadow 0.2s ease;
-                box-shadow: inset 0 0 20px rgb(125 214 255 / 4%),
-                    inset 0 1px 0 rgb(125 214 255 / 8%);
+                transition: box-shadow 0.2s ease;
+                box-shadow: var(--cp-field-ring);
 
                 &::placeholder {
                     color: rgb(125 214 255 / 28%);
@@ -136,13 +130,12 @@
                 }
 
                 &:hover {
-                    border-color: rgb(125 214 255 / 55%);
+                    box-shadow: var(--cp-field-ring-hover);
                 }
 
                 &:focus {
                     outline: none;
-                    border-color: var(--cp-cyan);
-                    box-shadow: var(--zi-focus);
+                    box-shadow: var(--cp-field-ring-focus);
                 }
             }
         }
@@ -277,16 +270,16 @@
 
     & input {
         padding: 11px 14px;
-        border: 1px solid rgb(125 214 255 / 28%);
-        border-radius: 4px;
+        border: 0;
+        border-radius: var(--cp-field-radius);
         font-size: 13px;
         font-weight: 500;
         letter-spacing: 0.25px;
-        background: rgb(4 10 26 / 96%);
+        background: var(--cp-field-bg);
         color: var(--zi-text, #f6f3ff);
         caret-color: var(--cp-cyan);
-        transition: border-color 0.2s ease, box-shadow 0.2s ease;
-        box-shadow: inset 0 0 20px rgb(125 214 255 / 4%), inset 0 1px 0 rgb(125 214 255 / 8%);
+        transition: box-shadow 0.2s ease;
+        box-shadow: var(--cp-field-ring);
 
         &::placeholder {
             color: rgb(125 214 255 / 28%);
@@ -294,18 +287,17 @@
         }
 
         &:hover {
-            border-color: rgb(125 214 255 / 55%);
+            box-shadow: var(--cp-field-ring-hover);
         }
 
         &:focus {
             outline: none;
-            border-color: var(--cp-cyan);
-            box-shadow: var(--zi-focus, 0 0 0 2px var(--cp-cyan));
+            box-shadow: var(--cp-field-ring-focus);
         }
     }
 }
 
-/* Layout only — children (NeonButton / .cancel-button) style themselves. */
+/* Layout only: the NeonButtons inside style themselves. */
 .action-controls {
     display: flex;
     gap: 12px;
@@ -324,24 +316,3 @@
     }
 }
 
-/* Secondary / ghost action (e.g. battle Cancel) — not a NeonButton tone. */
-.cancel-button {
-    padding: 12px 24px;
-    border: 1px solid var(--cp-border-soft);
-    border-radius: 2px;
-    font-size: 14px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    background: rgb(5 13 30 / 92%);
-    color: rgb(195 210 255 / 78%);
-
-    &:hover {
-        color: #f6f3ff;
-        border-color: var(--cp-border-strong);
-        transform: translateY(-1px);
-        box-shadow: 0 0 12px rgb(125 214 255 / 22%);
-    }
-}

@@ -1,5 +1,6 @@
 import React from 'react';
 import './index.css';
+import RoundKey from '@components/ui/round-key';
 
 export type DashboardPanelProps = {
     title: React.ReactNode;
@@ -41,14 +42,7 @@ const DashboardPanel: React.FC<DashboardPanelProps> = ({
             <div className="surface">
                 <header className="title-bar">
                     {back != null ? (
-                        <button
-                            type="button"
-                            className="panel-back"
-                            onClick={back}
-                            aria-label="Back"
-                        >
-                            ‹
-                        </button>
+                        <RoundKey icon="back" className="panel-back" onClick={back} aria-label="Back" />
                     ) : null}
                     <div className="intro">
                         <h2 id={headingId} className="heading">

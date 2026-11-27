@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import {
     getRarityColor,
+    getRarityName,
     SLOT,
     useChainCapabilities,
     usePetEquipment,
@@ -125,7 +126,7 @@ const SendPetModal: React.FC<SendPetModalProps> = ({ isOpen, onClose, pet, petId
                         <strong>DNA:</strong> {pet.dna.toString()}
                     </p>
                     <p>
-                        <strong>Rarity:</strong> {pet.rarity}
+                        <strong>Rarity:</strong> {getRarityName(pet.rarity)}
                     </p>
                 </div>
             </div>
@@ -179,9 +180,9 @@ const SendPetModal: React.FC<SendPetModalProps> = ({ isOpen, onClose, pet, petId
             </div>
 
             <div className={styles.actions}>
-                <button className={styles.cancel} onClick={handleClose} disabled={isPending}>
+                <NeonButton tone="ghost" onClick={handleClose} disabled={isPending}>
                     Cancel
-                </button>
+                </NeonButton>
                 <NeonButton
                     tone="cyan"
                     onClick={handleSend}

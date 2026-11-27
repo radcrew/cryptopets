@@ -1,6 +1,6 @@
 /* CSS Module — class names are local; reference via `import styles from '.../index.module.css'`.
    Battle setup (fighter-vs-rival showdown) + full-scene battle overlay. Shared
-   chrome (.interface/.cancel-button) stays global in interactions.css; the
+   chrome (.interface) stays global in interactions.css; the
    Battle Log's dialogue comes from the global battle-dialogue.css. */
 
 /* Battle setup — scoped under the global .interface chrome + local .battleSetup. */
@@ -176,7 +176,7 @@
     width: 18px;
     height: 3px;
     margin: 8px 0;
-    border-radius: 2px;
+    border-radius: 999px;
     background: rgb(255 255 255 / 20%);
 }
 
@@ -510,22 +510,6 @@
     top: 18px;
     left: 20px;
     z-index: 3;
-    appearance: none;
-    background: transparent;
-    border: 1px solid rgb(125 214 255 / 28%);
-    border-radius: 2px;
-    padding: 7px 14px;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.4px;
-    color: var(--cp-cyan);
-    cursor: pointer;
-    transition: border-color 0.15s ease, box-shadow 0.15s ease;
-}
-
-.sceneBack:hover {
-    border-color: var(--cp-cyan);
-    box-shadow: 0 0 10px rgb(125 214 255 / 22%);
 }
 
 /* Arena backdrop — scoped to just the actual battle panel (banner/HUD/arena in the
@@ -716,7 +700,7 @@
     font-weight: 700;
     letter-spacing: 0.5px;
     padding: 3px 9px;
-    border-radius: 2px;
+    border-radius: 999px;
     background: rgb(255 214 125 / 12%);
     border: 1px solid rgb(255 214 125 / 35%);
     color: var(--cp-amber);
@@ -753,7 +737,7 @@
         ),
         rgb(5 10 24 / 85%);
     border: 1px solid rgb(101 131 255 / 20%);
-    border-radius: 2px;
+    border-radius: 999px;
     overflow: hidden;
 }
 
@@ -789,7 +773,7 @@
     letter-spacing: 0.3px;
     white-space: nowrap;
     padding: 3px 9px;
-    border-radius: 2px;
+    border-radius: 999px;
     background: rgb(255 255 255 / 5%);
     border: 1px solid rgb(255 255 255 / 12%);
     color: rgb(195 210 255 / 75%);

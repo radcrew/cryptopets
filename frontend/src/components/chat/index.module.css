@@ -46,6 +46,9 @@
        conversation off the bottom. */
     min-height: 0;
     overflow-y: auto;
+    /* Room inside its own edge for a hovered letter's lift and an open one's glow. */
+    margin: calc(-1 * var(--cp-bleed));
+    padding: var(--cp-bleed);
 }
 
 /* A thread as a sealed letter: parchment-dark paper, a wax seal at its edge. */
@@ -85,7 +88,12 @@
 }
 
 .threadButton:hover {
-    transform: translateX(3px);
+    transform: translateY(var(--cp-lift));
+    box-shadow: inset 0 0 0 1px rgb(233 216 184 / 40%), 0 0 18px -6px rgb(181 140 255 / 60%), 0 8px 16px rgb(0 0 0 / 40%);
+}
+
+.threadButton:active {
+    transform: none;
 }
 
 .threadButton.isActive {

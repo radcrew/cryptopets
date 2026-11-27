@@ -33,9 +33,9 @@ const AcceptConfirmDialog: React.FC<AcceptConfirmDialogProps> = ({
             will marry your <strong>{targetPetName(pending.myPetId)}</strong> (#{pending.myPetId}).
         </p>
         <div className={styles.confirmActions}>
-            <button type="button" className={styles.confirmCancel} onClick={onCancel} disabled={busy}>
+            <NeonButton tone="ghost" size="sm" onClick={onCancel} disabled={busy}>
                 Cancel
-            </button>
+            </NeonButton>
             <NeonButton tone="emerald" size="sm" onClick={onConfirm} disabled={busy}>
                 {isAccepting ? 'Accepting...' : '💒 Confirm'}
             </NeonButton>

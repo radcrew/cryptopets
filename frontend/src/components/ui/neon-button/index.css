@@ -153,6 +153,20 @@
         --btn-glow: rgb(255 110 196 / 30%);
     }
 
+    /* The quiet key beside a main action (Cancel, Not now): slate, and no sheen, so the
+       eye goes to the action it stands next to. */
+    &.tone-ghost {
+        --btn-top: #4a5288;
+        --btn-bottom: #262c5c;
+        --btn-depth: #0d1030;
+        --btn-text: #e2e6ff;
+        --btn-glow: rgb(0 0 0 / 30%);
+
+        &::before {
+            display: none;
+        }
+    }
+
     @media (prefers-reduced-motion: reduce) {
         transition: none;
 

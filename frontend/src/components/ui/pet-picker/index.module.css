@@ -11,7 +11,7 @@
        the action button off the panel. */
     max-height: 320px;
     overflow-y: auto;
-    padding: 8px 4px 4px;
+    padding: var(--cp-bleed);
     scrollbar-width: thin;
     scrollbar-color: rgb(125 214 255 / 35%) transparent;
 }
@@ -23,7 +23,7 @@
     max-height: none;
     overflow-x: auto;
     overflow-y: hidden;
-    padding: 8px 4px 6px;
+    padding: var(--cp-bleed);
     scroll-snap-type: x proximity;
 }
 
@@ -54,16 +54,17 @@
     transition: transform 0.25s var(--cp-ease-spring), color 0.18s ease;
 
     &:hover:not(:disabled) {
-        transform: translateY(-3px);
+        transform: translateY(var(--cp-lift));
         color: #fff;
-        border-color: transparent;
-        box-shadow: none;
     }
 
-    &:focus-visible {
-        outline: 3px solid var(--cp-cyan);
-        outline-offset: 2px;
+    &:active:not(:disabled) {
+        transform: none;
     }
+}
+
+.tile:hover:not(:disabled) .art {
+    box-shadow: 0 0 0 3px var(--rc), 0 0 22px var(--rc), 0 8px 14px rgb(0 0 0 / 45%);
 }
 
 /* The rarity ladder, matching getRarityColor in @shared/core. */
@@ -106,7 +107,7 @@
 
 .tile.isSelected {
     color: #fff;
-    transform: translateY(-4px) scale(1.06);
+    transform: translateY(var(--cp-lift));
 }
 
 /* Chosen: a white ring inside the rarity one, and the rarity glow turned up. */

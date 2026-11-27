@@ -30,6 +30,7 @@ vi.mock('@shared/core', () => ({
     usePetList: () => petList,
     usePetEquipment: () => petEquipment,
     getRarityColor: () => '#7dd6ff',
+    getRarityName: () => 'Rare',
     SLOT: { weapon: 0, armor: 1, trinket: 2 },
     useTransferPet: (opts: { onSuccess?: () => void }) => {
         capturedOnSuccess = opts?.onSuccess;

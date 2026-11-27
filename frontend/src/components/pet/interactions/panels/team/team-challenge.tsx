@@ -22,6 +22,7 @@ import { type BoardFighter, ZoneGrid } from './team-board';
 import TeamLineup, { type LineupPet, ORDINALS } from './team-lineup';
 import TeamPetGrid from './team-pet-grid';
 import styles from './index.module.css';
+import NeonButton from '@components/ui/neon-button';
 
 const STATE_LABELS: Record<string, string> = {
     accepted: 'Challenge accepted. Freezing both teams…',
@@ -296,9 +297,9 @@ const TeamChallenge: React.FC = () => {
                     <AuthActionButton tone="magenta" onClick={() => void panel.start()} disabled={!panel.canStart}>
                         ⚔ Start Team Battle
                     </AuthActionButton>
-                    <button type="button" onClick={panel.cancel} disabled={inFlight} className="cancel-button">
+                    <NeonButton tone="ghost" onClick={panel.cancel} disabled={inFlight}>
                         Cancel
-                    </button>
+                    </NeonButton>
                 </div>
                 <p className={clsx(styles.startHint, blocked && styles.startHintBlocked)} role="status">
                     {hint}

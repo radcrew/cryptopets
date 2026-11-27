@@ -1,0 +1,66 @@
+/* CSS Module — class names are local; reference via `import styles from './index.module.css'`.
+   A round key: a dark disc in a coloured ring, standing on a short drop shadow. It lifts on
+   hover, presses down when clicked, and shows the same focus ring as every other key. */
+.key {
+    --key-ring: var(--cp-cyan);
+    --key-size: 44px;
+
+    flex: none;
+    display: grid;
+    place-items: center;
+    box-sizing: border-box;
+    width: var(--key-size);
+    height: var(--key-size);
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: radial-gradient(circle at 50% 35%, #2a3170, #0c1030);
+    box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--key-ring) 60%, transparent), 0 4px 0 #050818, 0 8px 16px rgb(0 0 0 / 40%);
+    color: #fff;
+    cursor: pointer;
+    transition: transform 0.15s var(--cp-ease-spring), box-shadow 0.15s ease;
+
+    &:hover {
+        transform: translateY(-2px);
+        box-shadow: inset 0 0 0 2px var(--key-ring), 0 0 18px -2px color-mix(in srgb, var(--key-ring) 70%, transparent),
+            0 6px 0 #050818, 0 10px 18px rgb(0 0 0 / 45%);
+    }
+
+    &:active {
+        transform: translateY(3px);
+        box-shadow: inset 0 0 0 2px var(--key-ring), 0 1px 0 #050818;
+    }
+
+    &:focus-visible {
+        outline: 3px solid var(--cp-focus-ring);
+        outline-offset: 3px;
+    }
+}
+
+.sm {
+    --key-size: 28px;
+
+    box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--key-ring) 55%, transparent);
+
+    &:hover {
+        transform: none;
+        box-shadow: inset 0 0 0 1.5px var(--key-ring), 0 0 12px -2px color-mix(in srgb, var(--key-ring) 70%, transparent);
+    }
+
+    &:active {
+        transform: scale(0.92);
+        box-shadow: inset 0 0 0 1.5px var(--key-ring);
+    }
+}
+
+.glyph {
+    width: 56%;
+    height: 56%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .key {
+        transition: none;
+    }
+}

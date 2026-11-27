@@ -4,6 +4,7 @@ import type { TxLifecycle } from '@shared/core';
 import { Tones } from '@constants/tones';
 import Icon, { CheckIcon } from '@components/ui/icon';
 import styles from './index.module.css';
+import RoundKey from '@components/ui/round-key';
 
 interface TransactionStatusProps {
     /** Mutation lifecycle from a `@shared/core` pet hook (e.g. `useTransferPet`). */
@@ -75,15 +76,15 @@ const TransactionStatus: React.FC<TransactionStatusProps> = ({ lifecycle }) => {
                         {displayHash.slice(0, 10)}...{displayHash.slice(-8)}
                     </div>
                 </div>
-                <button
-                    className={styles.close}
+                <RoundKey
+                    icon="close"
+                    size="sm"
+                    aria-label="Dismiss"
                     onClick={() => {
                         setDismissed(true);
                         setConfirmedHash(null);
                     }}
-                >
-                    ×
-                </button>
+                />
             </div>
         </div>
     );

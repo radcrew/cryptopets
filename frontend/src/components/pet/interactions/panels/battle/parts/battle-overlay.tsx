@@ -22,6 +22,7 @@ import LedgerStone, { type LedgerRecord } from '@components/game/ledger-stone';
 import PulseMoment from '@components/game/pulse-moment';
 import ResultStamp from '@components/game/result-stamp';
 import StrikePop, { type StrikeCue } from '@components/game/strike-pop';
+import RoundKey from '@components/ui/round-key';
 
 export type BattleOverlayProps = {
     open: boolean;
@@ -269,9 +270,7 @@ const BattleOverlay: React.FC<BattleOverlayProps> = ({
     if (!showResult) {
         return (
             <div className={styles.scene} role="status" aria-live="polite">
-                <button type="button" className={styles.sceneBack} onClick={onBack}>
-                    ← Back
-                </button>
+                <RoundKey icon="back" className={styles.sceneBack} onClick={onBack} aria-label="Back" />
                 <div className={styles.sceneLayout}>
                     <div className={styles.sceneMain}>
                         <div className={styles.sceneArenaPanel}>

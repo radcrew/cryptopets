@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import Modal from 'react-modal';
 
 import './index.css';
+import RoundKey from '@components/ui/round-key';
 
 type NeonModalProps = {
     isOpen: boolean;
@@ -43,9 +44,7 @@ const NeonModal = ({
                 <h3 className="title">{title}</h3>
                 <div className="controls">
                     {headerActions}
-                    <button type="button" className="close-btn" onClick={onRequestClose} aria-label="Close modal">
-                        ×
-                    </button>
+                    <RoundKey icon="close" onClick={onRequestClose} aria-label="Close modal" />
                 </div>
             </div>
             <div className={bodyClassName}>{children}</div>

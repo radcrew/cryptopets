@@ -221,7 +221,7 @@ describe('TeamChallenge battle scene', () => {
         expect(within(scene).getByText('Hidden')).toBeInTheDocument();
         expect(scene).toHaveFocus();
 
-        await user.click(within(scene).getByRole('button', { name: '← Back' }));
+        await user.click(within(scene).getByRole('button', { name: 'Back' }));
         expect(panel.hideScene).toHaveBeenCalledTimes(1);
         scene.focus();
         await user.keyboard('{Escape}');

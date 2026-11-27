@@ -4,6 +4,7 @@ import Icon, { CheckIcon, CloseIcon, PauseIcon, WarningIcon } from '@components/
 import { Tones, type Tone } from '@constants/tones';
 import { useSound } from '@contexts/sound';
 import styles from './index.module.css';
+import RoundKey from '@components/ui/round-key';
 
 export type ToastTone = 'error' | 'info' | 'success';
 
@@ -81,14 +82,12 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                                 <Icon as={IconComponent} tone={toneColor(tone)} />
                             </span>
                             <p className={styles.message}>{toast.message}</p>
-                            <button
-                                type="button"
-                                className={styles.dismiss}
+                            <RoundKey
+                                icon="close"
+                                size="sm"
                                 aria-label="Dismiss notification"
                                 onClick={() => dismiss(toast.id)}
-                            >
-                                ×
-                            </button>
+                            />
                         </div>
                     );
                 })}

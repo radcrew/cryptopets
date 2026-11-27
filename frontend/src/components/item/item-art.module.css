@@ -9,7 +9,7 @@
     width: 100%;
     aspect-ratio: 1 / 1;
     overflow: hidden;
-    border-radius: 2px;
+    border-radius: 12px;
     /* The art is painted on its own near-black ground, so the frame matches it and the
        image reads as part of the card rather than a photo pasted onto one. */
     background: rgb(5 13 30 / 92%);

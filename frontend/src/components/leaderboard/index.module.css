@@ -35,6 +35,9 @@
     flex: 1;
     min-height: 0;
     overflow-y: auto;
+    /* Into the page body's padding, so your own row's glow is not cut at the edge. */
+    margin: 0 calc(-1 * var(--cp-bleed));
+    padding: 4px var(--cp-bleed) var(--cp-bleed);
 }
 
 /* The plaques hang down the middle of the Hall rather than across the whole wall. */
@@ -296,11 +299,6 @@
     border-radius: 16px;
     background: linear-gradient(180deg, rgb(40 46 104 / 82%), rgb(16 19 52 / 88%));
     box-shadow: inset 0 1px 0 rgb(255 255 255 / 12%), 0 0 0 1px rgb(255 207 112 / 18%), 0 6px 14px rgb(0 0 0 / 35%);
-    transition: transform 0.2s var(--cp-ease-spring);
-}
-
-.row:hover {
-    transform: translateX(4px);
 }
 
 /* The connected wallet's own rows, so a player finds themselves without reading

@@ -1,13 +1,22 @@
 /* CSS Module — class names are local; reference via `import styles from './index.module.css'`.
    Each battle is a small arched stone, the same rock as the Ledger Stone's tablet. A won
    stone's runes glow gold, a lost one's stay cool violet. */
+/* The part that scrolls: the page body clips, so without this every stone past the first
+   screenful was cut off with no way to reach it. It reaches into the body's padding so its
+   own edge leaves room for a hovered stone's lift and glow. */
 .grid {
+    flex: 1 1 auto;
+    min-height: 0;
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(min(100%, 190px), 1fr));
+    align-content: start;
     gap: 16px;
-    margin: 0;
-    padding: 4px 0 0;
+    margin: 0 calc(-1 * var(--cp-bleed));
+    padding: var(--cp-bleed);
+    overflow-y: auto;
     list-style: none;
+    scrollbar-width: thin;
+    scrollbar-color: rgb(181 140 255 / 40%) transparent;
 }
 
 .stone {
@@ -33,14 +42,13 @@
 }
 
 .stone:hover {
-    transform: translateY(-5px);
+    transform: translateY(var(--cp-lift));
     box-shadow: inset 0 0 34px rgb(0 0 0 / 55%), inset 0 2px 0 rgb(255 255 255 / 10%),
         0 0 0 1px var(--glow), 0 0 26px -4px var(--glow), 0 18px 32px rgb(0 0 0 / 50%);
 }
 
-.stone:focus-visible {
-    outline: 3px solid var(--cp-cyan);
-    outline-offset: 3px;
+.stone:active {
+    transform: none;
 }
 
 .won {

@@ -335,27 +335,6 @@
     margin-top: 16px;
 }
 
-.confirmCancel {
-    padding: 8px 18px;
-    border-radius: 6px;
-    background: transparent;
-    border: 1px solid rgb(125 214 255 / 25%);
-    color: rgb(195 210 255 / 70%);
-    font-size: 13px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-
-    &:hover:not(:disabled) {
-        background: rgb(125 214 255 / 8%);
-        border-color: rgb(125 214 255 / 50%);
-    }
-
-    &:disabled {
-        opacity: 0.45;
-        cursor: not-allowed;
-    }
-}
-
 /* ── Benefits banner (propose tab) — truthful marriage benefit, heart motif ── */
 /* What marriage unlocks, on a ribbon card above the altar. */
 .benefits {

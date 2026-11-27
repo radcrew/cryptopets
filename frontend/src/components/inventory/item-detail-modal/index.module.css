@@ -71,7 +71,7 @@
     gap: 5px;
     padding: 3px 9px;
     border: 1px solid rgb(110 231 183 / 30%);
-    border-radius: 3px;
+    border-radius: 10px;
     background: rgb(110 231 183 / 8%);
     font-size: 0.76rem;
 }
@@ -109,7 +109,7 @@
     margin: 0;
     padding: 9px 12px;
     border: 1px solid rgb(255 110 196 / 40%);
-    border-radius: 2px;
+    border-radius: 12px;
     background: rgb(255 110 196 / 10%);
     color: #ff9bd6;
     font-size: 0.84rem;

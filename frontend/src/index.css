@@ -53,7 +53,12 @@ h1 {
     line-height: 1.1;
 }
 
-button {
+/* The base a key starts from, at zero specificity (`:where`) so a component's own class
+   always wins. There is deliberately no hover rule here: each key draws its own hover. A
+   generic `button:hover` glow used to outrank component classes, swapping a key's own ring
+   for a cyan box the moment the pointer arrived, and drawing that box behind tiles that
+   have no frame at all. */
+:where(button) {
     border-radius: 2px;
     border: 1px solid transparent;
     padding: 0.6em 1.2em;
@@ -64,15 +69,20 @@ button {
     background-color: rgb(5 13 30 / 92%);
     color: var(--cp-text-body-dark);
     cursor: pointer;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
 
-    &:hover {
-        border-color: var(--cp-link);
-        box-shadow: 0 0 12px rgb(125 214 255 / 24%);
-    }
+:where(button):disabled {
+    cursor: not-allowed;
+}
 
-    &:focus,
-    &:focus-visible {
-        outline: none;
-    }
+/* One focus ring for everything a keyboard can reach. Shown only for keyboard focus
+   (`:focus-visible`), so a mouse click never leaves a ring behind. A component that draws
+   its own focus state, such as a portrait's white ring, turns this off with its own class. */
+:where(button, a[href], summary, [role='button'], [role='radio'], [role='tab'], [role='switch'], [role='option']):focus {
+    outline: none;
+}
+
+:where(button, a[href], summary, [role='button'], [role='radio'], [role='tab'], [role='switch'], [role='option']):focus-visible {
+    outline: 3px solid var(--cp-focus-ring);
+    outline-offset: 3px;
 }

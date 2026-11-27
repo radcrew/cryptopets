@@ -1,22 +1,23 @@
 /* CSS Module — class names are local; reference via `import styles from './index.module.css'`. */
+/* A game card in the bottom-right corner, above the dock: clear of the wallet keys at the
+   top and of the notices that drop in under the HUD. */
 .root {
-    --tx-inset: 1.25rem;
-    --tx-slide-duration: 0.3s;
+    --tx-inset: 16px;
+    --tx-slide-duration: 0.45s;
     --tx-state-duration: 0.6s;
+    --ring: var(--cp-cyan);
 
     position: fixed;
     z-index: var(--cp-z-modal);
-    inset-block-start: var(--tx-inset);
+    inset-block-end: calc(env(safe-area-inset-bottom, 0px) + 112px);
     inset-inline-end: var(--tx-inset);
     min-width: 300px;
     max-width: 400px;
-    border-radius: 2px;
-    border: 1px solid var(--cp-border-soft);
-    background: linear-gradient(180deg, rgb(10 16 32 / 96%), rgb(6 10 22 / 98%));
-    box-shadow: inset 0 0 18px rgb(125 214 255 / 8%), 0 0 20px rgb(125 214 255 / 20%),
-        0 16px 40px rgb(0 0 0 / 45%);
-    backdrop-filter: blur(8px);
-    animation: tx-slide-in var(--tx-slide-duration) ease-out;
+    border-radius: 18px;
+    background: linear-gradient(170deg, #171d48, #0a0d24 72%);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--ring) 65%, transparent),
+        0 0 26px -6px color-mix(in srgb, var(--ring) 70%, transparent), 0 12px 28px rgb(0 0 0 / 45%);
+    animation: tx-slide-in var(--tx-slide-duration) var(--cp-ease-spring);
 
     .content {
         display: flex;
@@ -89,35 +90,6 @@
         }
     }
 
-    .close {
-        display: flex;
-        flex-shrink: 0;
-        align-items: center;
-        justify-content: center;
-        width: 1.5rem;
-        height: 1.5rem;
-        padding: 0.25rem;
-        border: 1px solid transparent;
-        border-radius: 2px;
-        background: transparent;
-        font-size: var(--cp-font-size-xl);
-        line-height: 1;
-        color: rgb(195 210 255 / 60%);
-        cursor: pointer;
-        transition: var(--cp-transition-fast);
-
-        &:hover:not(:disabled) {
-            color: var(--cp-cyan);
-            border-color: rgb(125 214 255 / 42%);
-            box-shadow: 0 0 10px rgb(125 214 255 / 24%);
-        }
-
-        &:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-    }
-
     &.pending .icon {
         background: rgb(255 181 67 / 14%);
         color: #ffd07b;
@@ -133,6 +105,8 @@
     }
 
     &.confirmed {
+        --ring: var(--cp-emerald);
+
         animation: tx-success-pulse var(--tx-state-duration) ease-out;
 
         .icon {
@@ -144,6 +118,8 @@
     }
 
     &.error {
+        --ring: var(--cp-magenta);
+
         animation: tx-error-shake var(--tx-state-duration) ease-out;
 
         .icon {
@@ -165,12 +141,12 @@
 @keyframes tx-slide-in {
     from {
         opacity: 0;
-        transform: translateX(100%);
+        transform: translateY(24px) scale(0.94);
     }
 
     to {
         opacity: 1;
-        transform: translateX(0);
+        transform: translateY(0) scale(1);
     }
 }
 

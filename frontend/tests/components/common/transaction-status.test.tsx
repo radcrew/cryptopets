@@ -47,7 +47,7 @@ describe('TransactionStatus', () => {
             <TransactionStatus lifecycle={lc({ phase: 'confirming', hash: HASH })} />,
         );
 
-        fireEvent.click(screen.getByText('×'));
+        fireEvent.click(screen.getByRole('button', { name: 'Dismiss' }));
 
         expect(container).toBeEmptyDOMElement();
     });

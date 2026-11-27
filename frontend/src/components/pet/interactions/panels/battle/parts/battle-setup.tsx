@@ -24,6 +24,7 @@ import styles from '../index.module.css';
 import EquippedBadges from '@components/pet/equipped-badges';
 import PetPicker from '@components/ui/pet-picker';
 import PetStage from '@components/game/pet-stage';
+import NeonButton from '@components/ui/neon-button';
 
 export type BattleSetupProps = {
     isStandaloneView: boolean;
@@ -306,9 +307,9 @@ const BattleSetup: React.FC<BattleSetupProps> = ({
                 <AuthActionButton tone="magenta" onClick={onBattle} disabled={battleDisabled}>
                     ⚔ {battleButtonLabel}
                 </AuthActionButton>
-                <button type="button" onClick={onCancel} className="cancel-button">
+                <NeonButton tone="ghost" onClick={onCancel}>
                     Cancel
-                </button>
+                </NeonButton>
             </div>
         </div>
     );

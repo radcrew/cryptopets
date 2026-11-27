@@ -56,20 +56,6 @@
         color: #f6f3ff;
     }
 
-    .dismiss {
-        appearance: none;
-        border: none;
-        background: transparent;
-        color: rgb(195 210 255 / 72%);
-        font-size: 18px;
-        line-height: 1;
-        cursor: pointer;
-        padding: 0 2px;
-
-        &:hover {
-            color: #fff;
-        }
-    }
 }
 
 @keyframes toast-enter {

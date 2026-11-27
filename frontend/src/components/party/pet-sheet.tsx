@@ -36,6 +36,7 @@ import {
     TRAIN_PATH,
 } from '@constants/interactionRoutes';
 import styles from './pet-sheet.module.css';
+import RoundKey from '@components/ui/round-key';
 
 const SLOT_ICONS: Record<string, string> = { weapon: '⚔️', armor: '🛡️', trinket: '💠' };
 
@@ -122,15 +123,11 @@ const PetSheet: React.FC<{ petId: string; onClose: () => void; onBack?: () => vo
             >
                 <div className={styles.topKeys}>
                     {onBack ? (
-                        <button type="button" className={styles.round} onClick={onBack} aria-label="Back to your party">
-                            ‹
-                        </button>
+                        <RoundKey icon="back" className={styles.round} onClick={onBack} aria-label="Back to your party" />
                     ) : (
                         <span />
                     )}
-                    <button type="button" className={styles.round} onClick={onClose} aria-label="Close" data-autofocus>
-                        ×
-                    </button>
+                    <RoundKey icon="close" className={styles.round} onClick={onClose} aria-label="Close" data-autofocus />
                 </div>
                 {body}
             </div>

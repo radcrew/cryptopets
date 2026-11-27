@@ -6,6 +6,7 @@ import type { VerifiedBattleReceipt } from '@shared/core';
 import NeonButton from '@components/ui/neon-button';
 import { useSound } from '@contexts/sound';
 import styles from './index.module.css';
+import RoundKey from '@components/ui/round-key';
 
 /** One signed receipt, and the checks this browser ran on it. */
 export type LedgerRecord = {
@@ -117,9 +118,7 @@ export const LedgerTablet: React.FC<{ record: LedgerRecord; caption: string; onC
         // The veil is the dialog, so the close key can sit in the screen's corner, clear of the
         // stone's arched top and its title.
         <div ref={dialog} className={styles.veil} role="dialog" aria-modal="true" aria-label={`Ledger Stone #${sequence}`}>
-            <button type="button" className={styles.close} onClick={onClose} aria-label="Close the Ledger Stone">
-                ×
-            </button>
+            <RoundKey icon="close" className={styles.close} onClick={onClose} aria-label="Close the Ledger Stone" />
             <div className={styles.tablet}>
                 <h2 className={styles.title}>Ledger Stone · #{sequence.toLocaleString()}</h2>
                 <p className={styles.caption}>

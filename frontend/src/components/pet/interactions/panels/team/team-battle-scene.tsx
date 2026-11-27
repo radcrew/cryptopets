@@ -14,6 +14,7 @@ import duel from '../battle/index.module.css';
 import { teamPetArt } from './art';
 import { BattleBoard, type BoardFighter } from './team-board';
 import styles from './index.module.css';
+import RoundKey from '@components/ui/round-key';
 
 export type ScenePhase = 'submitting' | 'running' | 'result' | 'failed';
 
@@ -281,9 +282,7 @@ const TeamBattleScene: React.FC<TeamBattleSceneProps> = ({
             tabIndex={-1}
         >
             {onHide && phase === 'running' && (
-                <button type="button" className={duel.sceneBack} onClick={onHide}>
-                    ← Back
-                </button>
+                <RoundKey icon="back" className={duel.sceneBack} onClick={onHide} aria-label="Back" />
             )}
             <div className={duel.sceneLayout}>
                 <div className={duel.sceneMain}>

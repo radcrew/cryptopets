@@ -66,8 +66,11 @@
 
 /* Fills the panel rather than sitting at the top of it, so the two parents and the nest
    between them use the height instead of leaving it empty below. */
+/* Scrolls; it reaches into the page body's padding so its own edge leaves room for the
+   keys' lift and glow without moving the content. */
 .tabPanel {
-    padding-top: 18px;
+    margin-inline: calc(-1 * var(--cp-bleed));
+    padding: 18px var(--cp-bleed) var(--cp-bleed);
     display: flex;
     flex-direction: column;
     gap: 14px;

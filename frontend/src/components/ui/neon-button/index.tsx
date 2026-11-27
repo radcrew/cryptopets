@@ -4,10 +4,8 @@ import { type Tone } from '@constants/tones';
 
 import './index.css';
 
-export type NeonButtonTone = Extract<
-    Tone,
-    'emerald' | 'azure' | 'amber' | 'cyan' | 'violet' | 'magenta'
->;
+/** `ghost` is the quiet key for a secondary action such as Cancel: the same key, in slate. */
+export type NeonButtonTone = Extract<Tone, 'emerald' | 'azure' | 'amber' | 'cyan' | 'violet' | 'magenta'> | 'ghost';
 export type NeonButtonSize = 'md' | 'sm' | 'xs';
 
 export type NeonButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {

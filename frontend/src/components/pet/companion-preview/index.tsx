@@ -5,6 +5,7 @@ import { getRarityColor, type Pet } from '@shared/core';
 import ComingSoon from '@components/game/coming-soon';
 import PetArt from '@components/pet/pet-art';
 import styles from './index.module.css';
+import RoundKey from '@components/ui/round-key';
 
 /** Sample traits. The real ones are generated once per pet and never touch combat. */
 const TRAITS = ['Bold', 'Curious', 'Loyal'];
@@ -35,9 +36,7 @@ const CompanionPreview: React.FC<{ pet: Pet; onClose: () => void }> = ({ pet, on
 
     return createPortal(
         <div className={styles.veil} role="dialog" aria-modal="true" aria-label={`Talk with ${pet.name}`}>
-            <button ref={closeButton} type="button" className={styles.close} onClick={onClose} aria-label="Close">
-                ×
-            </button>
+            <RoundKey ref={closeButton} icon="close" className={styles.close} onClick={onClose} aria-label="Close" />
             <div className={styles.panel} style={{ '--rc': getRarityColor(pet.rarity) } as React.CSSProperties}>
                 <header className={styles.head}>
                     <span className={styles.portrait}>

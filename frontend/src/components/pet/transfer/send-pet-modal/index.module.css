@@ -1,23 +1,25 @@
 /* CSS Module — class names are local; reference via `import styles from './index.module.css'`.
    Body content only — the overlay/dialog/header/close chrome comes from <NeonModal>. */
 .sendPetBody {
+    /* The pet being sent, on a game card. */
     .preview {
-        background: rgb(5 13 30 / 78%);
-        border: 1px solid var(--cp-border-soft);
-        border-radius: 2px;
+        background: linear-gradient(170deg, rgb(23 29 72 / 85%), rgb(10 13 36 / 90%));
+        border: 0;
+        border-radius: 16px;
+        box-shadow: inset 0 0 0 1px rgb(125 214 255 / 22%);
         padding: 16px;
         margin-bottom: 20px;
         box-sizing: border-box;
 
         & h3 {
             margin: 0 0 12px 0;
-            font-family: var(--cp-title-font);
+            font-family: var(--cp-display-font);
             color: #f6f3ff;
-            font-size: 1.25rem;
-            font-weight: 700;
-            letter-spacing: 0.5px;
+            font-size: 1.15rem;
+            font-weight: 400;
+            letter-spacing: 0.04em;
             text-transform: uppercase;
-            text-shadow: 0 0 10px var(--cp-text-glow);
+            text-shadow: 0 3px 0 #2a1050;
         }
     }
 
@@ -39,10 +41,10 @@
     /* Amber rather than magenta: this is something to notice before sending, not an error
        and not a blocked action. Sending a geared pet is a legitimate thing to want. */
     .gearNotice {
-        background: rgb(40 26 5 / 62%);
-        border: 1px solid rgb(255 186 84 / 34%);
-        border-left-width: 3px;
-        border-radius: 2px;
+        background: linear-gradient(170deg, rgb(64 42 10 / 70%), rgb(30 20 6 / 80%));
+        border: 0;
+        border-radius: 16px;
+        box-shadow: inset 0 0 0 1px rgb(255 186 84 / 40%);
         padding: 12px 14px;
         margin-bottom: 20px;
         box-sizing: border-box;
@@ -124,25 +126,28 @@
         & input {
             width: 100%;
             max-width: 100%;
-            padding: 0.625rem 1rem;
-            border: 1px solid rgb(125 214 255 / 24%);
-            border-radius: 2px;
-            background: rgb(5 13 30 / 92%);
+            padding: 0.7rem 1rem;
+            border: 0;
+            border-radius: var(--cp-field-radius);
+            background: var(--cp-field-bg);
+            box-shadow: var(--cp-field-ring);
             color: var(--cp-text-body-dark);
             font-size: 1rem;
             font-family: inherit;
-            transition: border-color 0.2s, box-shadow 0.2s;
+            transition: box-shadow 0.2s;
             box-sizing: border-box;
+
+            &:hover:not(:disabled) {
+                box-shadow: var(--cp-field-ring-hover);
+            }
 
             &:focus {
                 outline: none;
-                border-color: var(--cp-cyan);
-                box-shadow: 0 0 0 2px var(--cp-cyan), 0 0 12px rgb(125 214 255 / 32%);
+                box-shadow: var(--cp-field-ring-focus);
             }
 
             &.invalid {
-                border-color: var(--cp-magenta);
-                box-shadow: 0 0 12px rgb(255 110 196 / 28%);
+                box-shadow: inset 0 0 0 2px var(--cp-magenta), 0 0 16px rgb(255 110 196 / 28%);
             }
 
             &:disabled {
@@ -165,31 +170,5 @@
         padding-top: 8px;
         width: 100%;
         box-sizing: border-box;
-    }
-
-    /* Secondary / ghost cancel — not a NeonButton tone. */
-    .cancel {
-        padding: 0.75rem 2rem;
-        border-radius: 2px;
-        font-size: 1rem;
-        font-weight: 700;
-        letter-spacing: 0.7px;
-        text-transform: uppercase;
-        cursor: pointer;
-        transition: all 0.2s;
-        background: rgb(5 13 30 / 92%);
-        color: rgb(195 210 255 / 78%);
-        border: 1px solid var(--cp-border-soft);
-
-        &:hover:not(:disabled) {
-            color: #f6f3ff;
-            border-color: var(--cp-border-strong);
-            box-shadow: 0 0 12px rgb(125 214 255 / 22%);
-        }
-
-        &:disabled {
-            opacity: 0.55;
-            cursor: not-allowed;
-        }
     }
 }

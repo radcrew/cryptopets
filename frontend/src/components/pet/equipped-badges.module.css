@@ -37,7 +37,7 @@
     width: 22px;
     height: 22px;
     border: 1px solid color-mix(in srgb, var(--rarity, #ffffff) 60%, transparent);
-    border-radius: 2px;
+    border-radius: 999px;
     /* Opaque, not tinted: these sit on generated art that can be any colour, and a
        translucent chip over a bright painting is unreadable. */
     background: rgb(5 13 30 / 92%);

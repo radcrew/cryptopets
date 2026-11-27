@@ -613,7 +613,7 @@ button.tile:focus-visible {
     gap: 8px;
     overflow-x: auto;
     overflow-y: hidden;
-    padding: 2px 2px 6px;
+    padding: var(--cp-bleed);
     scrollbar-width: thin;
     scrollbar-color: rgb(125 214 255 / 35%) transparent;
 }
@@ -656,14 +656,15 @@ button.tile:focus-visible {
 
 .petTile:hover:not(:disabled) {
     color: #f6f3ff;
-    transform: translateY(-3px);
-    border-color: transparent;
-    box-shadow: none;
+    transform: translateY(var(--cp-lift));
 }
 
-.petTile:focus-visible {
-    outline: 3px solid var(--cp-cyan);
-    outline-offset: 2px;
+.petTile:active:not(:disabled) {
+    transform: none;
+}
+
+.petTile:hover:not(:disabled) .petArt {
+    box-shadow: 0 0 0 3px var(--rc), 0 0 22px var(--rc), 0 8px 14px rgb(0 0 0 / 45%);
 }
 
 .petTile:disabled {
@@ -673,7 +674,7 @@ button.tile:focus-visible {
 
 .petTileChosen {
     color: #fff;
-    transform: translateY(-4px) scale(1.06);
+    transform: translateY(var(--cp-lift));
 }
 
 .petTileChosen .petArt {
@@ -710,6 +711,7 @@ button.tile:focus-visible {
     overflow: hidden;
     background: radial-gradient(circle at 50% 40%, #1d2250, #0a0d24);
     box-shadow: 0 0 0 3px var(--rc), 0 0 14px -2px var(--rc), 0 6px 12px rgb(0 0 0 / 45%);
+    transition: box-shadow 0.2s ease;
 }
 
 .petArt img {
@@ -750,7 +752,7 @@ button.tile:focus-visible {
 .hpTrack {
     width: 100%;
     height: 4px;
-    border-radius: 2px;
+    border-radius: 999px;
     background: rgba(255, 255, 255, 0.12);
     overflow: hidden;
 }
@@ -1273,7 +1275,7 @@ button.lineupWho:focus-visible {
     display: flex;
     height: 6px;
     overflow: hidden;
-    border-radius: 3px;
+    border-radius: 999px;
     background: rgb(255 255 255 / 10%);
 }
 

@@ -6,6 +6,7 @@ import { getGeneration, getRarityColor, type Pet } from '@shared/core';
 import ComingSoon from '@components/game/coming-soon';
 import PetArt from '@components/pet/pet-art';
 import styles from './index.module.css';
+import RoundKey from '@components/ui/round-key';
 
 /** The arcs roadmap §8 plans, each with what would unlock it. The first is shown open. */
 const chapters = (name: string) => [
@@ -42,9 +43,7 @@ const StoryPreview: React.FC<{ pet: Pet; onClose: () => void }> = ({ pet, onClos
 
     return createPortal(
         <div className={styles.veil} role="dialog" aria-modal="true" aria-label={`${pet.name}'s story`}>
-            <button ref={closeButton} type="button" className={styles.close} onClick={onClose} aria-label="Close the story">
-                ×
-            </button>
+            <RoundKey ref={closeButton} icon="close" className={styles.close} onClick={onClose} aria-label="Close the story" />
             <div className={styles.book} style={{ '--rc': getRarityColor(pet.rarity) } as React.CSSProperties}>
                 <header className={styles.cover}>
                     <span className={styles.portrait}>

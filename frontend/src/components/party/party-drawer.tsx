@@ -4,6 +4,7 @@ import { getRarityColor, useChainCapabilities, usePetCooldowns, usePetList } fro
 
 import PetArt from '@components/pet/pet-art';
 import styles from './party-drawer.module.css';
+import RoundKey from '@components/ui/round-key';
 
 /**
  * The party: every pet the player owns, as portraits, with the key to summon another.
@@ -96,9 +97,7 @@ const PartyDrawer: React.FC<{
                             </span>
                         )}
                     </span>
-                    <button type="button" className={styles.close} onClick={onClose} aria-label="Close">
-                        ×
-                    </button>
+                    <RoundKey icon="close" onClick={onClose} aria-label="Close" />
                 </header>
                 {content}
             </div>
