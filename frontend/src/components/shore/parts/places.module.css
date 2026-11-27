@@ -58,7 +58,8 @@
 
 .hall {
     --tag: var(--cp-gold);
-    left: max(2%, 22px);
+    /* Far enough in that its sign, wider than the Hall, clears the scene's left edge. */
+    left: max(2%, 32px);
     bottom: 44%;
     width: clamp(90px, 11cqw, 140px);
     aspect-ratio: 160 / 220;
