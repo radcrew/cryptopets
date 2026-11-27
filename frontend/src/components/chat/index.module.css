@@ -187,9 +187,11 @@
     flex-direction: column;
     align-items: flex-start;
     gap: 2px;
-    padding: 8px 14px;
-    border-radius: 12px;
-    background: rgb(148 163 184 / 12%);
+    padding: 9px 15px;
+    /* A speech bubble: round, with the corner nearest the speaker tucked in as its tail. */
+    border-radius: 18px 18px 18px 6px;
+    background: rgb(8 10 28 / 70%);
+    box-shadow: inset 0 0 0 1px rgb(125 214 255 / 32%), 0 4px 12px rgb(0 0 0 / 30%);
     /* `#root` in App.css centres the whole app, so anything that wants ordinary prose
        has to say so — see `.threadButton`, which already had to. A centred second line
        under a longer first one does not read as a message. The meta below is placed by
@@ -206,7 +208,9 @@
 }
 
 .message.isMine .bubble {
-    background: rgb(181 140 255 / 13%);
+    border-radius: 18px 18px 6px 18px;
+    background: linear-gradient(135deg, rgb(181 140 255 / 30%), rgb(255 123 203 / 22%));
+    box-shadow: inset 0 0 0 1px rgb(255 123 203 / 35%), 0 4px 12px rgb(0 0 0 / 30%);
 }
 
 /* The pet behind each side of the thread. Round, because that is what reads as a

@@ -54,13 +54,14 @@ const PetCard: React.FC<PetCardProps> = ({ pet, cooldown, equipped, onBattle, on
     const skill = getPetSkill(pet.speciesId);
 
     return (
-        <div className={styles.petCard}>
+        // The card's frame glows in the pet's own rarity colour, like a collectible card.
+        <div className={styles.petCard} style={{ '--rc': rarityColor } as React.CSSProperties}>
             <div
                 className={styles.rarityBar}
                 style={{ background: rarityColor, boxShadow: `0 0 8px ${rarityColor}` }}
             />
             <div className={styles.visual}>
-                <div className={styles.rarity} style={{ color: rarityColor, borderColor: rarityColor }}>
+                <div className={styles.rarity}>
                     {getRarityName(pet.rarity)}
                 </div>
                 <div className={styles.level}>Lv. {pet.level}</div>
