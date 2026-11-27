@@ -1,52 +1,51 @@
 /* CSS Module — class names are local; reference via `import styles from '.../index.module.css'`.
-   Breed panel: tabs + parent previews + DNA helix/egg centre. Shared chrome
-   (.interface/.picker/.field/.action-controls) stays global in interactions.css;
-   the primary CTA reaches neon-button's global .neon-btn via :global(). */
+   Breed panel: the tab keys, the rosters and the notices. The nest scene itself (pedestals,
+   egg, name field) lives in nest.module.css. */
+/* My pets or With spouse: two chunky keys side by side, the chosen one lit. */
 .tabs {
     display: flex;
-    gap: 4px;
-    margin-bottom: 0;
-    border-bottom: 1px solid rgb(120 200 255 / 18%);
-    padding-bottom: 0;
+    justify-content: center;
+    gap: 6px;
+    width: max-content;
+    max-width: 100%;
+    margin: 0 auto;
+    padding: 5px;
+    border-radius: 999px;
+    background: rgb(8 10 28 / 72%);
+    box-shadow: inset 0 0 0 1px rgb(255 207 112 / 30%);
 }
 
 .tab {
-    flex: 1;
-    padding: 10px 16px;
-    background: transparent;
-    border: 1px solid transparent;
-    border-bottom: none;
-    border-radius: 8px 8px 0 0;
-    color: rgb(180 210 255 / 55%);
-    font-size: 13px;
-    font-weight: 700;
-    letter-spacing: 0.4px;
-    text-transform: uppercase;
-    cursor: pointer;
-    transition: all 0.2s ease;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 6px;
+    padding: 9px 18px;
+    border: 0;
+    border-radius: 999px;
+    background: none;
+    color: #c9cbe0;
+    font: 400 12px var(--cp-display-font);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: transform 0.15s var(--cp-ease-spring), background 0.15s ease;
 
     &:hover:not(.active) {
-        color: rgb(180 210 255 / 88%);
-        background: rgb(120 200 255 / 6%);
+        color: #fff;
+        background: rgb(255 255 255 / 8%);
     }
 
     &.active {
-        color: var(--zi-text, #f6f3ff);
-        background: rgb(120 200 255 / 8%);
-        border-color: rgb(120 200 255 / 22%);
-        border-bottom-color: rgb(5 13 30 / 92%);
-        margin-bottom: -1px;
+        color: #2a1600;
+        background: linear-gradient(180deg, #ffe08a, #ffad3b);
+        box-shadow: 0 3px 0 #8a4a12;
     }
 
     &.spouseTab.active {
-        color: #ffd07b;
-        background: rgb(255 181 67 / 8%);
-        border-color: rgb(255 181 67 / 24%);
-        border-bottom-color: rgb(5 13 30 / 92%);
+        color: #fff;
+        background: linear-gradient(180deg, #ff9ad8, #d6409c);
+        box-shadow: 0 3px 0 #6e1650;
     }
 }
 
@@ -65,8 +64,8 @@
     color: #ffd07b;
 }
 
-/* Fills the panel rather than sitting at the top of it, so the two parents and the DNA
-   centre between them use the height instead of leaving it empty below. */
+/* Fills the panel rather than sitting at the top of it, so the two parents and the nest
+   between them use the height instead of leaving it empty below. */
 .tabPanel {
     padding-top: 18px;
     display: flex;
@@ -80,32 +79,13 @@
 }
 
 .tabHint {
-    font-size: 13px;
-    color: rgb(180 210 255 / 58%);
     margin: 0;
+    font-size: 13px;
+    color: #d6d8ea;
+    text-align: center;
 }
 
 /* Partner (spouse) info — mirrors .picker .field select sizing exactly */
-.spouseValue {
-    display: flex;
-    align-items: center;
-    padding: 11px 14px;
-    font-size: 13px;
-    font-weight: 600;
-    letter-spacing: 0.25px;
-    background: rgb(255 181 67 / 6%);
-    border: 1px solid rgb(255 181 67 / 22%);
-    border-radius: 4px;
-    color: #ffd07b;
-}
-
-.spousePlaceholder {
-    color: rgb(255 181 67 / 35%);
-    font-weight: 400;
-    font-style: italic;
-}
-
-/* Stud fee notice */
 .studFeeNotice {
     font-size: 12px;
     color: rgb(255 181 67 / 72%);
@@ -152,579 +132,7 @@
 /* Takes the slack inside the tab panel and centres the pair in it. `align-items: center`
    also keeps the DNA centre — which carries the breed action on this tab — level with the
    two parent cards rather than riding at their top edge. */
-.parents {
-    display: grid;
-    grid-template-columns: 1fr auto 1fr;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 10px;
-    /* Never squeezed below its cards: with the rosters under it, shrinking made the cards
-       spill over them. The tab scrolls instead when the screen is short. */
-    flex: 0 0 auto;
-}
-
-/* Parent column = card + Prev/Next cycle row (mock-style selection) */
-.parentCol {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    min-width: 0;
-}
-
-.cycle {
-    display: flex;
-    gap: 8px;
-}
-
-.cycleBtn {
-    flex: 1;
-    background: rgb(5 13 30 / 70%);
-    border: 1px solid rgb(101 131 255 / 22%);
-    border-radius: 6px;
-    padding: 8px;
-    font-size: 12px;
-    font-weight: 600;
-    color: rgb(195 210 255 / 65%);
-    cursor: pointer;
-    transition: border-color 0.2s ease, color 0.2s ease;
-
-    &:hover:not(:disabled) {
-        color: #f6f3ff;
-    }
-
-    &:disabled {
-        opacity: 0.45;
-        cursor: not-allowed;
-    }
-}
-
-.cycleBtnA {
-    border-color: rgb(255 207 112 / 20%);
-    color: rgb(255 207 112 / 65%);
-
-    &:hover:not(:disabled) {
-        border-color: rgb(255 207 112 / 50%);
-        color: var(--cp-amber);
-    }
-}
-
-.cycleBtnB {
-    border-color: rgb(181 140 255 / 20%);
-    color: rgb(181 140 255 / 65%);
-
-    &:hover:not(:disabled) {
-        border-color: rgb(181 140 255 / 50%);
-        color: var(--cp-violet);
-    }
-}
-
-/* With-Spouse tab: ◀ current pet ▶ cycle selector (replaces the dropdown) */
-.cycleSelect {
-    display: flex;
-    align-items: stretch;
-    gap: 8px;
-
-    .cycleBtn {
-        flex: 0 0 auto;
-        min-width: 42px;
-        color: rgb(125 214 255 / 70%);
-        border-color: rgb(125 214 255 / 28%);
-
-        &:hover:not(:disabled) {
-            border-color: var(--cp-cyan);
-            color: var(--cp-cyan);
-        }
-    }
-}
-
-.cycleCurrent {
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 8px 12px;
-    border-radius: 6px;
-    border: 1px solid rgb(125 214 255 / 28%);
-    background: rgb(4 10 26 / 96%);
-    font-size: 13px;
-    color: var(--zi-text);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-/* ── DNA helix + compatibility + egg centre ─────────────────────────────────── */
-.dna {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-    width: 140px;
-    padding: 4px 0;
-}
-
-/* Breed action button, sitting between the two pets under the egg. */
-.dnaAction {
-    width: 100%;
-    margin-top: 2px;
-
-    :global(.neon-btn) {
-        width: 100%;
-        min-width: 0;
-        padding: 11px 8px;
-        font-size: 11px;
-        letter-spacing: 0.4px;
-        white-space: nowrap;
-    }
-}
-
-.dnaLabel {
-    font-size: 8px;
-    font-weight: 700;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    color: rgb(195 210 255 / 32%);
-}
-
-.dnaHelix {
-    display: block;
-    overflow: visible;
-    filter: drop-shadow(0 0 4px rgb(125 214 255 / 25%));
-}
-
-.dnaStrand {
-    animation: cp-strand-glow 2.5s ease-in-out infinite;
-}
-.dnaStrandB {
-    animation-delay: 0.5s;
-}
-.dnaNode {
-    animation: cp-node-blink 2.5s ease-in-out infinite;
-}
-
-/* Compatibility ring */
-.dnaCompat {
-    position: relative;
-    width: 64px;
-    height: 64px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-}
-
-.dnaCompatSvg {
-    position: absolute;
-    inset: 0;
-    transform: rotate(-90deg);
-}
-
-.dnaCompatArc {
-    filter: drop-shadow(0 0 5px rgb(125 214 255 / 70%));
-    animation: cp-compat-draw 0.9s ease both;
-    transition: stroke-dasharray 0.5s ease;
-}
-
-.dnaCompatText {
-    position: relative;
-    z-index: 1;
-    text-align: center;
-    line-height: 1;
-}
-
-.dnaCompatPct {
-    display: block;
-    font-family: var(--cp-title-font);
-    font-size: 14px;
-    font-weight: 900;
-    color: var(--cp-cyan);
-}
-
-.dnaCompatCap {
-    display: block;
-    margin-top: 2px;
-    font-size: 7px;
-    letter-spacing: 0.8px;
-    text-transform: uppercase;
-    color: rgb(195 210 255 / 45%);
-}
-
-/* Egg / offspring estimate */
-.dnaEgg {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 2px;
-    padding: 8px 6px;
-    border-radius: 10px;
-    border: 1px solid rgb(255 207 112 / 18%);
-    background: rgb(10 16 32 / 85%);
-}
-
-.dnaEggEmoji {
-    font-size: 26px;
-    line-height: 1;
-    filter: drop-shadow(0 0 10px rgb(255 207 112 / 80%));
-    animation: cp-float 2.8s ease-in-out infinite;
-}
-
-.dnaEggRarity {
-    font-family: var(--cp-title-font);
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.3px;
-}
-
-.dnaEggGen {
-    font-size: 9px;
-    color: rgb(195 210 255 / 40%);
-}
-
-.parent {
-    position: relative;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-
-    /* The art is the card now rather than a 74px strip above it, so the card
-       needs the height to be one. */
-    min-height: 300px;
-    border-radius: 12px;
-    overflow: hidden;
-    border: 1px solid rgb(120 150 255 / 12%);
-    background: linear-gradient(180deg, rgb(10 16 32 / 85%), rgb(6 10 22 / 90%));
-}
-
-.parentB {
-    border-color: rgb(120 150 255 / 12%);
-}
-
-/* No shorter min-height of its own: an empty slot that matched the filled card
-   keeps the two columns level while a parent is still being chosen. */
-.parent.isEmpty {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-style: dashed;
-}
-
-.parentPlaceholder {
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.4px;
-    text-transform: uppercase;
-    color: rgb(195 210 255 / 40%);
-}
-
-/* Art layer, with the rarity / level / bred badges over it.
-   Positioned so PetArt's filling image resolves against it, and a grid so the
-   emoji fallback centres in the same space the art covers. */
-.parentArt {
-    position: absolute;
-    inset: 0;
-    display: grid;
-    place-items: center;
-    background: radial-gradient(circle at 50% 40%, rgb(255 207 112 / 12%), transparent 62%);
-}
-
-.parentB .parentArt {
-    background: radial-gradient(circle at 50% 40%, rgb(181 140 255 / 12%), transparent 62%);
-}
-
-/* Opaque at the base, clear at the top: the readout needs ground to sit on and
-   the pet needs to stay visible above it. */
-.parentScrim {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(
-        to top,
-        rgb(3 7 18 / 96%) 0%,
-        rgb(3 7 18 / 88%) 38%,
-        rgb(3 7 18 / 26%) 68%,
-        rgb(3 7 18 / 0%) 100%
-    );
-}
-
-.parentRarity {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    border: 1px solid;
-    border-radius: 3px;
-    padding: 2px 7px;
-    font-size: 8px;
-    font-weight: 700;
-    letter-spacing: 0.9px;
-    text-transform: uppercase;
-    background: rgb(5 13 30 / 55%);
-}
-
-.parentLevel {
-    position: absolute;
-    top: 8px;
-    left: 8px;
-    background: rgb(5 13 30 / 88%);
-    color: var(--cp-cyan);
-    border: 1px solid rgb(125 214 255 / 32%);
-    border-radius: 999px;
-    padding: 2px 8px;
-    font-size: 9px;
-    font-weight: 700;
-}
-
-.parentB .parentLevel {
-    color: var(--cp-violet);
-    border-color: rgb(181 140 255 / 32%);
-}
-
-/* Under the level badge rather than bottom-right, which is now the readout. */
-.parentBred {
-    position: absolute;
-    top: 34px;
-    left: 8px;
-    background: rgb(255 207 112 / 12%);
-    color: var(--cp-amber);
-    border: 1px solid rgb(255 207 112 / 30%);
-    border-radius: 999px;
-    padding: 2px 8px;
-    font-size: 9px;
-    font-weight: 700;
-}
-
-.parentB .parentBred {
-    background: rgb(181 140 255 / 12%);
-    color: var(--cp-violet);
-    border-color: rgb(181 140 255 / 30%);
-}
-
-/* The emoji fallback only — PetArt's image is taken out of flow by `fill`, so
-   the float and glow here never reach the art. */
-.parentAvatar {
-    font-size: clamp(3rem, 9vw, 5rem);
-    line-height: 1;
-    flex-shrink: 0;
-    animation: cp-float 3.5s ease-in-out infinite;
-    filter: drop-shadow(0 0 18px rgb(255 207 112 / 55%));
-}
-
-.parentB .parentAvatar {
-    animation-duration: 4.2s;
-    filter: drop-shadow(0 0 18px rgb(181 140 255 / 55%));
-}
-
-.parentBody {
-    position: relative;
-    padding: 10px 12px 11px;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
-.parentName {
-    font-family: var(--cp-title-font);
-    font-size: 13px;
-    font-weight: 700;
-    color: #f4f2ff;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.parentClass {
-    font-size: 10px;
-    color: rgb(195 210 255 / 50%);
-    margin-bottom: 2px;
-}
-
-/* One row of four tiles, matching the battle page's combatant card. Four
-   stacked tracks cost four times the height and implied a proportion the raw
-   stat does not have. */
-.parentStats {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 5px;
-    margin-top: 2px;
-}
-
-.parentStat {
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 1px;
-    padding: 6px 3px;
-    border: 1px solid rgb(120 150 255 / 14%);
-    border-radius: 6px;
-    background: rgb(5 13 30 / 62%);
-
-    /* Laid over the pet rather than punched through it. */
-    backdrop-filter: blur(6px);
-}
-
-.parentStatLabel {
-    font-size: 8px;
-    font-weight: 700;
-    letter-spacing: 0.4px;
-    text-transform: uppercase;
-}
-
-.parentStatValue {
-    font-family: var(--cp-title-font);
-    font-size: 14px;
-    font-weight: 800;
-    color: #f4f2ff;
-    font-variant-numeric: tabular-nums;
-}
-
-/* XP / HP meters */
-.parentMeters {
-    margin-top: 3px;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
-.parentMeter {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.parentMeterLabel {
-    font-size: 8px;
-    font-weight: 700;
-    width: 18px;
-    flex-shrink: 0;
-}
-
-.parentMeterLabelXp {
-    color: rgb(125 214 255 / 50%);
-}
-
-.parentMeterLabelHp {
-    color: rgb(15 255 174 / 50%);
-}
-
-.parentMeterTrack {
-    flex: 1;
-    height: 4px;
-    background: var(--cp-inset);
-    border-radius: 999px;
-    overflow: hidden;
-}
-
-.parentMeterFill {
-    height: 100%;
-    border-radius: 999px;
-}
-
-.parentMeterFillXp {
-    background: linear-gradient(90deg, #7dd6ff, #b58cff);
-}
-
-.parentMeterFillHp {
-    background: linear-gradient(90deg, #0fffae, #7dd6ff);
-}
-
-.parentMeterValue {
-    font-size: 9px;
-    white-space: nowrap;
-    flex-shrink: 0;
-}
-
-.parentMeterValueXp {
-    color: rgb(125 214 255 / 70%);
-}
-
-.parentMeterValueHp {
-    color: rgb(15 255 174 / 70%);
-}
-
-/* W / L record */
-.parentRecord {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-top: 3px;
-    padding-top: 6px;
-    border-top: 1px solid rgb(101 131 255 / 10%);
-    font-size: 10px;
-    color: rgb(195 210 255 / 45%);
-}
-
-.parentWr {
-    font-weight: 700;
-    color: rgb(125 214 255 / 70%);
-}
-
-.parentB .parentWr {
-    color: rgb(181 140 255 / 70%);
-}
-
-/* Breed-only keyframes moved here from styles/animations.css (sole consumer). */
-@keyframes cp-strand-glow {
-    0%,
-    100% {
-        filter: drop-shadow(0 0 3px rgb(125 214 255 / 40%));
-    }
-    50% {
-        filter: drop-shadow(0 0 9px rgb(125 214 255 / 90%));
-    }
-}
-@keyframes cp-node-blink {
-    0%,
-    100% {
-        opacity: 0.65;
-        transform: scale(1);
-    }
-    50% {
-        opacity: 1;
-        transform: scale(1.4);
-    }
-}
-@keyframes cp-compat-draw {
-    from {
-        stroke-dasharray: 0 251;
-    }
-}
-
-/* Local copy of the shared float keyframe (battle/pet-showcase still use the
-   global cp-float, so a module reference needs its own scoped copy). */
-@keyframes cp-float {
-    0%,
-    100% {
-        transform: translateY(0);
-    }
-    50% {
-        transform: translateY(-9px);
-    }
-}
-
-@media (max-width: 560px) {
-    .parents {
-        grid-template-columns: 1fr;
-    }
-    .dna {
-        justify-self: center;
-        width: 100%;
-        max-width: 200px;
-    }
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .dnaEggEmoji,
-    .dnaStrand,
-    .dnaNode,
-    .dnaCompatArc,
-    .parentAvatar {
-        animation: none;
-    }
-}
-
-/* The nest's rosters under the parent cards: one portrait strip per parent. */
+/* The nest's rosters under the pedestals: one portrait strip per parent. */
 .parentRosters {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));

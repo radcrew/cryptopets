@@ -3,7 +3,6 @@ import TransactionStatus from '@components/common/transaction-status';
 import NeonButton from '@components/ui/neon-button';
 import PetPicker from '@components/ui/pet-picker';
 import {
-    getPetClass,
     getRarityColor,
     getReadyPetsUnified,
     getXpNumbers,
@@ -22,6 +21,7 @@ import { Tones } from '@constants/tones';
 import styles from './index.module.css';
 import PetArt from '@components/pet/pet-art';
 import Celebration from '@components/game/celebration';
+import PetStage, { StageBar, StageKicker } from '@components/game/pet-stage';
 import XpGain from './xp-gain';
 
 export type TrainPanelProps = {
@@ -101,60 +101,42 @@ const TrainPanel: React.FC<TrainPanelProps> = ({ isStandaloneView = true }) => {
                     </>
                 )}
 
-                {/* Always rendered, with a placeholder before a pet is chosen: the card
-                    keeps its size either way, so selecting a pet moves nothing. */}
-                <div className={`interaction-visual ${styles.status}`}>
-                    <div className={styles.visual}>
-                        {selectedPetObj ? (
-                            <>
-                                <span className={styles.level}>Lv.{selectedPetObj.level}</span>
-                                <span className={styles.avatar}>
-                                    <PetArt pet={selectedPetObj} />
-                                </span>
-                            </>
-                        ) : (
-                            <span className={styles.avatar}>
-                                <span className="pet-slot-glyph">?</span>
-                            </span>
-                        )}
+                {/* The pet on its stage. Always drawn, with a "?" on the pedestal before a pet is
+                    chosen, so choosing one moves nothing below it. */}
+                <PetStage
+                    className="interaction-visual"
+                    pet={selectedPetObj}
+                    tone="cyan"
+                    emptyHint="Pick a pet from your roster below."
+                >
+                    <StageKicker>Training session</StageKicker>
+                    {selectedPetObj && selectedXp ? (
+                        <>
+                            <StageBar
+                                label="XP"
+                                value={`${selectedXp.xpCurrent} / ${selectedXp.xpMax}`}
+                                percent={getXpPercent(selectedPetObj)}
+                            />
+                            <p className={styles.note}>One session adds XP at once. The fee rises with level.</p>
+                            {trainCost && <p className={styles.cost}>🪙 Cost: {trainCost}</p>}
+                        </>
+                    ) : (
+                        <p className={styles.note}>Choose a pet from your roster to see its XP and the fee.</p>
+                    )}
+                    <div className="action-controls">
+                        <NeonButton
+                            tone="emerald"
+                            onClick={handleTrain}
+                            disabled={isPending || !selectedPet || !isConnected}
+                        >
+                            {buttonLabel}
+                        </NeonButton>
                     </div>
-                    <div className={styles.body}>
-                        {selectedPetObj ? (
-                            <>
-                                <div className={styles.name}>{selectedPetObj.name}</div>
-                                <div className={styles.petClass}>
-                                    {getPetClass(selectedPetObj.dna)}
-                                </div>
-                                <div className={styles.xpTrack}>
-                                    <div
-                                        className={styles.xpFill}
-                                        style={{ width: `${getXpPercent(selectedPetObj)}%` }}
-                                    />
-                                </div>
-                                <div className={styles.xp}>
-                                    {selectedXp?.xpCurrent}/{selectedXp?.xpMax} XP
-                                </div>
-                            </>
-                        ) : (
-                            // Same classes as the filled state, so both are the same
-                            // height by construction rather than by matched numbers.
-                            <>
-                                <div className={styles.name}>
-                                    <span className="skeleton-bar wide" />
-                                </div>
-                                <div className={styles.petClass}>
-                                    <span className="skeleton-bar narrow" />
-                                </div>
-                                <div className={styles.xpTrack} />
-                                <div className={styles.xp}>Select a pet to see its XP</div>
-                            </>
-                        )}
-                    </div>
-                </div>
+                </PetStage>
 
                 <div className="picker">
                     <div className="field">
-                        <span className="field-label">Select Pet</span>
+                        <span className="field-label">Your roster</span>
                         <PetPicker
                             pets={readyPets}
                             value={selectedPet}
@@ -163,17 +145,6 @@ const TrainPanel: React.FC<TrainPanelProps> = ({ isStandaloneView = true }) => {
                             emptyHint="No pets are ready right now."
                         />
                     </div>
-                    {trainCost && <p className="train-cost">Cost: {trainCost}</p>}
-                </div>
-
-                <div className="action-controls">
-                    <NeonButton
-                        tone="emerald"
-                        onClick={handleTrain}
-                        disabled={isPending || !selectedPet || !isConnected}
-                    >
-                        {buttonLabel}
-                    </NeonButton>
                 </div>
             </div>
 

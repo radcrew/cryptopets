@@ -52,13 +52,9 @@ const BreedPanel: React.FC<BreedPanelProps> = ({ isStandaloneView = true }) => {
 
             {tab === 'own' && <OwnPetsTab {...ownPetsTab} breedAction={breedButton} />}
 
-            {tab === 'spouse' && <WithSpouseTab {...withSpouseTab} />}
+            {tab === 'spouse' && <WithSpouseTab {...withSpouseTab} breedAction={breedButton} />}
 
             <StudFeeBalance />
-
-            {/* Own-pets breeding renders the action in the DNA centre (between the
-                two pets); the spouse tab has no centre preview, so keep it here. */}
-            {tab === 'spouse' && <div className="action-controls">{breedButton}</div>}
 
             {isAwaitingFulfillment && <p className="pending-hint">{AWAITING_HINT}</p>}
 

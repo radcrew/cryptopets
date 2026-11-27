@@ -1,5 +1,6 @@
-/* Generic dashboard panel surface. Panel-specific styles live in their own files
-   and compose via extra classes on the same root (e.g. `.dashboard-panel.pet-collection`). */
+/* The game screen every page stands in: no box, just the page's title on a hanging banner,
+   a round back key, and the page itself on its scene. Page-specific styles live in their own
+   files and compose via extra classes on the same root (e.g. `.dashboard-panel.pet-interactions`). */
 
 @keyframes dashboard-panel-refresh-spin {
     to {
@@ -35,15 +36,8 @@
     flex-direction: column;
     overflow: hidden;
 
+    /* No box: the page stands on its scene. */
     .surface {
-        background: var(--pc-surface-bg);
-        /* A game panel floating over its scene: a tri-colour glowing rim, glass behind. */
-        border-radius: 26px;
-        padding: var(--pc-spacing-lg);
-        box-shadow: 0 0 0 2px rgb(181 140 255 / 42%), 0 0 44px rgb(181 140 255 / 16%),
-            0 30px 70px rgb(0 0 0 / 55%);
-        border: none;
-        backdrop-filter: blur(6px);
         flex: 1 1 auto;
         width: 100%;
         max-width: 100%;
@@ -54,58 +48,94 @@
         position: relative;
         overflow: hidden;
         box-sizing: border-box;
-
-        @media (max-width: 480px) {
-            padding: 20px;
-        }
-
-        @media (prefers-contrast: more) {
-            border: 2px solid var(--cp-color-text);
-        }
+        padding: 4px 0 0;
+        background: none;
+        border: none;
+        border-radius: 0;
+        box-shadow: none;
     }
 
+    /* The page's name on a cloth banner hanging from two ropes, centred, with the back key
+       in the corner. `--banner` tints the banner's trim and glow (an "r g b" triplet). */
     .title-bar {
+        --banner: 181 140 255;
+
         display: flex;
         justify-content: center;
-        align-items: center;
+        align-items: flex-start;
         margin-block-end: var(--pc-spacing-md);
+        padding-block-start: 14px;
         flex-shrink: 0;
         position: relative;
-
-        @media (max-width: 480px) {
-            margin-block-end: var(--pc-spacing-sm);
-            flex-direction: column;
-        }
+        min-height: 52px;
 
         .intro {
-            width: 100%;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            /* Clear of the back key on the left and an action key on the right. */
+            max-width: calc(100% - 112px);
             text-align: center;
+            filter: drop-shadow(0 6px 0 rgb(0 0 0 / 35%)) drop-shadow(0 0 18px rgb(var(--banner) / 35%));
+        }
+
+        /* The ropes the banner hangs from. */
+        .intro::before,
+        .intro::after {
+            content: '';
+            position: absolute;
+            top: -16px;
+            width: 3px;
+            height: 18px;
+            border-radius: 2px;
+            background: linear-gradient(180deg, #8a6a3a, #d9b27a);
+        }
+
+        .intro::before {
+            left: 24%;
+        }
+
+        .intro::after {
+            right: 24%;
         }
 
         .heading {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
             margin: 0;
+            padding: 10px 40px 12px;
             font-family: var(--cp-display-font);
-            font-size: clamp(1.4rem, 2.4vw, 2rem);
+            font-size: clamp(1.05rem, 2vw, 1.5rem);
             font-weight: 400;
-            letter-spacing: 0.04em;
+            line-height: 1.15;
+            letter-spacing: 0.05em;
             text-transform: uppercase;
-            color: var(--pc-text);
-            background: linear-gradient(180deg, #ffffff, #a6e6ff 45%, #b58cff 75%, #ff7bcb);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-            filter: drop-shadow(0 3px 0 #2a1050) drop-shadow(0 0 14px rgb(181 140 255 / 40%));
+            text-wrap: balance;
+            color: #fff;
+            text-shadow: 0 2px 0 rgb(0 0 0 / 40%);
+            background: linear-gradient(180deg, #3d2c82, #24185a 60%, #1c1248);
+            box-shadow: inset 0 3px 0 rgb(var(--banner) / 85%), inset 0 -3px 0 rgb(var(--banner) / 85%);
+            /* Swallow-tailed ends, like a pennant. */
+            clip-path: polygon(0 0, 100% 0, calc(100% - 18px) 50%, 100% 100%, 0 100%, 18px 50%);
 
             @media (max-width: 480px) {
-                font-size: 20px;
+                padding: 9px 30px 10px;
+                font-size: 15px;
             }
         }
 
         .caption {
-            margin: 4px 0 0;
-            font-size: var(--pc-font-xs);
-            font-weight: 400;
-            color: var(--pc-text-muted);
+            margin: 10px 0 0;
+            padding: 4px 12px;
+            border-radius: 999px;
+            background: rgb(8 10 28 / 72%);
+            font-size: 12.5px;
+            font-weight: 500;
+            color: #d6d8ea;
+            text-wrap: balance;
         }
 
         .actions {
@@ -114,41 +144,34 @@
             inset-inline-end: 0;
         }
 
+        /* A round key back to the Shore. */
         .panel-back {
             position: absolute;
-            inset-block-start: 50%;
-            transform: translateY(-50%);
+            inset-block-start: 0;
             inset-inline-start: 0;
-            /* A round pill key, like the prototype's way back to the Shore. */
-            background: rgb(8 10 28 / 85%);
+            display: grid;
+            place-items: center;
+            width: 44px;
+            height: 44px;
+            padding: 0 0 3px;
             border: none;
-            border-radius: 999px;
-            box-shadow: inset 0 0 0 1px rgb(125 214 255 / 45%), 0 6px 14px rgb(0 0 0 / 40%);
-            color: var(--pc-text);
-            font-size: 0.85rem;
-            font-weight: 600;
-            cursor: pointer;
-            padding: 8px 14px;
-            letter-spacing: 0.3px;
-            transition: transform 0.2s var(--cp-ease-spring), box-shadow 0.2s ease;
+            border-radius: 50%;
+            background: radial-gradient(circle at 50% 35%, #2a3170, #0c1030);
+            box-shadow: inset 0 0 0 2px rgb(125 214 255 / 55%), 0 4px 0 #050818, 0 8px 16px rgb(0 0 0 / 40%);
+            color: #fff;
+            font-size: 28px;
             line-height: 1;
+            cursor: pointer;
+            transition: transform 0.15s var(--cp-ease-spring), box-shadow 0.15s ease;
 
             &:hover {
-                transform: translateY(calc(-50% - 2px));
-                box-shadow: inset 0 0 0 1px var(--cp-cyan), 0 8px 18px rgb(0 0 0 / 45%);
+                transform: translateY(-2px);
+                box-shadow: inset 0 0 0 2px var(--cp-cyan), 0 6px 0 #050818, 0 10px 18px rgb(0 0 0 / 45%);
             }
 
-            /* A phone has no room beside the title: the key takes its own row above it,
-               rather than landing on a caption that wraps to two lines. */
-            @media (max-width: 480px) {
-                position: static;
-                align-self: flex-start;
-                transform: none;
-                margin-block-end: 6px;
-
-                &:hover {
-                    transform: translateY(-2px);
-                }
+            &:active {
+                transform: translateY(3px);
+                box-shadow: inset 0 0 0 2px var(--cp-cyan), 0 1px 0 #050818;
             }
         }
     }

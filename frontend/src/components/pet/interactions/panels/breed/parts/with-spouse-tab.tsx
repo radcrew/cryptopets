@@ -1,8 +1,11 @@
 import React from 'react';
 import type { Pet, PetChain } from '@shared/core';
+import Nest from './nest';
+import ParentSpot from './parent-spot';
 import PendingBreedNotice from './pending-breed-notice';
 import SpouseLabel from './spouse-label';
 import styles from '../index.module.css';
+import nest from '../nest.module.css';
 
 export type WithSpouseTabProps = {
     allPets: { id: string; pet: Pet }[];
@@ -18,6 +21,8 @@ export type WithSpouseTabProps = {
     areRelated: boolean;
     /** Hide the pending-breed recovery notice while a breed is settling. */
     showPendingNotices: boolean;
+    /** Breed action button, rendered in the nest once the pet is married. */
+    breedAction?: React.ReactNode;
 };
 
 /** Breed one of the user's pets with its married partner (cross-owner). */
@@ -34,6 +39,7 @@ const WithSpouseTab: React.FC<WithSpouseTabProps> = ({
     studFeeLabel,
     areRelated,
     showPendingNotices,
+    breedAction,
 }) => {
     const selected = allPets.find(({ id }) => id === spousePetId)?.pet ?? null;
 
@@ -48,67 +54,61 @@ const WithSpouseTab: React.FC<WithSpouseTabProps> = ({
     return (
         <div className={styles.tabPanel}>
             <p className={styles.tabHint}>Cycle to a married pet to breed with its spouse.</p>
-            <div className="picker">
-                <div className="field">
-                    <span className="field-label">Your pet</span>
-                    <div className={styles.cycleSelect}>
-                        <button
-                            type="button"
-                            className={styles.cycleBtn}
-                            onClick={() => cycle(-1)}
-                            aria-label="Previous pet"
-                            disabled={allPets.length === 0}
-                        >
-                            ◀
-                        </button>
-                        <div className={styles.cycleCurrent}>
-                            {selected ? (
-                                <>
-                                    {selected.name} · Lv {selected.level}
-                                    {selected.spouseId ? ` ↔ #${selected.spouseId}` : ''}
-                                </>
-                            ) : (
-                                <span className={styles.spousePlaceholder}>Select a pet</span>
-                            )}
+            {/* Your pet and its partner on their pedestals, the nest between them. */}
+            <div className={nest.scene}>
+                <ParentSpot
+                    pet={selected}
+                    emptyHint="Choose one of your pets."
+                    cycleName="pet"
+                    onPrev={allPets.length > 0 ? () => cycle(-1) : undefined}
+                    onNext={allPets.length > 0 ? () => cycle(1) : undefined}
+                />
+                <Nest petA={selected} petB={null} waiting="With its spouse" ready={Boolean(spouseId)}>
+                    {spousePetId && !marriageLoading && !isMarried ? (
+                        <div className={styles.noMarried}>
+                            <p>This pet is not married yet.</p>
+                            <p>
+                                Go to the <strong>Marriage</strong> page to propose first.
+                            </p>
                         </div>
-                        <button
-                            type="button"
-                            className={styles.cycleBtn}
-                            onClick={() => cycle(1)}
-                            aria-label="Next pet"
-                            disabled={allPets.length === 0}
-                        >
-                            ▶
-                        </button>
-                    </div>
-                </div>
-                <div className="field">
-                    <span className="field-label">Partner&apos;s pet</span>
-                    <div className={styles.spouseValue}>
+                    ) : (
+                        spouseId && (
+                            <>
+                                <label className={nest.nameField}>
+                                    <span>Name the egg</span>
+                                    <input
+                                        id="breed-spouse-offspring-name"
+                                        type="text"
+                                        value={childName}
+                                        onChange={(e) => onChildNameChange(e.target.value)}
+                                        placeholder="Name for the new pet…"
+                                        maxLength={20}
+                                    />
+                                </label>
+                                {breedAction && <div className={nest.action}>{breedAction}</div>}
+                            </>
+                        )
+                    )}
+                </Nest>
+                <div className={nest.partner}>
+                    <span className={nest.ring} aria-hidden>
+                        💍
+                    </span>
+                    <span className={nest.partnerLabel}>
                         {!spousePetId ? (
-                            <span className={styles.spousePlaceholder}>— select your pet first —</span>
+                            'Choose your pet first'
                         ) : marriageLoading ? (
-                            <span className={styles.spousePlaceholder}>Checking…</span>
+                            'Checking…'
                         ) : spouseId ? (
                             <SpouseLabel chain={chain} spouseId={spouseId} />
                         ) : (
-                            <span className={styles.spousePlaceholder}>Not married</span>
+                            'Not married'
                         )}
-                    </div>
+                    </span>
+                    <small>Partner&apos;s pet</small>
                 </div>
             </div>
 
-            {/* Not-married hint */}
-            {spousePetId && !marriageLoading && !isMarried && (
-                <div className={styles.noMarried}>
-                    <p>This pet is not married yet.</p>
-                    <p>
-                        Go to the <strong>Marriage</strong> page to propose first.
-                    </p>
-                </div>
-            )}
-
-            {/* Married — show stud fee + breed inputs */}
             {spouseId && (
                 <>
                     {studFeeLabel && (
@@ -131,17 +131,6 @@ const WithSpouseTab: React.FC<WithSpouseTabProps> = ({
                             label={`#${spousePetId}`}
                         />
                     )}
-                    <div className="name-input">
-                        <label htmlFor="breed-spouse-offspring-name">Offspring Name</label>
-                        <input
-                            id="breed-spouse-offspring-name"
-                            type="text"
-                            value={childName}
-                            onChange={(e) => onChildNameChange(e.target.value)}
-                            placeholder="Name for the new pet…"
-                            maxLength={20}
-                        />
-                    </div>
                 </>
             )}
         </div>

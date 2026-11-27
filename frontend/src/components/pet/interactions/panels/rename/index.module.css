@@ -1,51 +1,75 @@
 /* CSS Module — class names are local; reference via `import styles from './index.module.css'`.
-   Rename details below the shared ring-avatar hero (live preview + requirements).
-   Shared chrome (.interface/.picker/.field/.action-controls) stays global in
-   interactions.css and is referenced as plain strings from the tsx. */
-.preview {
-    font-family: var(--cp-title-font);
-    font-size: 18px;
-    font-weight: 800;
-    letter-spacing: 1.5px;
-    color: var(--cp-cyan);
-    text-shadow: 0 0 18px rgb(125 214 255 / 60%), 0 0 36px rgb(125 214 255 / 30%);
-    line-height: 1.2;
-    word-break: break-all;
-    max-width: 320px;
+   The rename card beside the pet on its stage: a carved plaque showing the new name as it is
+   typed, the field, and the length rules. */
+.plaque {
+    display: grid;
+    place-items: center;
+    min-height: 58px;
+    padding: 10px 14px;
+    border-radius: 12px;
+    background: linear-gradient(180deg, #8a6a3a, #5e4422);
+    box-shadow: inset 0 2px 0 rgb(255 255 255 / 20%), inset 0 -3px 0 rgb(0 0 0 / 25%), 0 6px 0 #3a2a12;
 }
 
-.sub {
-    font-size: 11px;
-    color: rgb(195 210 255 / 45%);
+/* Letters cut into the wood. */
+.preview {
+    font: 400 clamp(17px, 2.6vw, 22px) var(--cp-display-font);
+    letter-spacing: 0.04em;
+    color: #ffe9b3;
+    text-shadow: 0 -1px 0 rgb(0 0 0 / 55%), 0 1px 0 rgb(255 255 255 / 20%);
+    overflow-wrap: anywhere;
+    text-align: center;
+}
+
+.previewEmpty {
+    color: rgb(255 233 179 / 45%);
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font: 400 11px var(--cp-display-font);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--cp-cyan);
+}
+
+.field input {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 11px 14px;
+    border: 0;
+    border-radius: 14px;
+    background: rgb(4 8 24 / 90%);
+    box-shadow: inset 0 0 0 2px rgb(125 214 255 / 35%);
+    color: #fff;
+    font: 500 15px var(--cp-content-font);
+    letter-spacing: 0;
+    text-transform: none;
+}
+
+.field input:focus {
+    outline: none;
+    box-shadow: inset 0 0 0 2px var(--cp-cyan), 0 0 16px rgb(125 214 255 / 30%);
 }
 
 .reqs {
     display: flex;
     flex-direction: column;
-    gap: 5px;
-    margin-top: 4px;
-    font-size: 11px;
+    gap: 4px;
+    font-size: 12px;
 
     .isOk {
-        color: rgb(15 255 174 / 75%);
+        color: rgb(15 255 174 / 80%);
     }
 
     .isPending {
-        color: rgb(195 210 255 / 45%);
+        color: rgb(195 210 255 / 55%);
     }
 }
 
-/* Extra breathing room above the shared .action-controls, specific to this
-   panel. */
+/* Extra breathing room above the shared .action-controls, specific to this panel. */
 .actionControls {
     margin-top: 18px;
-}
-
-/* Why the pet list is empty. Amber rather than the muted body colour: this is the
-   answer to "why can I not rename anything", so it has to be read, not skimmed past. */
-.emptyNote {
-    margin: 6px 0 0;
-    color: rgb(255 199 120 / 85%);
-    font-size: 11px;
-    line-height: 1.45;
 }

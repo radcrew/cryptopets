@@ -20,8 +20,9 @@ export type DashboardPanelProps = {
 };
 
 /**
- * Generic dashboard panel surface — title bar, caption, action slot, and panel body.
- * Panel-specific styles compose by passing `className` (e.g. `pet-collection`, `pet-interactions`).
+ * The game screen a page stands in: its title on a hanging banner, a round back key, an
+ * action slot and the page body, with no box around it so the page sits on its scene.
+ * Page-specific styles compose by passing `className` (e.g. `pet-interactions`).
  */
 const DashboardPanel: React.FC<DashboardPanelProps> = ({
     title,
@@ -46,7 +47,7 @@ const DashboardPanel: React.FC<DashboardPanelProps> = ({
                             onClick={back}
                             aria-label="Back"
                         >
-                            ‹ Back
+                            ‹
                         </button>
                     ) : null}
                     <div className="intro">

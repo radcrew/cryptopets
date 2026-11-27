@@ -1,0 +1,261 @@
+/* CSS Module — class names are local; reference via `import styles from './nest.module.css'`.
+   The nest scene: two parents on amber pedestals facing each other, and between them a straw
+   nest with a glowing egg, its generation, its name and the key that lays it. */
+.scene {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 300px) minmax(0, 1fr);
+    align-items: center;
+    gap: 16px;
+    margin: 6px 0 18px;
+
+    @media (max-width: 820px) {
+        grid-template-columns: minmax(0, 1fr);
+        justify-items: center;
+    }
+}
+
+.parent {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.stats {
+    display: flex;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.stats li {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 46px;
+    padding: 4px 6px;
+    border-radius: 10px;
+    background: rgb(8 10 28 / 72%);
+    box-shadow: inset 0 0 0 1px rgb(255 207 112 / 25%);
+}
+
+.stats small {
+    font-size: 9.5px;
+    letter-spacing: 0.1em;
+    color: var(--cp-text-muted-dark);
+}
+
+.stats b {
+    font: 400 14px var(--cp-display-font);
+    color: #fff;
+}
+
+.bred {
+    border-radius: 999px;
+    padding: 2px 10px;
+    background: rgb(255 207 112 / 14%);
+    color: var(--cp-gold);
+    font-size: 11.5px;
+}
+
+.cycle {
+    display: flex;
+    gap: 10px;
+}
+
+.cycleKey {
+    width: 40px;
+    height: 36px;
+    border: 0;
+    border-radius: 12px;
+    background: linear-gradient(180deg, #ffe08a, #ffad3b);
+    box-shadow: inset 0 2px 0 rgb(255 255 255 / 35%), 0 4px 0 #8a4a12;
+    color: #2a1600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: transform 0.12s var(--cp-ease-spring), box-shadow 0.12s ease;
+}
+
+.cycleKey:hover {
+    transform: translateY(-2px);
+}
+
+.cycleKey:active {
+    transform: translateY(3px);
+    box-shadow: inset 0 2px 0 rgb(255 255 255 / 35%), 0 1px 0 #8a4a12;
+}
+
+/* ── The nest ─────────────────────────────────────────────────────────── */
+.nest {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    max-width: 300px;
+    text-align: center;
+}
+
+.eggSpot {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 200px;
+    height: 170px;
+}
+
+.glow {
+    position: absolute;
+    inset: 10px 20px 30px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgb(255 207 112 / 45%), transparent 65%);
+    animation: pulse 2.4s ease-in-out infinite;
+}
+
+.egg,
+.eggDim {
+    position: relative;
+    z-index: 1;
+    width: 92px;
+    height: 118px;
+    margin-bottom: 26px;
+    border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+    background: radial-gradient(circle at 36% 30%, #fff, #fff4d6 30%, #ffb347);
+    box-shadow: inset -8px -10px 0 rgb(255 159 58 / 35%), 0 0 30px rgb(255 207 112 / 55%);
+    animation: wobble 3s ease-in-out infinite;
+}
+
+/* Before both parents are chosen the egg is only a promise. */
+.eggDim {
+    opacity: 0.4;
+    filter: grayscale(0.6);
+    animation: none;
+}
+
+.twigs {
+    position: absolute;
+    left: 0;
+    bottom: 6px;
+    z-index: 2;
+    width: 200px;
+    height: 70px;
+}
+
+.gen {
+    border-radius: 999px;
+    padding: 4px 14px;
+    background: linear-gradient(180deg, #ffe08a, #ffad3b);
+    box-shadow: 0 3px 0 #8a4a12;
+    color: #2a1600;
+    font: 400 13px var(--cp-display-font);
+}
+
+.note {
+    margin: 0;
+    font-size: 12.5px;
+    color: #d6d8ea;
+}
+
+.nameField {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: 100%;
+    font: 400 11px var(--cp-display-font);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--cp-gold);
+}
+
+.nameField input {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 11px 14px;
+    border: 0;
+    border-radius: 14px;
+    background: rgb(4 8 24 / 90%);
+    box-shadow: inset 0 0 0 2px rgb(255 207 112 / 40%);
+    color: #fff;
+    font: 500 15px var(--cp-content-font);
+    letter-spacing: 0;
+    text-align: center;
+    text-transform: none;
+}
+
+.nameField input:focus {
+    outline: none;
+    box-shadow: inset 0 0 0 2px var(--cp-gold), 0 0 16px rgb(255 207 112 / 35%);
+}
+
+.action {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+}
+
+.action :global(.neon-btn) {
+    width: 100%;
+}
+
+/* ── The partner, on the spouse tab ───────────────────────────────────── */
+.partner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    text-align: center;
+}
+
+.ring {
+    display: grid;
+    place-items: center;
+    width: min(150px, 42vw);
+    aspect-ratio: 1;
+    border-radius: 50%;
+    border: 3px dashed rgb(255 123 203 / 55%);
+    background: radial-gradient(circle, rgb(255 123 203 / 16%), transparent 70%);
+    font-size: 56px;
+}
+
+.partnerLabel {
+    border-radius: 14px;
+    padding: 6px 16px;
+    background: rgb(8 10 28 / 78%);
+    box-shadow: inset 0 0 0 1px rgb(255 123 203 / 40%);
+    font: 400 15px var(--cp-display-font);
+    color: #fff;
+}
+
+.partner small {
+    font-size: 12px;
+    color: var(--cp-text-muted-dark);
+}
+
+@keyframes pulse {
+    50% {
+        transform: scale(1.12);
+        opacity: 0.7;
+    }
+}
+
+@keyframes wobble {
+    0%,
+    100% {
+        transform: rotate(-3deg);
+    }
+    50% {
+        transform: rotate(3deg);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .glow,
+    .egg {
+        animation: none;
+    }
+
+    .cycleKey {
+        transition: none;
+    }
+}

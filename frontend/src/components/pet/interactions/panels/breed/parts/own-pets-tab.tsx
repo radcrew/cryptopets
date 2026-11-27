@@ -2,8 +2,10 @@ import React, { useEffect } from 'react';
 import type { Pet } from '@shared/core';
 import PetPicker from '@components/ui/pet-picker';
 import PendingBreedNotice from './pending-breed-notice';
-import BreedParentsPreview from './breed-parents-preview';
+import Nest from './nest';
+import ParentSpot from './parent-spot';
 import styles from '../index.module.css';
+import nest from '../nest.module.css';
 
 export type OwnPetsTabProps = {
     petCount: number;
@@ -17,7 +19,7 @@ export type OwnPetsTabProps = {
     areRelated: boolean;
     /** Hide the pending-breed recovery notices while a breed is settling. */
     showPendingNotices: boolean;
-    /** Breed action button, rendered in the DNA centre between the two pets. */
+    /** Breed action button, rendered in the nest between the two pets. */
     breedAction?: React.ReactNode;
 };
 
@@ -78,15 +80,37 @@ const OwnPetsTab: React.FC<OwnPetsTabProps> = ({
     return (
         <div className={styles.tabPanel}>
             <p className={styles.tabHint}>Pick two parents from your pets, or cycle each side.</p>
-            <BreedParentsPreview
-                petA={parentA}
-                petB={parentB}
-                action={breedAction}
-                onPrevA={() => cycle(pet1, pet2, -1, onPet1Change)}
-                onNextA={() => cycle(pet1, pet2, 1, onPet1Change)}
-                onPrevB={() => cycle(pet2, pet1, -1, onPet2Change)}
-                onNextB={() => cycle(pet2, pet1, 1, onPet2Change)}
-            />
+            {/* The two parents on their pedestals, facing each other across the nest. */}
+            <div className={nest.scene}>
+                <ParentSpot
+                    pet={parentA}
+                    emptyHint="Choose the first parent below."
+                    cycleName="first parent"
+                    onPrev={() => cycle(pet1, pet2, -1, onPet1Change)}
+                    onNext={() => cycle(pet1, pet2, 1, onPet1Change)}
+                />
+                <Nest petA={parentA} petB={parentB}>
+                    <label className={nest.nameField}>
+                        <span>Name the egg</span>
+                        <input
+                            id="breed-offspring-name"
+                            type="text"
+                            value={childName}
+                            onChange={(e) => onChildNameChange(e.target.value)}
+                            placeholder="Name for the new pet…"
+                            maxLength={20}
+                        />
+                    </label>
+                    {breedAction && <div className={nest.action}>{breedAction}</div>}
+                </Nest>
+                <ParentSpot
+                    pet={parentB}
+                    emptyHint="Choose the second parent below."
+                    cycleName="second parent"
+                    onPrev={() => cycle(pet2, pet1, -1, onPet2Change)}
+                    onNext={() => cycle(pet2, pet1, 1, onPet2Change)}
+                />
+            </div>
             {/* The nest's rosters: each parent picked from the pets the other is not. */}
             <div className={styles.parentRosters}>
                 <section className={styles.parentRoster} aria-label="First parent">
@@ -122,17 +146,6 @@ const OwnPetsTab: React.FC<OwnPetsTabProps> = ({
                     <PendingBreedNotice petId={pet2 || undefined} label={`#${pet2}`} />
                 </>
             )}
-            <div className="name-input">
-                <label htmlFor="breed-offspring-name">Offspring Name</label>
-                <input
-                    id="breed-offspring-name"
-                    type="text"
-                    value={childName}
-                    onChange={(e) => onChildNameChange(e.target.value)}
-                    placeholder="Name for the new pet…"
-                    maxLength={20}
-                />
-            </div>
         </div>
     );
 };

@@ -1,79 +1,66 @@
 /* CSS Module — class names are local; reference via `import styles from './index.module.css'`.
-   Level-up details below the shared ring-avatar hero (level transition + XP).
-   Shared chrome (.interface/.picker/.field/.action-controls) stays global. */
-.name {
-    font-family: var(--cp-title-font);
-    font-size: 20px;
-    font-weight: 800;
-    color: #f4f2ff;
-    text-shadow: 0 0 14px rgb(181 140 255 / 50%);
-}
-
-.petClass {
-    font-size: 12px;
-    color: rgb(195 210 255 / 50%);
-    margin-top: -6px;
-}
-
+   The level-up card beside the pet on its stage: the jump from this level to the next, big. */
 .transition {
     display: flex;
     align-items: center;
-    gap: 10px;
+    justify-content: center;
+    gap: 14px;
 }
 
 .badge {
-    font-family: var(--cp-title-font);
-    font-size: 12px;
-    font-weight: 700;
-    border-radius: 999px;
-    padding: 5px 14px;
+    display: grid;
+    place-items: center;
+    min-width: 74px;
+    padding: 10px 14px;
+    border-radius: 18px;
+    font: 400 clamp(20px, 3.4vw, 28px) var(--cp-display-font);
 }
 
 .badgeCur {
-    color: var(--cp-violet);
-    background: rgb(181 140 255 / 12%);
-    border: 1px solid rgb(181 140 255 / 35%);
+    color: #ddd0ff;
+    background: rgb(181 140 255 / 14%);
+    box-shadow: inset 0 0 0 2px rgb(181 140 255 / 45%);
 }
 
 .badgeNext {
-    color: var(--cp-gold);
-    background: rgb(255 215 0 / 12%);
-    border: 1px solid rgb(255 215 0 / 40%);
-    box-shadow: 0 0 12px rgb(255 215 0 / 20%);
+    color: #2a1600;
+    background: linear-gradient(180deg, #ffe08a, #ffad3b);
+    box-shadow: inset 0 2px 0 rgb(255 255 255 / 40%), 0 5px 0 #8a4a12, 0 0 24px rgb(255 210 90 / 45%);
+    animation: glow 1.8s ease-in-out infinite;
 }
 
 .arrow {
-    font-size: 20px;
-    color: rgb(255 215 0 / 65%);
+    font: 400 26px var(--cp-display-font);
+    color: var(--cp-gold);
 }
 
-.xp {
-    width: 100%;
-    max-width: 240px;
+.note {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.45;
+    color: #c9cbe0;
 }
 
-.xpRow {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 5px;
-    font-size: 9px;
-    font-weight: 700;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    color: rgb(125 214 255 / 55%);
-}
-
-.xpTrack {
-    height: 8px;
-    background: var(--cp-inset);
+/* The fee, on a coin. */
+.cost {
+    align-self: flex-start;
+    margin: 0;
+    padding: 4px 12px 4px 8px;
     border-radius: 999px;
-    overflow: hidden;
-    border: 1px solid rgb(125 214 255 / 12%);
+    background: rgb(255 210 90 / 14%);
+    box-shadow: inset 0 0 0 1px rgb(255 210 90 / 40%);
+    font: 400 12.5px var(--cp-display-font);
+    color: var(--cp-gold);
 }
 
-.xpFill {
-    height: 100%;
-    background: var(--cp-gradient-line);
-    border-radius: 999px;
-    box-shadow: 0 0 10px rgb(181 140 255 / 50%);
+@keyframes glow {
+    50% {
+        box-shadow: inset 0 2px 0 rgb(255 255 255 / 40%), 0 5px 0 #8a4a12, 0 0 36px rgb(255 210 90 / 70%);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .badgeNext {
+        animation: none;
+    }
 }

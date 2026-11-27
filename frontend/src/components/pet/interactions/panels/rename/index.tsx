@@ -3,7 +3,6 @@ import clsx from 'clsx';
 import TransactionStatus from '@components/common/transaction-status';
 import NeonButton from '@components/ui/neon-button';
 import {
-    getPetClass,
     getReadyPetsUnified,
     useChainCapabilities,
     usePetList,
@@ -14,10 +13,9 @@ import { usePetChoice } from '@hooks/usePetChoice';
 import { useTxErrorToast } from '@hooks/useTxErrorToast';
 import Icon, { CheckIcon, QuillIcon } from '@components/ui/icon';
 import { Tones } from '@constants/tones';
-import PetShowcase from '../_shared/pet-showcase';
+import PetStage, { StageKicker } from '@components/game/pet-stage';
 import styles from './index.module.css';
-import PetArt from '@components/pet/pet-art';
-import PetSelect from '@components/ui/pet-select';
+import PetPicker from '@components/ui/pet-picker';
 
 const MAX_NAME_LEN = 20;
 
@@ -80,7 +78,6 @@ const RenamePanel: React.FC<RenamePanelProps> = ({ isStandaloneView = true }) =>
             : `Renaming needs a level ${renameMinLevel} pet. Level one up first.`;
 
     const selectedPetObj = selectablePets.find(({ id }) => id === selectedPet)?.pet ?? null;
-    const previewName = newName.trim() || selectedPetObj?.name || 'New Name';
     const meetsMin = newName.trim().length >= 2;
 
     const handleChangeName = async () => {
@@ -120,68 +117,22 @@ const RenamePanel: React.FC<RenamePanelProps> = ({ isStandaloneView = true }) =>
                     </>
                 )}
 
-                {/* The slot is always rendered, with a placeholder standing in before a
-                    pet is chosen, so picking one swaps content into a box that is
-                    already the right size and nothing on the panel shifts. */}
-                <div className="interaction-visual">
-                    {!selectedPetObj && (
-                        // Built from the same classes as the filled state rather than
-                        // its own skeleton layout, so the two are the same height by
-                        // construction instead of by hand-matched numbers that drift.
-                        <PetShowcase
-                            avatar={<span className="pet-slot-glyph">?</span>}
-                            accent="cyan"
-                        >
-                            <div className={styles.preview}>
-                                <span className="skeleton-bar wide" />
-                            </div>
-                            <div className={styles.sub}>
-                                <span className="skeleton-bar narrow" />
-                            </div>
-                            <div className={styles.reqs}>
-                                <div className={styles.isPending}>○ Min 2 characters</div>
-                                <div className={styles.isPending}>
-                                    ○ Max {MAX_NAME_LEN} characters
-                                </div>
-                            </div>
-                        </PetShowcase>
-                    )}
-                    {selectedPetObj && (
-                        <PetShowcase avatar={<PetArt pet={selectedPetObj} />} accent="cyan">
-                            <div className={styles.preview}>{previewName}</div>
-                            <div className={styles.sub}>
-                                {getPetClass(selectedPetObj.dna)} · Lv.{selectedPetObj.level}
-                            </div>
-                            <div className={styles.reqs}>
-                                <div className={meetsMin ? styles.isOk : styles.isPending}>
-                                    {meetsMin ? '✓' : '○'} Min 2 characters
-                                </div>
-                                <div className={styles.isOk}>
-                                    ✓ Max {MAX_NAME_LEN} characters ({newName.length})
-                                </div>
-                            </div>
-                        </PetShowcase>
-                    )}
-                </div>
-
-                <div className="picker">
-                    <div className="field">
-                        <label htmlFor="rename-pet">Select Pet</label>
-                        <PetSelect
-                            id="rename-pet"
-                            pets={selectablePets}
-                            value={selectedPet}
-                            onChange={setSelectedPet}
-                            placeholder="Select pet..."
-                            disabled={selectablePets.length === 0}
-                        />
-                        {selectablePets.length === 0 && (
-                            <p className={styles.emptyNote}>{emptyReason}</p>
-                        )}
+                {/* The pet on its stage, and the plaque its new name is carved on. Always drawn,
+                    with a "?" on the pedestal before a pet is chosen, so nothing moves. */}
+                <PetStage
+                    className="interaction-visual"
+                    pet={selectedPetObj}
+                    tone="cyan"
+                    emptyHint="Pick a pet from your roster below."
+                >
+                    <StageKicker>Carve a new name</StageKicker>
+                    <div className={styles.plaque}>
+                        <span className={clsx(styles.preview, !newName.trim() && styles.previewEmpty)}>
+                            {newName.trim() || 'Your new name'}
+                        </span>
                     </div>
-
-                    <div className="field">
-                        <label htmlFor="rename-new-name">New Name</label>
+                    <label className={styles.field}>
+                        <span>New Name</span>
                         <input
                             id="rename-new-name"
                             type="text"
@@ -190,17 +141,37 @@ const RenamePanel: React.FC<RenamePanelProps> = ({ isStandaloneView = true }) =>
                             placeholder="Enter new name..."
                             maxLength={MAX_NAME_LEN}
                         />
+                    </label>
+                    <div className={styles.reqs}>
+                        <div className={meetsMin ? styles.isOk : styles.isPending}>
+                            {meetsMin ? '✓' : '○'} Min 2 characters
+                        </div>
+                        <div className={styles.isOk}>
+                            ✓ Max {MAX_NAME_LEN} characters ({newName.length})
+                        </div>
                     </div>
-                </div>
+                    <div className={clsx('action-controls', styles.actionControls)}>
+                        <NeonButton
+                            tone="emerald"
+                            onClick={handleChangeName}
+                            disabled={isPending || !selectedPet || !newName.trim() || !isConnected}
+                        >
+                            {isPending ? 'Changing Name...' : 'Change Name'}
+                        </NeonButton>
+                    </div>
+                </PetStage>
 
-                <div className={clsx('action-controls', styles.actionControls)}>
-                    <NeonButton
-                        tone="emerald"
-                        onClick={handleChangeName}
-                        disabled={isPending || !selectedPet || !newName.trim() || !isConnected}
-                    >
-                        {isPending ? 'Changing Name...' : 'Change Name'}
-                    </NeonButton>
+                <div className="picker">
+                    <div className="field">
+                        <span className="field-label">Your roster</span>
+                        <PetPicker
+                            pets={selectablePets}
+                            value={selectedPet}
+                            onChange={setSelectedPet}
+                            label="Pet to rename"
+                            emptyHint={emptyReason}
+                        />
+                    </div>
                 </div>
             </div>
 

@@ -39,6 +39,7 @@ vi.mock('@shared/core', () => ({
     // No art service in these tests: PetArt renders the emoji alone.
     petArtUrl: () => null,
     getPetClass: () => 'Warrior',
+    getRarityColor: () => '#7dd6ff',
     getXpNumbers: () => ({ xpCurrent: 10, xpMax: 100 }),
     getXpPercent: () => 10,
     // Mirrors the real filter, which drops pets whose cooldown has not elapsed.
@@ -57,12 +58,10 @@ vi.mock('@shared/core', () => ({
 import RenamePanel from '@components/pet/interactions/panels/rename';
 
 /**
- * Picks a pet from `PetSelect`: a trigger plus a portalled listbox, so the options exist
- * only once it is open and `selectOptions` does not apply.
+ * Picks a pet from `PetPicker`: every pet is a visible portrait, so this is one click.
  */
 async function choosePet(name: string) {
-    await userEvent.click(screen.getByRole('combobox'));
-    await userEvent.click(await screen.findByRole('option', { name: new RegExp(name) }));
+    await userEvent.click(screen.getByRole('radio', { name: new RegExp(name) }));
 }
 
 beforeEach(() => {
@@ -73,23 +72,19 @@ beforeEach(() => {
 });
 
 describe('RenamePanel', () => {
-    it('lists the ready pets as options', async () => {
+    it('shows the ready pets as portraits to pick from', () => {
         render(<RenamePanel />);
-        await userEvent.click(screen.getByRole('combobox'));
-
-        expect(await screen.findByRole('option', { name: /Alpha/ })).toBeInTheDocument();
-        expect(screen.getByRole('option', { name: /Beta/ })).toBeInTheDocument();
-        // The level rides beside the name rather than being folded into one string.
-        expect(screen.getByRole('option', { name: /Lv 5/ })).toBeInTheDocument();
+        expect(screen.getByRole('radio', { name: /Alpha/ })).toBeInTheDocument();
+        expect(screen.getByRole('radio', { name: /Beta/ })).toBeInTheDocument();
+        expect(screen.getByRole('radio', { name: /Lv 5/ })).toBeInTheDocument();
     });
 
     it('filters out pets below the rename minimum level', async () => {
         capabilities.renameMinLevel = 3;
         render(<RenamePanel />);
-        await userEvent.click(screen.getByRole('combobox'));
 
-        expect(screen.queryByRole('option', { name: /Alpha/ })).not.toBeInTheDocument();
-        expect(await screen.findByRole('option', { name: /Beta/ })).toBeInTheDocument();
+        expect(screen.queryByRole('radio', { name: /Alpha/ })).not.toBeInTheDocument();
+        expect(screen.getByRole('radio', { name: /Beta/ })).toBeInTheDocument();
     });
 
     // The standalone page shows no subtitle, so without this the control is simply
@@ -100,7 +95,7 @@ describe('RenamePanel', () => {
         expect(
             screen.getByText('Renaming needs a level 9 pet. Level one up first.'),
         ).toBeInTheDocument();
-        expect(screen.getByRole('combobox')).toBeDisabled();
+        expect(screen.queryByRole('radio')).toBeNull();
 
         capabilities.renameMinLevel = 1;
         petList.pets = [];

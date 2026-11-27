@@ -4,7 +4,6 @@ import TransactionStatus from '@components/common/transaction-status';
 import NeonButton from '@components/ui/neon-button';
 import PetPicker from '@components/ui/pet-picker';
 import {
-    getPetClass,
     getRarityColor,
     getReadyPetsUnified,
     getXpNumbers,
@@ -21,7 +20,7 @@ import { useTxErrorToast } from '@hooks/useTxErrorToast';
 import Icon, { CheckIcon } from '@components/ui/icon';
 import { Tones } from '@constants/tones';
 import SyncMetadataButton from './sync-metadata-button';
-import PetShowcase from '../_shared/pet-showcase';
+import PetStage, { StageBar, StageKicker } from '@components/game/pet-stage';
 import styles from './index.module.css';
 import PetArt from '@components/pet/pet-art';
 import Celebration from '@components/game/celebration';
@@ -118,73 +117,49 @@ const LevelUpPanel: React.FC<LevelUpPanelProps> = ({ isStandaloneView = true }) 
                     </>
                 )}
 
-                {/* The slot is always rendered, with a placeholder standing in before a
-                    pet is chosen, so picking one swaps content into a box that is
-                    already the right size and nothing on the panel shifts. */}
-                <div className="interaction-visual">
-                {!selectedPetObj && (
-                    // Built from the same classes as the filled state rather than from
-                    // its own skeleton layout, so the two are the same height by
-                    // construction instead of by hand-matched numbers that drift.
-                    <PetShowcase avatar={<span className="pet-slot-glyph">?</span>} accent="violet">
-                        <div className={styles.name}>
-                            <span className="skeleton-bar wide" />
-                        </div>
-                        <div className={styles.petClass}>
-                            <span className="skeleton-bar narrow" />
-                        </div>
-                        <div className={styles.transition}>
-                            <span className={clsx(styles.badge, styles.badgeCur)}>Lv.?</span>
-                            <span className={styles.arrow} aria-hidden>
-                                →
-                            </span>
-                            <span className={clsx(styles.badge, styles.badgeNext)}>Lv.?</span>
-                        </div>
-                        <div className={styles.xp}>
-                            <div className={styles.xpRow}>
-                                <span>XP</span>
-                                <span>—</span>
-                            </div>
-                            <div className={styles.xpTrack} />
-                        </div>
-                    </PetShowcase>
-                )}
-                {selectedPetObj && (
-                    <PetShowcase avatar={<PetArt pet={selectedPetObj} />} accent="violet">
-                        <div className={styles.name}>{selectedPetObj.name}</div>
-                        <div className={styles.petClass}>{getPetClass(selectedPetObj.dna)}</div>
-                        <div className={styles.transition}>
-                            <span className={clsx(styles.badge, styles.badgeCur)}>
-                                Lv.{selectedPetObj.level}
-                            </span>
-                            <span className={styles.arrow} aria-hidden>
-                                →
-                            </span>
-                            <span className={clsx(styles.badge, styles.badgeNext)}>
-                                Lv.{selectedPetObj.level + 1}
-                            </span>
-                        </div>
-                        <div className={styles.xp}>
-                            <div className={styles.xpRow}>
-                                <span>XP</span>
-                                <span>
-                                    {selectedXp?.xpCurrent}/{selectedXp?.xpMax}
+                {/* The pet on its stage. Always drawn, with a "?" on the pedestal before a pet is
+                    chosen, so choosing one moves nothing below it. */}
+                <PetStage
+                    className="interaction-visual"
+                    pet={selectedPetObj}
+                    tone="violet"
+                    emptyHint="Pick a pet from your roster below."
+                >
+                    <StageKicker>Level up</StageKicker>
+                    {selectedPetObj && selectedXp ? (
+                        <>
+                            <div className={styles.transition}>
+                                <span className={clsx(styles.badge, styles.badgeCur)}>Lv {selectedPetObj.level}</span>
+                                <span className={styles.arrow} aria-hidden>
+                                    ➜
                                 </span>
+                                <span className={clsx(styles.badge, styles.badgeNext)}>Lv {selectedPetObj.level + 1}</span>
                             </div>
-                            <div className={styles.xpTrack}>
-                                <div
-                                    className={styles.xpFill}
-                                    style={{ width: `${getXpPercent(selectedPetObj)}%` }}
-                                />
-                            </div>
-                        </div>
-                    </PetShowcase>
-                )}
-                </div>
+                            <StageBar
+                                label="XP"
+                                value={`${selectedXp.xpCurrent} / ${selectedXp.xpMax}`}
+                                percent={getXpPercent(selectedPetObj)}
+                            />
+                            <p className={styles.note}>Always exactly one level. The fee rises with level.</p>
+                            {levelUpCost && <p className={styles.cost}>🪙 Cost: {levelUpCost}</p>}
+                        </>
+                    ) : (
+                        <p className={styles.note}>Choose a pet from your roster to see its next level and the fee.</p>
+                    )}
+                    <div className="action-controls">
+                        <NeonButton
+                            tone="emerald"
+                            onClick={handleLevelUp}
+                            disabled={isPending || !selectedPet || !isConnected}
+                        >
+                            {buttonLabel}
+                        </NeonButton>
+                    </div>
+                </PetStage>
 
                 <div className="picker">
                     <div className="field">
-                        <span className="field-label">Select Pet</span>
+                        <span className="field-label">Your roster</span>
                         <PetPicker
                             pets={readyPets}
                             value={selectedPet}
@@ -193,17 +168,6 @@ const LevelUpPanel: React.FC<LevelUpPanelProps> = ({ isStandaloneView = true }) 
                             emptyHint="No pets are ready right now."
                         />
                     </div>
-                    {levelUpCost && <p className="level-up-cost">Cost: {levelUpCost}</p>}
-                </div>
-
-                <div className="action-controls">
-                    <NeonButton
-                        tone="emerald"
-                        onClick={handleLevelUp}
-                        disabled={isPending || !selectedPet || !isConnected}
-                    >
-                        {buttonLabel}
-                    </NeonButton>
                 </div>
             </div>
 

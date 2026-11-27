@@ -1,125 +1,25 @@
 /* CSS Module — class names are local; reference via `import styles from './index.module.css'`.
-   Train pet-status card — avatar + name/class + XP (cyan accent). Shared chrome
-   (.interface/.picker/.field/.action-controls) stays global in interactions.css. */
-/* `--tr-*` are the knobs the two-column layout turns (see interactions.css): in a narrow
-   pet column the card stacks and the art grows, while the default stays the wide
-   avatar-beside-stats card this panel uses on its own. */
-.status {
-    display: flex;
-    flex-direction: var(--tr-dir, row);
-    align-items: stretch;
-    gap: 14px;
-    margin-bottom: 18px;
-    padding: 12px;
-    border-radius: 12px;
-    border: 1px solid rgb(125 214 255 / 25%);
-    background: var(--cp-surface);
-    box-shadow: inset 0 0 24px rgb(125 214 255 / 5%);
+   The training session's card beside the pet on its stage, and the XP gain the celebration
+   fills once the session lands. */
+.note {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.45;
+    color: #c9cbe0;
 }
 
-.visual {
-    position: relative;
-    flex-shrink: 0;
-    width: var(--tr-visual, 128px);
-    aspect-ratio: var(--tr-visual-ratio, auto);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 10px;
-    overflow: hidden;
-    background: radial-gradient(circle at 50% 50%, rgb(125 214 255 / 18%), transparent 65%), #070e1e;
-    border: 1px solid rgb(125 214 255 / 12%);
-}
-
-.level {
-    position: absolute;
-    top: 7px;
-    left: 7px;
-    background: rgb(5 13 30 / 88%);
-    color: var(--cp-cyan);
-    border: 1px solid rgb(125 214 255 / 32%);
+/* The fee, on a coin. */
+.cost {
+    align-self: flex-start;
+    margin: 0;
+    padding: 4px 12px 4px 8px;
     border-radius: 999px;
-    padding: 2px 8px;
-    font-size: 9px;
-    font-weight: 700;
+    background: rgb(255 210 90 / 14%);
+    box-shadow: inset 0 0 0 1px rgb(255 210 90 / 40%);
+    font: 400 12.5px var(--cp-display-font);
+    color: var(--cp-gold);
 }
 
-/* See the note in _shared/pet-showcase.module.css: the art is 1em, so this sizes it. */
-.avatar {
-    font-size: var(--tr-art, 4rem);
-    line-height: 1;
-    animation: cp-float 3.5s ease-in-out infinite;
-    filter: drop-shadow(0 0 18px rgb(125 214 255 / 60%));
-}
-
-/* Matches `.visual`'s radius so the art echoes the frame it sits in. `.visual` already
-   clips, but the art is smaller than the panel and never touches those corners. */
-.avatar img {
-    border-radius: 10px;
-}
-
-.body {
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    gap: 6px;
-}
-
-.name {
-    font-family: var(--cp-title-font);
-    font-size: 15px;
-    font-weight: 700;
-    color: #f4f2ff;
-}
-
-.petClass {
-    font-size: 11px;
-    color: rgb(195 210 255 / 50%);
-}
-
-.xpTrack {
-    height: 5px;
-    background: var(--cp-inset);
-    border-radius: 999px;
-    overflow: hidden;
-    margin-top: 2px;
-}
-
-.xpFill {
-    height: 100%;
-    background: var(--cp-gradient-line);
-    border-radius: 999px;
-    box-shadow: 0 0 8px rgb(181 140 255 / 45%);
-}
-
-.xp {
-    font-size: 9px;
-    color: rgb(125 214 255 / 55%);
-    text-align: right;
-}
-
-/* Local copy of the shared float keyframe — the global cp-float in
-   animations.css is still used by other (non-module) panel stylesheets, so a
-   module reference must resolve to its own scoped copy. */
-@keyframes cp-float {
-    0%,
-    100% {
-        transform: translateY(0);
-    }
-    50% {
-        transform: translateY(-9px);
-    }
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .avatar {
-        animation: none;
-    }
-}
-
-/* The XP bar in the training celebration. */
 .xpGain {
     width: 100%;
     display: flex;

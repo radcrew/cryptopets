@@ -1,0 +1,195 @@
+/* CSS Module — class names are local; reference via `import styles from './index.module.css'`.
+   A spotlight from above, a glowing pedestal below, the pet floating between them; the effect
+   card stands beside it on a wide screen and under it on a phone. `--tone` is the page accent. */
+.stage {
+    --tone: 125 214 255;
+
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(18px, 4vw, 48px);
+    padding: 6px 0 10px;
+}
+
+.cyan {
+    --tone: 125 214 255;
+}
+
+.violet {
+    --tone: 181 140 255;
+}
+
+.amber {
+    --tone: 255 207 112;
+}
+
+.magenta {
+    --tone: 255 123 203;
+}
+
+.spot {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: min(260px, 72vw);
+}
+
+/* A soft cone of light falling on the pedestal. */
+.beam {
+    position: absolute;
+    top: -30px;
+    left: 50%;
+    width: 78%;
+    height: calc(100% + 10px);
+    transform: translateX(-50%);
+    background: linear-gradient(180deg, rgb(var(--tone) / 30%), rgb(var(--tone) / 6%) 70%, transparent);
+    clip-path: polygon(38% 0, 62% 0, 100% 100%, 0 100%);
+    pointer-events: none;
+}
+
+.figure {
+    --rc: rgb(var(--tone));
+
+    position: relative;
+    z-index: 1;
+    display: grid;
+    place-items: center;
+    width: min(190px, 52vw);
+    aspect-ratio: 1;
+    overflow: hidden;
+    border-radius: 50%;
+    background: radial-gradient(circle at 50% 38%, #262c66, #0a0d24 72%);
+    box-shadow: 0 0 0 4px var(--rc), 0 0 40px -6px var(--rc), 0 16px 30px rgb(0 0 0 / 50%);
+    animation: float 3.2s ease-in-out infinite;
+}
+
+.emoji {
+    font-size: clamp(70px, 18vw, 110px);
+    line-height: 1;
+}
+
+.empty {
+    border: 3px dashed rgb(var(--tone) / 60%);
+    background: radial-gradient(circle, rgb(var(--tone) / 14%), transparent 70%);
+    box-shadow: none;
+}
+
+.ghost {
+    font: 400 clamp(56px, 12vw, 80px) var(--cp-display-font);
+    color: rgb(var(--tone) / 70%);
+    text-shadow: 0 0 24px rgb(var(--tone) / 60%);
+}
+
+/* The pedestal: a lit stone disc the pet floats over. */
+.pedestal {
+    position: relative;
+    z-index: 0;
+    width: 86%;
+    height: 34px;
+    margin-top: -14px;
+    border-radius: 50%;
+    background: radial-gradient(ellipse at 50% 30%, rgb(var(--tone) / 55%), rgb(var(--tone) / 10%) 55%, transparent 72%),
+        linear-gradient(180deg, #3a3f62, #161a38);
+    box-shadow: 0 10px 22px rgb(0 0 0 / 55%), inset 0 2px 0 rgb(255 255 255 / 15%);
+}
+
+.plate {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 10px;
+    padding: 6px 18px;
+    border-radius: 14px;
+    background: rgb(8 10 28 / 78%);
+    box-shadow: inset 0 0 0 1px rgb(var(--tone) / 40%);
+    text-align: center;
+}
+
+.plate b {
+    font: 400 clamp(17px, 2.6vw, 22px) var(--cp-display-font);
+    letter-spacing: 0.03em;
+    color: #fff;
+}
+
+.plate small {
+    font-size: 12.5px;
+    color: var(--cp-text-muted-dark);
+}
+
+.hint {
+    margin: 12px 0 0;
+    padding: 6px 14px;
+    border-radius: 999px;
+    background: rgb(8 10 28 / 72%);
+    font-size: 13px;
+    color: #d6d8ea;
+    text-align: center;
+}
+
+/* What the action does, on a card beside the pedestal. */
+.effect {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: min(340px, 100%);
+    padding: 16px 18px;
+    border-radius: 20px;
+    background: linear-gradient(170deg, rgb(23 29 72 / 88%), rgb(10 13 36 / 92%));
+    box-shadow: 0 0 0 2px rgb(var(--tone) / 45%), 0 16px 34px rgb(0 0 0 / 45%);
+}
+
+.kicker {
+    font: 400 11px var(--cp-display-font);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgb(var(--tone));
+}
+
+.barHead {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 5px;
+    font-size: 12.5px;
+    color: #c9cbe0;
+}
+
+.barHead b {
+    font: 400 12px var(--cp-display-font);
+    color: #fff;
+}
+
+.barTrack {
+    display: block;
+    height: 14px;
+    border-radius: 999px;
+    overflow: hidden;
+    background: rgb(0 0 0 / 45%);
+    box-shadow: inset 0 2px 4px rgb(0 0 0 / 60%);
+}
+
+.barFill {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #8a62ff, #ff7bcb);
+    box-shadow: inset 0 3px 0 rgb(255 255 255 / 30%);
+    transition: width 0.6s var(--cp-ease-spring);
+}
+
+@keyframes float {
+    50% {
+        transform: translateY(-8px);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .figure {
+        animation: none;
+    }
+
+    .barFill {
+        transition: none;
+    }
+}

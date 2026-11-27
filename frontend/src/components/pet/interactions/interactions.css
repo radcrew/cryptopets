@@ -153,13 +153,9 @@
         }
     }
 
+    /* No box: a page's content stands on its scene, and its parts carry their own frames. */
     .interface {
-        background: var(--zi-surface-bg);
-        border: 1px solid var(--zi-border);
-        border-radius: 12px;
-        padding: 20px;
-        margin-top: 20px;
-        box-shadow: inset 0 0 18px rgb(125 214 255 / 5%);
+        margin-top: 4px;
 
         h4 {
             margin: 0 0 8px 0;
@@ -274,93 +270,27 @@
 }
 
 /* ==========================================================================
-   Single-pet action screens (level-up, train): pet column beside the controls,
-   primary action across the bottom.
-
-   These panels are one short form in a very wide slot, so a single stacked column
-   left most of the panel empty. The pet block becomes a fixed-width left column,
-   the picker takes the rest, and the action sits on the bottom edge under a rule —
-   `margin-top: auto` rather than absolute positioning, so it is pushed down by the
-   free space instead of overlapping content when there is none.
-
-   The pet column is always rendered — a placeholder stands in before a pet is chosen —
-   so this layout does not switch on selection and nothing moves when a pet is picked.
+   Single-pet action screens (level up, train, rename): the pet on its stage, the
+   roster as a tray beneath it, and the action as one big key under that.
    ========================================================================== */
 .dashboard-panel.pet-interactions.interaction-standalone--levelup .interface,
-.dashboard-panel.pet-interactions.interaction-standalone--train .interface {
+.dashboard-panel.pet-interactions.interaction-standalone--train .interface,
+.dashboard-panel.pet-interactions.interaction-standalone--changename .interface {
     display: flex;
     flex-direction: column;
-    flex: 1;
-    min-height: 0;
+    gap: 18px;
 }
 
-.dashboard-panel.pet-interactions.interaction-standalone--levelup .interface .action-controls,
-.dashboard-panel.pet-interactions.interaction-standalone--train .interface .action-controls {
-    margin-top: auto;
-    padding-top: 18px;
-    border-top: 1px solid var(--zi-border);
-}
-
-@media (min-width: 900px) {
-    .dashboard-panel.pet-interactions.interaction-standalone--levelup .interface,
-    .dashboard-panel.pet-interactions.interaction-standalone--train .interface {
-        display: grid;
-        grid-template-columns: minmax(240px, 320px) minmax(0, 1fr);
-        grid-template-rows: 1fr auto;
-        column-gap: 32px;
-        /* Both columns ride in the middle of the free row rather than hugging the top,
-           so the leftover height is shared above and below instead of pooling under
-           the form. */
-        align-items: center;
-    }
-
-    .interaction-standalone--levelup .interface .interaction-visual,
-    .interaction-standalone--train .interface .interaction-visual {
-        grid-column: 1;
-        grid-row: 1;
-    }
-
-    /* The pet gets its own column here, so the art can be far larger than in the
-       single-column layout these panels fall back to. This is the space the screen was
-       wasting. */
-    .interaction-standalone--levelup .interface .interaction-visual {
-        --sc-size: 260px;
-    }
-
-    /* Train's card stacks in a narrow column: side by side, the art could never be more
-       than half the column wide. */
-    .interaction-standalone--train .interface .interaction-visual {
-        --tr-dir: column;
-        --tr-visual: 100%;
-        --tr-visual-ratio: 1;
-        --tr-art: 10rem;
-    }
-
-    /* The pet tiles auto-fill this width, so it sets how many sit across a row: about
-       five. Left uncapped they would spread over a very wide panel into one long line
-       with the cost note stranded at the far end. */
-    .interaction-standalone--levelup .interface .picker,
-    .interaction-standalone--train .interface .picker {
-        max-width: 620px;
-    }
-
-    .interaction-standalone--levelup .interface .picker,
-    .interaction-standalone--train .interface .picker {
-        grid-column: 2;
-        grid-row: 1;
-        /* One column of its own: the outer grid already splits the panel, so the
-           picker's own two-up grid would put the select and the cost side by side in
-           half the width. */
-        grid-template-columns: minmax(0, 1fr);
-        margin-bottom: 0;
-    }
-
-    .interaction-standalone--levelup .interface .action-controls,
-    .interaction-standalone--train .interface .action-controls {
-        grid-column: 1 / -1;
-        grid-row: 2;
-        align-self: end;
-    }
+.dashboard-panel.pet-interactions.interaction-standalone--levelup .interface .picker,
+.dashboard-panel.pet-interactions.interaction-standalone--train .interface .picker,
+.dashboard-panel.pet-interactions.interaction-standalone--changename .interface .picker {
+    grid-template-columns: minmax(0, 1fr);
+    width: min(760px, 100%);
+    margin: 0 auto;
+    padding: 12px 16px 14px;
+    border-radius: 22px;
+    background: rgb(8 10 28 / 62%);
+    box-shadow: inset 0 0 0 1px rgb(var(--view-accent, 125 214 255) / 30%), 0 12px 28px rgb(0 0 0 / 35%);
 }
 
 .interaction-standalone--battle,
@@ -389,65 +319,16 @@
     --view-accent: 125 214 255;
 }
 
-/* Wash sits behind the panel content instead of the flat card gradient. */
-.dashboard-panel.pet-interactions.interaction-standalone .surface {
-    background: var(--view-wash, var(--pc-surface-bg));
-    border-color: rgb(var(--view-accent, 101 131 255) / 22%);
-}
-
-/* Left-aligned header: ← Back · accent-glow title · subtitle, with an accent rule. */
-.dashboard-panel.pet-interactions.interaction-standalone .title-bar {
-    justify-content: flex-start;
-    gap: 14px;
-    padding-block-end: 12px;
-    margin-block-end: var(--pc-spacing-md);
-    border-block-end: 1px solid rgb(var(--view-accent, 101 131 255) / 16%);
-}
-
-.dashboard-panel.pet-interactions.interaction-standalone .title-bar .intro {
-    width: auto;
-    text-align: start;
-}
-
-.dashboard-panel.pet-interactions.interaction-standalone .title-bar .heading {
-    text-shadow: 0 0 14px rgb(var(--view-accent, 185 160 255) / 50%);
-}
-
-.dashboard-panel.pet-interactions.interaction-standalone .title-bar .panel-back {
-    position: static;
-    transform: none;
-    border: 1px solid rgb(101 131 255 / 22%);
-    border-radius: 5px;
-    padding: 6px 12px;
-    font-weight: 600;
-
-    &:hover {
-        border-color: rgb(101 131 255 / 50%);
-    }
-}
-
-/* Keep the centered layout for the connect/empty state cards (no back-nav flow). */
-.dashboard-panel.pet-interactions.interaction-standalone.wallet-disconnected .title-bar {
-    justify-content: center;
-    border-block-end: none;
-    padding-block-end: 0;
-}
-
-/* Primary CTA — adopt the mock's large Orbitron accent button, retinted to the
-   per-view accent by overriding the NeonButton tone vars. */
-.dashboard-panel.pet-interactions.interaction-standalone .action-controls .neon-btn {
-    --btn-text: rgb(var(--view-accent, 125 214 255) / 100%);
-    --btn-border: rgb(var(--view-accent, 125 214 255) / 55%);
-    --btn-glow: rgb(var(--view-accent, 125 214 255) / 26%);
-    --btn-inner: rgb(var(--view-accent, 125 214 255) / 14%);
-    font-family: var(--cp-title-font);
-    letter-spacing: 2px;
-    border-radius: 8px;
-}
-
+/* The main action: one big key, centred under everything else. */
 .dashboard-panel.pet-interactions.interaction-standalone .action-controls .neon-btn.size-md {
-    padding: 14px 40px;
-    font-size: 0.9rem;
+    min-width: min(260px, 100%);
+    padding: 15px 30px;
+    font-size: 1rem;
+}
+
+/* Each page's accent trims its banner. */
+.dashboard-panel.pet-interactions.interaction-standalone .title-bar {
+    --banner: var(--view-accent, 181 140 255);
 }
 
 .help-text {
