@@ -23,8 +23,9 @@ h3,
 h4,
 h5,
 h6 {
-    font-family: var(--cp-title-font);
-    letter-spacing: 0.5px;
+    font-family: var(--cp-display-font);
+    font-weight: 400;
+    letter-spacing: 0.04em;
 }
 
 a {

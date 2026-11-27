@@ -2,13 +2,15 @@ import React, { useMemo } from 'react';
 import clsx from 'clsx';
 import { useChainCapabilities, usePetList } from '@shared/core';
 
+import Icon, { SoundOffIcon, SoundOnIcon } from '@components/ui/icon';
 import AccountDropdown from '@components/wallet/account-dropdown';
+import { useSound } from '@contexts/sound';
 import styles from './index.module.css';
 
 const TITLE = 'Crypto Pets';
 
 /**
- * Shell header: wordmark, player status badges, and the wallet control.
+ * Shell header: wordmark, player status badges, the sound switch, and the wallet control.
  *
  * Total wins is derived from the real pet list. The Gold tier / level and the
  * win-streak badges are static placeholders pending real progression data
@@ -17,6 +19,7 @@ const TITLE = 'Crypto Pets';
 const TopBar: React.FC = () => {
     const { isConnected } = useChainCapabilities();
     const { pets } = usePetList();
+    const { muted, toggleMuted } = useSound();
 
     const totalWins = useMemo(
         () => pets.reduce((sum, pet) => sum + (pet.winCount ?? 0), 0),
@@ -49,6 +52,18 @@ const TopBar: React.FC = () => {
                     </div>
                 </div>
             )}
+
+            {/* aria-pressed for the same reason as the sidebar pin: one control whose state changes. */}
+            <button
+                type="button"
+                className={styles.sound}
+                onClick={toggleMuted}
+                aria-pressed={!muted}
+                aria-label="Sound effects"
+                title={muted ? 'Turn sound on' : 'Mute sound'}
+            >
+                <Icon as={muted ? SoundOffIcon : SoundOnIcon} tone="cyan" glow="none" noGap />
+            </button>
 
             <div className={styles.wallet}>
                 <AccountDropdown />

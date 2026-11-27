@@ -27,6 +27,8 @@ import {
     IoPin,
     IoPinOutline,
     IoRefresh,
+    IoVolumeHigh,
+    IoVolumeMute,
     IoWarning,
 } from 'react-icons/io5';
 import clsx from 'clsx';
@@ -117,5 +119,7 @@ export {
     IoPin as PinFilledIcon,
     IoPinOutline as PinIcon,
     IoRefresh as RefreshIcon,
+    IoVolumeHigh as SoundOnIcon,
+    IoVolumeMute as SoundOffIcon,
     IoWarning as WarningIcon,
 };

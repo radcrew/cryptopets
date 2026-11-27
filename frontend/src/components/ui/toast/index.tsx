@@ -2,6 +2,7 @@ import React, { createContext, useCallback, useContext, useMemo, useState } from
 import clsx from 'clsx';
 import Icon, { CheckIcon, CloseIcon, PauseIcon, WarningIcon } from '@components/ui/icon';
 import { Tones, type Tone } from '@constants/tones';
+import { useSound } from '@contexts/sound';
 import styles from './index.module.css';
 
 export type ToastTone = 'error' | 'info' | 'success';
@@ -40,6 +41,7 @@ const toneColor = (tone: ToastTone): Exclude<Tone, 'azure'> => {
 
 export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [toasts, setToasts] = useState<ToastRecord[]>([]);
+    const { play } = useSound();
 
     const dismiss = useCallback((id: string) => {
         setToasts((current) => current.filter((toast) => toast.id !== id));
@@ -50,8 +52,10 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             const id = crypto.randomUUID();
             setToasts((current) => [...current, { id, message, tone }]);
             window.setTimeout(() => dismiss(id), AUTO_DISMISS_MS);
+            // Info toasts stay quiet: they report progress, not an outcome worth a cue.
+            if (tone !== 'info') play(tone);
         },
-        [dismiss],
+        [dismiss, play],
     );
 
     const value = useMemo<ToastContextValue>(

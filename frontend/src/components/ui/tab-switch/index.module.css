@@ -8,12 +8,13 @@
     display: inline-flex;
     gap: 4px;
     padding: 4px;
-    border-radius: 12px;
+    border-radius: 999px;
     /* Recessed, so the raised active tab has something to sit in. Without a track the two
        tabs read as separate buttons however they are filled, which is the whole complaint
        this control was built to answer. */
-    background: rgb(0 0 0 / 22%);
-    border: 1px solid rgb(255 255 255 / 7%);
+    background: rgb(0 0 0 / 34%);
+    border: 1px solid rgb(255 255 255 / 8%);
+    box-shadow: inset 0 2px 6px rgb(0 0 0 / 45%);
     /* Sized to its labels rather than stretched: a two-tab control spanning a desktop panel
        reads as a navigation bar, not a switch. */
     align-self: flex-start;
@@ -23,22 +24,26 @@
 }
 
 .tab {
-    padding: 6px 18px;
-    border-radius: 9px;
+    padding: 7px 18px;
+    border-radius: 999px;
     border: 1px solid transparent;
     background: transparent;
     color: inherit;
     font: inherit;
-    font-size: 0.9rem;
+    font-family: var(--cp-display-font);
+    font-size: 0.76rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
     line-height: 1.4;
     cursor: pointer;
-    opacity: 0.62;
+    opacity: 0.66;
     white-space: nowrap;
     transition:
         opacity 0.15s ease,
         background 0.18s ease,
         border-color 0.18s ease,
-        box-shadow 0.18s ease;
+        box-shadow 0.18s ease,
+        transform 0.2s var(--cp-ease-spring);
 }
 
 .tab:hover:not(.isActive) {
@@ -53,14 +58,20 @@
 
 .tab.isActive {
     opacity: 1;
-    color: var(--tab-accent);
-    background: color-mix(in srgb, var(--tab-accent) 16%, transparent);
-    border-color: color-mix(in srgb, var(--tab-accent) 45%, transparent);
+    color: #12081f;
+    background: linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--tab-accent) 55%, white),
+        var(--tab-accent)
+    );
+    border-color: transparent;
+    transform: translateY(-1px);
     /* Inner highlight plus outer bloom: the raised-thumb read, and the neon the rest of the
        app is styled in. Kept low-alpha so it does not out-shout the panel content. */
     box-shadow:
-        inset 0 1px 0 rgb(255 255 255 / 12%),
-        0 0 12px color-mix(in srgb, var(--tab-accent) 28%, transparent);
+        inset 0 1px 0 rgb(255 255 255 / 45%),
+        0 3px 0 color-mix(in srgb, var(--tab-accent) 40%, black),
+        0 0 14px color-mix(in srgb, var(--tab-accent) 35%, transparent);
 }
 
 /* Tones. The only colour declarations in the file. */

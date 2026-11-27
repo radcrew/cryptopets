@@ -11,6 +11,7 @@ import { SolanaWalletProvider } from '@chains/solana/provider';
 import { solanaNetworkNameFromCluster } from '@constants/chains';
 import { ToastProvider } from '@components/ui/toast';
 import { DynamicProvider } from '@contexts/dynamic';
+import { SoundProvider } from '@contexts/sound';
 import { API_URL } from './config';
 import { petsContractParams } from './petsContractParams';
 
@@ -39,6 +40,7 @@ const providers: Wrapper[] = [
     (c) => <ApiClientProvider baseURL={API_URL}>{c}</ApiClientProvider>,
     (c) => <AuthProvider>{c}</AuthProvider>,
     (c) => <PetsConfigProvider evm={petsContractParams}>{c}</PetsConfigProvider>,
+    (c) => <SoundProvider>{c}</SoundProvider>,
     (c) => <ToastProvider>{c}</ToastProvider>,
     (c) => <BrowserRouter>{c}</BrowserRouter>,
 ];
