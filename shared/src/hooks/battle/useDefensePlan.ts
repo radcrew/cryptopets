@@ -1,9 +1,10 @@
-import { type DefensePlan, defensePlanTypedData, type Tactic } from '@cryptopets/protocol';
+import { type DefensePlan, defensePlanTypedData, type Tactic, TEAM_SCHEMA_VERSIONS } from '@cryptopets/protocol';
 import { useQuery } from '@tanstack/react-query';
 import { useCallback, useState } from 'react';
 import { useSignTypedData } from 'wagmi';
 
 import { useApiClient } from '../../contexts/ApiClientContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { toBattleRejection } from '../../utils/battleFailureMessage';
 import { useActiveChain } from '../session/useActiveChain';
 import { chainIdFor } from './chainIdFor';
@@ -59,6 +60,7 @@ export function defensePlanQueryKey(chainId: string | null, owner: string | null
 
 export function useDefensePlan() {
     const apiClient = useApiClient();
+    const { isAuthenticated } = useAuth();
     const activeChain = useActiveChain();
     const { data: config } = useBattleConfig();
     const { signTypedDataAsync } = useSignTypedData();
@@ -69,7 +71,8 @@ export function useDefensePlan() {
     const owner = activeChain.kind === 'none' ? null : activeChain.address;
     const query = useQuery({
         queryKey: defensePlanQueryKey(chainId, owner),
-        enabled: Boolean(chainId && owner),
+        // The plan read needs the session; without it there is no plan to show, not "none saved".
+        enabled: Boolean(chainId && owner && isAuthenticated),
         queryFn: async () => {
             const { data } = await apiClient.get<{ rulesetHash: string; plan: LiveDefensePlan | null }>(
                 `/api/battle/defense-plans?chainId=${encodeURIComponent(chainId ?? '')}`,
@@ -105,6 +108,8 @@ export function useDefensePlan() {
                     notBefore: now,
                     expiresAt: now + (vars.days ?? DEFAULTS.days) * 86400,
                     revocationNonce: 0,
+                    schemaVersion: TEAM_SCHEMA_VERSIONS.defensePlan,
+                    salt: newPlanSalt(),
                 };
                 const typed = defensePlanTypedData(plan);
                 const signature = await signTypedDataAsync({
@@ -112,7 +117,11 @@ export function useDefensePlan() {
                     types: typed.types,
                     primaryType: typed.primaryType,
                     // EVM only by now, so the protocol's plain-string accounts are 0x addresses.
-                    message: typed.message as typeof typed.message & { defenderOwner: `0x${string}`; rulesetHash: `0x${string}` },
+                    message: typed.message as typeof typed.message & {
+                        defenderOwner: `0x${string}`;
+                        rulesetHash: `0x${string}`;
+                        salt: `0x${string}`;
+                    },
                 });
                 const { data } = await apiClient.post<{ planHash: string }>('/api/battle/defense-plans', {
                     plan: {
@@ -127,6 +136,8 @@ export function useDefensePlan() {
                         notBefore: plan.notBefore,
                         expiresAt: plan.expiresAt,
                         revocationNonce: plan.revocationNonce,
+                        schemaVersion: plan.schemaVersion,
+                        salt: plan.salt,
                     },
                     signature,
                     signatureFormat: 'eip712',
@@ -171,4 +182,18 @@ export function useDefensePlan() {
         isPending,
         error,
     };
+}
+
+/**
+ * 32 random bytes for a new plan's salt (defence plan version 2). Cryptographic randomness only:
+ * the salt exists so nobody can guess it, and a guessable one would hand the hidden roster to
+ * anyone hashing candidate rosters against the plan, so there is deliberately no fallback.
+ */
+export function newPlanSalt(): `0x${string}` {
+    const cryptoApi = (globalThis as { crypto?: { getRandomValues?: (bytes: Uint8Array) => Uint8Array } }).crypto;
+    if (typeof cryptoApi?.getRandomValues !== 'function') {
+        throw new Error('this device has no secure random source, so a defence plan cannot be salted');
+    }
+    const bytes = cryptoApi.getRandomValues(new Uint8Array(32));
+    return `0x${Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('')}`;
 }

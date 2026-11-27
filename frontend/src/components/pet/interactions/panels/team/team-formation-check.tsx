@@ -10,9 +10,9 @@ import {
     type PlanRosterEntry,
 } from '@shared/core';
 
+import { ORDINALS } from './team-lineup';
 import styles from './index.module.css';
 
-const ORDINALS = ['1st', '2nd', '3rd'] as const;
 
 export interface TeamFormationCheckProps {
     roster: PlanRosterEntry[];

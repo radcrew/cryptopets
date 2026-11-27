@@ -93,6 +93,8 @@ export const BATTLE_REFUSALS = {
      * attacker agreed to fight under, so the battle is refused rather than run under others.
      */
     INTENT_RULESET_STALE: 'intent-ruleset-stale',
+    /** A team challenge accepted by a wallet other than the challenger's. */
+    NOT_INTENT_ATTACKER: 'not-intent-attacker',
 } as const;
 
 /** Consent refusals the backend decides itself, rather than the protocol's coverage rule. */

@@ -17,7 +17,7 @@ import { useBattleConfig } from '@shared/core';
  */
 const TeamBattlePage: React.FC = () => {
     const navigate = useNavigate();
-    const { data: config, isLoading } = useBattleConfig();
+    const { data: config, isLoading, isError, refetch } = useBattleConfig();
 
     return (
         <InteractionStandalone action="teambattle" minPets={1} showWhileLoading>
@@ -25,6 +25,14 @@ const TeamBattlePage: React.FC = () => {
                 <TeamPanel />
             ) : isLoading ? (
                 <p className="pending-hint">Loading team battles…</p>
+            ) : isError ? (
+                // Not "switched off": a failed read says nothing about whether team battles are open.
+                <div className="interface">
+                    <p>Could not reach the game server to load team battles.</p>
+                    <NeonButton tone="magenta" onClick={() => void refetch()}>
+                        Try again
+                    </NeonButton>
+                </div>
             ) : (
                 <div className="interface">
                     <p>Team battles are not open on this server yet.</p>

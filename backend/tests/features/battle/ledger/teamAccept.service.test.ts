@@ -27,6 +27,7 @@ vi.mock('../../../../src/features/battle/ledger/snapshot.builder', () => ({ buil
 vi.mock('../../../../src/features/battle/ledger/defensePlan.service', async () => ({
     ...(await vi.importActual<object>('../../../../src/features/battle/ledger/defensePlan.service')),
     consumePlanDailyBudget: vi.fn(),
+    refundPlanDailyBudget: vi.fn(),
 }));
 vi.mock('../../../../src/features/battle/randomness', () => ({
     chooseCommitmentRound: vi.fn(),
@@ -41,9 +42,10 @@ vi.mock('../../../../src/features/battle/ledger/transitions', () => ({ openBattl
 
 import { prisma } from '@config/prisma';
 import { acceptChallenge, acceptTeamBattle } from '@features/battle/ledger';
+import { DEFENDERS_CONCEALED } from '../../../../src/features/battle/ledger/teamAccept.service';
 import { chooseCommitmentRound } from '@features/battle/randomness';
-import { activeSigningKey, sign } from '@features/battle/signer';
-import { consumePlanDailyBudget } from '../../../../src/features/battle/ledger/defensePlan.service';
+import { activeSigningKey, sign , SignerRefusedError } from '@features/battle/signer';
+import { consumePlanDailyBudget, refundPlanDailyBudget } from '../../../../src/features/battle/ledger/defensePlan.service';
 import { decodeStoredTeamSnapshot } from '../../../../src/features/battle/ledger/snapshot.codec';
 import { buildPetSnapshot } from '../../../../src/features/battle/ledger/snapshot.builder';
 import { applyTransition, openBattle } from '../../../../src/features/battle/ledger/transitions';
@@ -95,7 +97,7 @@ beforeEach(() => {
     vi.mocked(prisma.battleRuleset.findUnique).mockResolvedValue({} as never);
     vi.mocked(prisma.battleCommitment.findFirst).mockResolvedValue(null);
     vi.mocked(buildPetSnapshot).mockImplementation((async (_chain: string, petId: string) => pets.get(petId) ?? null) as never);
-    vi.mocked(consumePlanDailyBudget).mockResolvedValue({ ok: true, used: 1 });
+    vi.mocked(consumePlanDailyBudget).mockResolvedValue({ ok: true });
     vi.mocked(chooseCommitmentRound).mockResolvedValue({ ok: true, round: 1002, latestVerified: 1000 });
     vi.mocked(activeSigningKey).mockReturnValue({ keyId: 'battle-signer-test' } as never);
     vi.mocked(openBattle).mockImplementation((async (req: { ledger: { battleId: string } }) => ({ ok: true, battleId: req.ledger.battleId })) as never);
@@ -180,6 +182,73 @@ describe('accepting a team challenge', () => {
         pets.set('23', { ...pets.get('23')!, equipment: [{ slot: 0, itemType: 9n, hp: 0, atk: 5, def: 0, int: 0, mdef: 0 }] } as never);
         expect(await accept()).toMatchObject({ ok: false, reason: 'equipment-catalog-mismatch' });
         expect(openBattle).not.toHaveBeenCalled();
+    });
+});
+
+describe('keeping the defenders hidden (D9)', () => {
+    // The attacker reads every refusal, so none may name a defending pet or say what it wears.
+    const detailOf = async () => {
+        const result = await accept();
+        expect(result.ok).toBe(false);
+        return (result as { detail: string }).detail;
+    };
+
+    it('says the defending team cannot be challenged, never which pet or why', async () => {
+        pets.set('22', { ...pets.get('22')!, readyAt: NOW + 60 });
+        expect(await accept()).toMatchObject({ ok: false, reason: 'defender-not-ready', detail: DEFENDERS_CONCEALED });
+
+        pets.set('22', { ...pets.get('22')!, readyAt: NOW - 1, owner: ATTACKER });
+        expect(await detailOf()).toBe(DEFENDERS_CONCEALED);
+
+        pets.delete('22');
+        expect(await detailOf()).toBe(DEFENDERS_CONCEALED);
+    });
+
+    it("keeps a defender's gear out of the refusal, and still names the attacker's own", async () => {
+        const unpriced = [{ slot: 0, itemType: 9n, hp: 0, atk: 5, def: 0, int: 0, mdef: 0 }];
+        pets.set('23', { ...pets.get('23')!, equipment: unpriced } as never);
+        expect(await detailOf()).toBe(DEFENDERS_CONCEALED);
+
+        pets.set('23', { ...pets.get('23')!, equipment: [] } as never);
+        pets.set('12', { ...pets.get('12')!, equipment: unpriced } as never);
+        expect(await detailOf()).toMatch(/pet 12/);
+    });
+
+    it('says "a defending pet" when one of the defenders is already in a battle', async () => {
+        vi.mocked(openBattle).mockResolvedValue({ ok: false, reason: 'pet-locked', petId: '21' } as never);
+        const detail = await detailOf();
+        expect(detail).toContain('a defending pet');
+        expect(detail).not.toContain('21');
+    });
+});
+
+describe("the defender's daily slot", () => {
+    it('is given back when the battle does not open', async () => {
+        vi.mocked(openBattle).mockResolvedValue({ ok: false, reason: 'pet-locked', petId: '11' } as never);
+        expect(await accept()).toMatchObject({ ok: false, reason: 'pet-locked', detail: 'pet 11 already has an open battle' });
+        expect(refundPlanDailyBudget).toHaveBeenCalledWith(PLAN_HASH, NOW);
+    });
+
+    it('is given back when the commitment cannot be signed', async () => {
+        vi.mocked(sign).mockRejectedValue(new SignerRefusedError('no key'));
+        expect(await accept()).toMatchObject({ ok: false, reason: 'signer-unavailable' });
+        expect(refundPlanDailyBudget).toHaveBeenCalledWith(PLAN_HASH, NOW);
+    });
+
+    it('is kept when the battle opens', async () => {
+        expect((await accept()).ok).toBe(true);
+        expect(refundPlanDailyBudget).not.toHaveBeenCalled();
+    });
+});
+
+describe('who may accept', () => {
+    it('is only the challenger', async () => {
+        const stranger = await acceptTeamBattle({ intentHash: INTENT_HASH, nowSeconds: NOW, callerWallet: DEFENDER });
+        expect(stranger).toMatchObject({ ok: false, reason: 'not-intent-attacker' });
+        expect(openBattle).not.toHaveBeenCalled();
+
+        const own = await acceptTeamBattle({ intentHash: INTENT_HASH, nowSeconds: NOW, callerWallet: ATTACKER.toUpperCase().replace('0X', '0x') });
+        expect(own.ok).toBe(true);
     });
 });
 

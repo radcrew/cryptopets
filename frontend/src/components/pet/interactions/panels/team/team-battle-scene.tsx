@@ -60,6 +60,10 @@ const TeamBattleScene: React.FC<TeamBattleSceneProps> = ({
     const [index, setIndex] = useState(0);
     const [playing, setPlaying] = useState(true);
     const finished = result !== null && index >= frames.length;
+    const dialog = useDialogFocus(
+        phase === 'running' ? onHide : finished || phase === 'failed' ? onDone : undefined,
+        finished,
+    );
 
     useEffect(() => {
         if (!result || !playing || finished) return undefined;
@@ -132,10 +136,12 @@ const TeamBattleScene: React.FC<TeamBattleSceneProps> = ({
         const rounds = `${summary.rounds} round${summary.rounds === 1 ? '' : 's'}`;
         return (
             <div
-                className={clsx(duel.scene, duel.isResult)}
+                ref={dialog.ref}
+                className={clsx(duel.scene, duel.isResult, styles.sceneDialog)}
                 role="dialog"
                 aria-modal="true"
                 aria-label="Team battle"
+                tabIndex={-1}
             >
                 <div className={duel.sceneLayout}>
                     <div className={duel.sceneMain}>
@@ -241,7 +247,14 @@ const TeamBattleScene: React.FC<TeamBattleSceneProps> = ({
     });
 
     return (
-        <div className={duel.scene} role="dialog" aria-modal="true" aria-label="Team battle">
+        <div
+            ref={dialog.ref}
+            className={clsx(duel.scene, styles.sceneDialog)}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Team battle"
+            tabIndex={-1}
+        >
             {onHide && phase === 'running' && (
                 <button type="button" className={duel.sceneBack} onClick={onHide}>
                     ← Back
@@ -334,5 +347,60 @@ const TeamBattleScene: React.FC<TeamBattleSceneProps> = ({
         </div>
     );
 };
+
+const FOCUSABLE = 'button:not([disabled]), [href], select:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+/**
+ * What a modal dialog owes the keyboard: focus moves into the scene when it opens and again when
+ * the result replaces the fight (the focused button may have gone), Tab and Shift+Tab stay inside
+ * it, Escape does what closing means in that phase, and focus goes back where it was afterwards.
+ * The key listener is attached here rather than as a prop, since the dialog element itself is
+ * not an interactive control.
+ */
+function useDialogFocus(onEscape: (() => void) | undefined, finished: boolean) {
+    const ref = useRef<HTMLDivElement>(null);
+    const escapeRef = useRef(onEscape);
+    escapeRef.current = onEscape;
+
+    useEffect(() => {
+        const previous = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+        return () => previous?.focus();
+    }, []);
+
+    // The fight and the result render different roots, so both the focus and the listener move
+    // with `finished`.
+    useEffect(() => {
+        const root = ref.current;
+        if (!root) return undefined;
+        root.focus();
+        const onKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape' && escapeRef.current) {
+                e.preventDefault();
+                escapeRef.current();
+                return;
+            }
+            if (e.key !== 'Tab') return;
+            const focusable = [...root.querySelectorAll<HTMLElement>(FOCUSABLE)];
+            const first = focusable[0];
+            const last = focusable[focusable.length - 1];
+            if (!first || !last) {
+                e.preventDefault();
+                return;
+            }
+            const active = document.activeElement;
+            if (e.shiftKey && (active === first || active === root)) {
+                e.preventDefault();
+                last.focus();
+            } else if (!e.shiftKey && active === last) {
+                e.preventDefault();
+                first.focus();
+            }
+        };
+        root.addEventListener('keydown', onKeyDown);
+        return () => root.removeEventListener('keydown', onKeyDown);
+    }, [finished]);
+
+    return { ref };
+}
 
 export default TeamBattleScene;

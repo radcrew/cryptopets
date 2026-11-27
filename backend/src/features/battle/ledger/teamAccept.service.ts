@@ -26,6 +26,7 @@ import {
     acceptBattle,
     type AcceptBattleRequest,
     type AcceptBattleResult,
+    type AcceptRejection,
     catalogRejection,
     ensureRulesetPublished,
     loadAcceptableIntent,
@@ -39,7 +40,7 @@ import {
     unwindToRejected,
 } from './accept.service';
 import { BATTLE_REFUSALS, CONSENT_REFUSALS, OPEN_BATTLE_REFUSALS } from './constants';
-import { consumePlanDailyBudget, toProtocolPlan } from './defensePlan.service';
+import { consumePlanDailyBudget, refundPlanDailyBudget, toProtocolPlan } from './defensePlan.service';
 import { servedDeploymentId } from './domain';
 import { BATTLE_KIND } from './kind';
 import { teamBattlesEnabled } from './mode';
@@ -60,6 +61,10 @@ import { openBattle } from './transitions';
  * - all six pets are frozen, the three attackers and the plan's three defenders;
  * - all six must be ready and priced by the catalog;
  * - all six are locked until the battle settles, as a duel's two are.
+ *
+ * The defenders are hidden from the attacker until the battle reveals them (D9), and a refusal
+ * is read by the attacker, so no refusal names a defending pet, its owner history or its gear.
+ * Those details go to the server log instead (`concealed`).
  */
 export async function acceptTeamBattle(request: AcceptBattleRequest): Promise<AcceptBattleResult> {
     if (!teamBattlesEnabled()) {
@@ -69,6 +74,9 @@ export async function acceptTeamBattle(request: AcceptBattleRequest): Promise<Ac
     if (!intent.ok) return intent.refusal;
     const row = intent.value;
     const chainId = row.chainId as ChainId;
+    if (request.callerWallet !== undefined && normalizeAccount(request.callerWallet) !== normalizeAccount(row.attackerOwner)) {
+        return reject(BATTLE_REFUSALS.NOT_INTENT_ATTACKER, 'only the challenger can accept their own team challenge');
+    }
 
     const plan = await loadPlan(row.defensePlanHash);
     if (!plan.ok) return plan.refusal;
@@ -77,7 +85,10 @@ export async function acceptTeamBattle(request: AcceptBattleRequest): Promise<Ac
     if (!frozen.ok) return frozen.refusal;
     const { attackers, roster } = frozen.value;
 
-    const priced = await priceUnderTeamRuleset([...attackers, ...roster].map((m) => m.pet));
+    const priced = await priceUnderTeamRuleset(
+        attackers.map((m) => m.pet),
+        roster.map((m) => m.pet),
+    );
     if (!priced.ok) return priced.refusal;
     const { ruleset, rulesetHash } = priced.value;
     if (row.rulesetHash.toLowerCase() !== rulesetHash.toLowerCase()) {
@@ -140,11 +151,15 @@ export async function acceptTeamBattle(request: AcceptBattleRequest): Promise<Ac
         },
     });
     if (!opened.ok) {
+        // No battle opened, so the defender keeps the day's slot this accept spent.
+        await refundPlanDailyBudget(plan.value.planHash, request.nowSeconds);
+        const defenderIds = new Set(roster.map((m) => m.pet.petId.toString()));
+        const which = (petId: string) => (defenderIds.has(petId) ? 'a defending pet' : `pet ${petId}`);
         switch (opened.reason) {
             case OPEN_BATTLE_REFUSALS.PET_LOCKED:
-                return reject(BATTLE_REFUSALS.PET_LOCKED, `pet ${opened.petId} already has an open battle`);
+                return reject(BATTLE_REFUSALS.PET_LOCKED, `${which(opened.petId)} already has an open battle`);
             case OPEN_BATTLE_REFUSALS.PET_PROGRESS_CHANGED:
-                return reject(BATTLE_REFUSALS.PET_LOCKED, `pet ${opened.petId}'s progress changed during this accept`);
+                return reject(BATTLE_REFUSALS.PET_LOCKED, `${which(opened.petId)}'s progress changed during this accept`);
             case OPEN_BATTLE_REFUSALS.INTENT_ALREADY_CONSUMED:
                 return reject(BATTLE_REFUSALS.INTENT_ALREADY_CONSUMED, 'this intent already produced a battle');
         }
@@ -169,6 +184,7 @@ export async function acceptTeamBattle(request: AcceptBattleRequest): Promise<Ac
         return { ok: true, battle: { battleId, ...signed } };
     } catch (error) {
         await unwindToRejected(battleId, error instanceof Error ? error.message : String(error));
+        await refundPlanDailyBudget(plan.value.planHash, request.nowSeconds);
         notifyBattleRoomIfPresent(request.roomId ?? null, { type: 'battle-updated', battleId, state: BattleState.rejected });
         if (error instanceof SignerRefusedError) {
             return reject(BATTLE_REFUSALS.SIGNER_UNAVAILABLE, error.message);
@@ -216,6 +232,7 @@ async function loadPlan(planHash: string | null): Promise<Step<LoadedPlan>> {
             notBefore: Number(plan.notBefore),
             expiresAt: Number(plan.expiresAt),
             revocationNonce: plan.revocationNonce,
+            ...(plan.salt ? { schemaVersion: 2, salt: plan.salt } : {}),
         },
     });
 }
@@ -233,16 +250,19 @@ async function freezeSquads(
     nowSeconds: number,
 ): Promise<Step<{ attackers: TeamBattleSnapshot['attackers']; roster: TeamBattleSnapshot['roster'] }>> {
     const placements = (row.attackers ?? []) as { petId: string; col: number; row: number; tactic: Tactic }[];
-    let attackerPets: (PetSnapshot | null)[];
-    let rosterPets: (PetSnapshot | null)[];
-    try {
-        [attackerPets, rosterPets] = await Promise.all([
-            Promise.all(placements.map((a) => buildPetSnapshot(chainId, a.petId))),
-            Promise.all(plan.wire.roster.map((e) => buildPetSnapshot(chainId, e.petId))),
-        ]);
-    } catch (error) {
-        return { ok: false, refusal: catalogRejection(error) };
+    const [attackerBuild, rosterBuild] = await Promise.allSettled([
+        Promise.all(placements.map((a) => buildPetSnapshot(chainId, a.petId))),
+        Promise.all(plan.wire.roster.map((e) => buildPetSnapshot(chainId, e.petId))),
+    ]);
+    if (attackerBuild.status === 'rejected') {
+        return { ok: false, refusal: catalogRejection(attackerBuild.reason) };
     }
+    if (rosterBuild.status === 'rejected') {
+        const refusal = catalogRejection(rosterBuild.reason);
+        return refusal.ok ? { ok: false, refusal } : concealed(refusal.reason, refusal.detail);
+    }
+    const attackerPets: (PetSnapshot | null)[] = attackerBuild.value;
+    const rosterPets: (PetSnapshot | null)[] = rosterBuild.value;
 
     const attackers: TeamBattleSnapshot['attackers'] = [];
     for (const [i, pet] of attackerPets.entries()) {
@@ -257,11 +277,11 @@ async function freezeSquads(
     const roster: TeamBattleSnapshot['roster'] = [];
     for (const [i, pet] of rosterPets.entries()) {
         const entry = plan.wire.roster[i]!;
-        if (!pet) return refuse(BATTLE_REFUSALS.DEFENDER_PET_MISSING, `defending pet ${entry.petId} is not in the roster`);
+        if (!pet) return concealed(BATTLE_REFUSALS.DEFENDER_PET_MISSING, `defending pet ${entry.petId} is not in the roster`);
         if (normalizeAccount(pet.owner) !== normalizeAccount(plan.wire.defenderOwner)) {
-            return refuse(BATTLE_REFUSALS.PET_OWNER_CHANGED, `defending pet ${entry.petId} now belongs to ${pet.owner}`);
+            return concealed(BATTLE_REFUSALS.PET_OWNER_CHANGED, `defending pet ${entry.petId} now belongs to ${pet.owner}`);
         }
-        if (!isBattleReady(pet, nowSeconds)) return refuse(BATTLE_REFUSALS.DEFENDER_NOT_READY, `defending pet ${entry.petId} ready at ${pet.readyAt}`);
+        if (!isBattleReady(pet, nowSeconds)) return concealed(BATTLE_REFUSALS.DEFENDER_NOT_READY, `defending pet ${entry.petId} ready at ${pet.readyAt}`);
         roster.push({ pet, col: entry.col, row: entry.row, tactic: entry.tactic });
     }
     return proceed({ attackers, roster });
@@ -270,23 +290,46 @@ async function freezeSquads(
 /**
  * The served team ruleset, after checking it prices every pet's gear. All six loadouts: a
  * battle the verifier will refuse should be refused here instead
- * (docs/plan-team-battles-3v3.md, Phase 2 and 4).
+ * (docs/plan-team-battles-3v3.md, Phase 2 and 4). A defender's gear is part of what the
+ * attacker may not see yet, so its mismatches are logged rather than returned.
  */
-async function priceUnderTeamRuleset(pets: PetSnapshot[]): Promise<Step<{ ruleset: Ruleset; rulesetHash: Hex }>> {
+async function priceUnderTeamRuleset(
+    attackerPets: PetSnapshot[],
+    defenderPets: PetSnapshot[],
+): Promise<Step<{ ruleset: Ruleset; rulesetHash: Hex }>> {
     let ruleset: Ruleset;
     try {
         ruleset = await servedTeamRuleset();
     } catch (error) {
         return { ok: false, refusal: catalogRejection(error) };
     }
-    const mismatches = findEquipmentMismatches(
-        pets.map((pet) => ({ role: `pet ${pet.petId}`, equipment: pet.equipment })),
-        ruleset,
-    );
-    if (mismatches.length > 0) {
-        return refuse(BATTLE_REFUSALS.EQUIPMENT_CATALOG_MISMATCH, mismatches.join('; '));
+    const mismatchesOf = (pets: PetSnapshot[]) =>
+        findEquipmentMismatches(
+            pets.map((pet) => ({ role: `pet ${pet.petId}`, equipment: pet.equipment })),
+            ruleset,
+        );
+    const attackerMismatches = mismatchesOf(attackerPets);
+    if (attackerMismatches.length > 0) {
+        return refuse(BATTLE_REFUSALS.EQUIPMENT_CATALOG_MISMATCH, attackerMismatches.join('; '));
+    }
+    const defenderMismatches = mismatchesOf(defenderPets);
+    if (defenderMismatches.length > 0) {
+        return concealed(BATTLE_REFUSALS.EQUIPMENT_CATALOG_MISMATCH, defenderMismatches.join('; '));
     }
     const rulesetHash = await servedTeamRulesetHash();
     await ensureRulesetPublished(ruleset, rulesetHash);
     return proceed({ ruleset, rulesetHash });
+}
+
+/** What the attacker is told about a refusal caused by the defending side. */
+export const DEFENDERS_CONCEALED = 'the defending team cannot be challenged right now';
+
+/**
+ * Refuses for a reason on the defending side without saying which pet or why: the reason code
+ * is kept, since "the defenders are resting" is already public through the opponent list, and
+ * the full detail is logged for the operator.
+ */
+function concealed(reason: AcceptRejection, detail: string): Step<never> {
+    console.warn(`[team-accept] refused (${reason}): ${detail}`);
+    return refuse(reason, DEFENDERS_CONCEALED);
 }

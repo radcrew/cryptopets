@@ -2,8 +2,6 @@ import {
     computeProgression,
     bonusFromEquipment,
     hashCombatLog,
-    type Hex,
-    loadRulesetBundle,
     simulate,
 } from '@cryptopets/protocol';
 import { BattleState } from '@generated/prisma/enums';
@@ -15,6 +13,7 @@ import {
     type ClaimedMessage,
     completeOutbox,
     decodeStoredSnapshot,
+    loadPublishedRuleset,
     OUTBOX_TOPICS,
 } from '@features/battle/ledger';
 import { BATTLE_KIND } from '@features/battle/ledger/kind';
@@ -55,11 +54,7 @@ export async function processComputeMessage(message: ClaimedMessage, nowSeconds:
         throw new Error(`battle ${battle.battleId} is seeded but has no seed recorded`);
     }
 
-    const rulesetRow = await prisma.battleRuleset.findUnique({ where: { rulesetHash: battle.rulesetHash } });
-    if (!rulesetRow) {
-        throw new Error(`no published ruleset bundle for ${battle.rulesetHash}; cannot compute battle ${battle.battleId}`);
-    }
-    const ruleset = loadRulesetBundle(JSON.stringify(rulesetRow.bundle), battle.rulesetHash as Hex);
+    const ruleset = await loadPublishedRuleset(battle.rulesetHash, `compute battle ${battle.battleId}`);
 
     const snapshot = decodeStoredSnapshot(battle.snapshot);
     const { attacker, defender } = snapshot;

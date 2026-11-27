@@ -16,6 +16,8 @@ export interface TeamPetGridProps {
     blockResting?: boolean;
     /** The pets are still being read, so an empty list means "not yet" rather than "none". */
     loading?: boolean;
+    /** Nothing can be chosen or taken out, such as while a battle with this team is running. */
+    disabled?: boolean;
     label: string;
 }
 
@@ -24,7 +26,7 @@ export interface TeamPetGridProps {
  * again to take it out. Toggle buttons rather than `PetPicker`'s radio group, because a team
  * holds several pets at once; the tiles follow `PetPicker`'s look so the two choosers match.
  */
-const TeamPetGrid: React.FC<TeamPetGridProps> = ({ pets, selected, max, onToggle, blockResting = false, loading = false, label }) => {
+const TeamPetGrid: React.FC<TeamPetGridProps> = ({ pets, selected, max, onToggle, blockResting = false, loading = false, disabled = false, label }) => {
     if (loading && pets.length === 0) {
         return (
             <p className={styles.muted} role="status">
@@ -47,7 +49,7 @@ const TeamPetGrid: React.FC<TeamPetGridProps> = ({ pets, selected, max, onToggle
                         aria-pressed={chosen}
                         aria-label={`${pet.name}, level ${pet.level}${resting ? ', resting' : ''}`}
                         className={clsx(styles.petTile, chosen && styles.petTileChosen)}
-                        disabled={!chosen && (full || (blockResting && resting))}
+                        disabled={disabled || (!chosen && (full || (blockResting && resting)))}
                         onClick={() => onToggle(pet.id)}
                     >
                         {chosen && <span className={styles.petBadge}>{position + 1}</span>}

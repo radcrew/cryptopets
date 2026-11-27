@@ -43,6 +43,7 @@ export const STATUS_BY_REASON: Record<AcceptRejection, number> = {
     [BATTLE_REFUSALS.TEAM_BATTLES_DISABLED]: 503,
     [BATTLE_REFUSALS.PET_OWNER_CHANGED]: 409,
     [BATTLE_REFUSALS.INTENT_RULESET_STALE]: 409,
+    [BATTLE_REFUSALS.NOT_INTENT_ATTACKER]: 403,
 };
 
 interface AcceptBody {
@@ -72,6 +73,7 @@ export async function postAcceptBattle(req: AuthenticatedRequest, res: Response)
     const result = await acceptChallenge({
         intentHash: body.intentHash,
         ...(typeof body.roomId === 'string' ? { roomId: body.roomId } : {}),
+        callerWallet: req.user.address,
         nowSeconds: Math.floor(Date.now() / 1000),
     });
 

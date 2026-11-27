@@ -1174,6 +1174,11 @@ button.lineupWho:focus-visible {
     margin: 0;
 }
 
+/* The scene takes focus so the keyboard starts inside it; the whole screen needs no ring. */
+.sceneDialog:focus {
+    outline: none;
+}
+
 .sceneTable {
     width: min(100%, 34rem);
     border-radius: 10px;

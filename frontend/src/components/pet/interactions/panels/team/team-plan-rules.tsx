@@ -54,6 +54,8 @@ export interface TeamPlanRulesProps {
     rules: PlanRules;
     onChange: (rules: PlanRules) => void;
     plan: LiveDefensePlan | null;
+    /** Signed out, the plan cannot be read, so "no team saved" would be a guess. */
+    signedIn?: boolean;
     disabled?: boolean;
 }
 
@@ -65,13 +67,16 @@ const TeamPlanRules: React.FC<TeamPlanRulesProps> = ({
     rules,
     onChange,
     plan,
+    signedIn = true,
     disabled = false,
 }) => {
     const set = (patch: Partial<PlanRules>) => onChange({ ...rules, ...patch });
     const read = (value: string) => (value === '' ? Number.NaN : Number(value));
     const shown = (value: number) => (Number.isNaN(value) ? '' : value);
     const error = planRulesError(rules);
-    const status = !plan
+    const status = !signedIn
+        ? { tone: styles.statusNone, text: 'Sign in to see your team' }
+        : !plan
         ? { tone: styles.statusNone, text: 'No team saved' }
         : plan.isStale
         ? { tone: styles.statusStale, text: 'Out of date' }

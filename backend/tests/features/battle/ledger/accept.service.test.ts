@@ -69,6 +69,7 @@ import { ItemCatalogError } from '@features/inventory';
 import { servedRuleset } from '../../../../src/features/battle/ledger/ruleset.builder';
 import { buildPetSnapshot } from '../../../../src/features/battle/ledger/snapshot.builder';
 import { applyTransition, openBattle } from '../../../../src/features/battle/ledger/transitions';
+import { clearPublishedRulesetCache } from '../../../../src/features/battle/ledger/rulesetBundle.store';
 
 const ROUND_1000_TIME = roundTime(QUICKNET, 1000);
 const NOW = ROUND_1000_TIME + 1;
@@ -157,6 +158,7 @@ function fakeTx() {
 }
 
 beforeEach(() => {
+    clearPublishedRulesetCache();
     vi.clearAllMocks();
     baseline();
 });

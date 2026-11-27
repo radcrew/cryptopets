@@ -78,6 +78,88 @@
         "revocationNonce": 0
       },
       "expectedPlanHash": "0x81422241f43f5127909468b0a15097f36074c08f7907592b332da003eacafd1f"
+    },
+    {
+      "name": "salted-plan",
+      "note": "Version 2: the first plan with a salt appended, so its hash cannot be matched by trying rosters.",
+      "plan": {
+        "domain": {
+          "chainId": "eip155:84532",
+          "deploymentId": "base-sepolia-live"
+        },
+        "defenderOwner": "0x2222222222222222222222222222222222222222",
+        "roster": [
+          {
+            "petId": "21",
+            "col": 1,
+            "row": 1,
+            "tactic": "breaker"
+          },
+          {
+            "petId": "22",
+            "col": 2,
+            "row": 1,
+            "tactic": "hunter"
+          },
+          {
+            "petId": "23",
+            "col": 2,
+            "row": 0,
+            "tactic": "bodyguard"
+          }
+        ],
+        "rulesetHash": "0xa51f2e63833f63b499b08fbf70118b90862d92302cff985ad1053d1ab62e53b4",
+        "minLevel": 1,
+        "maxLevel": 20,
+        "maxBattlesPerDay": 5,
+        "notBefore": 1692700000,
+        "expiresAt": 1695300000,
+        "revocationNonce": 0,
+        "schemaVersion": 2,
+        "salt": "0x1111111111111111111111111111111111111111111111111111111111111111"
+      },
+      "expectedPlanHash": "0xcd5ee53bf60999a70e9ba58a32a893f7aedb41f4335b2f6ef920222dc7a11c24"
+    },
+    {
+      "name": "salted-plan-other-salt",
+      "note": "The same version 2 plan under another salt. Nothing but the salt differs, and the hash does.",
+      "plan": {
+        "domain": {
+          "chainId": "eip155:84532",
+          "deploymentId": "base-sepolia-live"
+        },
+        "defenderOwner": "0x2222222222222222222222222222222222222222",
+        "roster": [
+          {
+            "petId": "21",
+            "col": 1,
+            "row": 1,
+            "tactic": "breaker"
+          },
+          {
+            "petId": "22",
+            "col": 2,
+            "row": 1,
+            "tactic": "hunter"
+          },
+          {
+            "petId": "23",
+            "col": 2,
+            "row": 0,
+            "tactic": "bodyguard"
+          }
+        ],
+        "rulesetHash": "0xa51f2e63833f63b499b08fbf70118b90862d92302cff985ad1053d1ab62e53b4",
+        "minLevel": 1,
+        "maxLevel": 20,
+        "maxBattlesPerDay": 5,
+        "notBefore": 1692700000,
+        "expiresAt": 1695300000,
+        "revocationNonce": 0,
+        "schemaVersion": 2,
+        "salt": "0x2222222222222222222222222222222222222222222222222222222222222222"
+      },
+      "expectedPlanHash": "0x22397e427b799190a5e0b186a45b725a556982e6f246a3c7b88a4d14f5b97fb4"
     }
   ],
   "teamIntents": [

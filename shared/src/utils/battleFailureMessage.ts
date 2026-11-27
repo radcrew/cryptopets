@@ -40,6 +40,7 @@ export const MESSAGES: Record<string, string> = {
     // Team challenges (docs/plan-team-battles-3v3.md).
     'team-battles-disabled': 'Team battles are switched off right now.',
     'pet-owner-changed': 'One of these pets has changed hands since the challenge was made.',
+    'not-intent-attacker': 'Only the player who made this challenge can start it.',
     'intent-ruleset-stale': 'The battle rules changed after you made this challenge. Challenge again.',
     'unknown-plan': "That player's team is not on record any more. Refresh and pick again.",
     'plan-revoked': 'That player has withdrawn their team from challenges.',

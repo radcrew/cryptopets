@@ -1,7 +1,7 @@
 import { chainFamily, evmChainIdNumber } from '../domain/chainId';
 import { assertProtocolDomain, type ProtocolDomain, writeHeader } from '../domain/deployment';
 import { assertPlacements, type Placement, writePlacement } from '../domain/placement';
-import { TEAM_SCHEMA_VERSIONS } from '../domain/schemaVersions';
+import { assertSupportedSchemaVersion } from '../domain/schemaVersions';
 import { type Hex, hexToBytes, normalizeAccount } from '../encoding/bytes';
 import { DOMAIN_TAGS } from '../encoding/domain';
 import { keccak256Hex } from '../encoding/hash';
@@ -21,6 +21,13 @@ import type { CoverageResult } from './types';
  *
  * Bound to `rulesetHash` like every consent: a rules change invalidates the plan rather
  * than reinterpreting it under new combat math.
+ *
+ * The roster is hidden from attackers until a battle reveals it (D9 in
+ * docs/plan-team-battles-3v3.md), but the plan's hash is public: an intent names it. Every
+ * field but the roster is shown or guessable, so without something unguessable in the hash an
+ * attacker could recover the roster by hashing each choice of the defender's pets, tiles and
+ * tactics until one matched. Version 2 adds that: a random 32-byte salt the defender's client
+ * picks and only the backend keeps.
  */
 export interface DefensePlan {
     domain: ProtocolDomain;
@@ -40,6 +47,10 @@ export interface DefensePlan {
     expiresAt: number;
     /** Bumped by the owner to invalidate every plan and authorization signed at a lower value. */
     revocationNonce: number;
+    /** Absent means 1, as for every versioned object: never "whatever this build writes". */
+    schemaVersion?: number;
+    /** Version 2 only: 32 random bytes, so the hash cannot be matched by trying rosters. */
+    salt?: Hex;
 }
 
 /** One roster pet: its home tile and tactic. */
@@ -89,6 +100,15 @@ export function assertDefensePlan(plan: DefensePlan): DefensePlan {
     if (!Number.isSafeInteger(plan.revocationNonce) || plan.revocationNonce < 0 || plan.revocationNonce > 0xffffffff) {
         throw new Error(`revocationNonce must be between 0 and 2^32-1, got ${plan.revocationNonce}`);
     }
+    const version = plan.schemaVersion ?? 1;
+    assertSupportedSchemaVersion('defensePlan', version);
+    if (version >= 2) {
+        if (typeof plan.salt !== 'string' || hexToBytes(plan.salt).length !== 32) {
+            throw new Error('a version 2 defence plan carries a 32-byte salt');
+        }
+    } else if (plan.salt !== undefined) {
+        throw new Error('a version 1 defence plan carries no salt');
+    }
 
     return {
         domain,
@@ -101,6 +121,8 @@ export function assertDefensePlan(plan: DefensePlan): DefensePlan {
         notBefore: plan.notBefore,
         expiresAt: plan.expiresAt,
         revocationNonce: plan.revocationNonce,
+        // Kept off a version 1 plan entirely, so its normalized copy is what it always was.
+        ...(version >= 2 ? { schemaVersion: version, salt: plan.salt } : {}),
     };
 }
 
@@ -131,23 +153,26 @@ export function planCovers(plan: DefensePlan, query: PlanCoverageQuery): Coverag
 
 /**
  * Canonical encoding: header, then the owner, the roster in slot order (pet id, column, row,
- * tactic), and the consent fields in the same order as a defence authorization's.
+ * tactic), and the consent fields in the same order as a defence authorization's. Version 2
+ * appends the salt; version 1 is byte for byte what it always was.
  */
 export function encodeDefensePlan(plan: DefensePlan): Uint8Array {
     const checked = assertDefensePlan(plan);
+    const version = checked.schemaVersion ?? 1;
     const writer = CanonicalWriter.withDomain(DOMAIN_TAGS.DEFENSE_PLAN);
-    writeHeader(writer, 'defensePlan', checked.domain, TEAM_SCHEMA_VERSIONS.defensePlan)
+    writeHeader(writer, 'defensePlan', checked.domain, version)
         .account(checked.defenderOwner)
         .array(checked.roster, (w, e) => writePlacement(w.u256(e.petId), e));
-    return writer
+    writer
         .hash(checked.rulesetHash)
         .u16(checked.minLevel)
         .u16(checked.maxLevel)
         .u32(checked.maxBattlesPerDay)
         .u64(checked.notBefore)
         .u64(checked.expiresAt)
-        .u32(checked.revocationNonce)
-        .build();
+        .u32(checked.revocationNonce);
+    if (version >= 2) writer.hash(checked.salt!);
+    return writer.build();
 }
 
 /** `defensePlanHash`: named by a team intent, and carried by the commitment and receipt. */
@@ -181,9 +206,15 @@ export const EIP712_DEFENSE_PLAN_TYPES = {
     ],
 } as const;
 
+/** Version 2: the same message with the salt last, so a wallet shows the readable fields first. */
+export const EIP712_DEFENSE_PLAN_V2_TYPES = {
+    DefensePlan: [...EIP712_DEFENSE_PLAN_TYPES.DefensePlan, { name: 'salt', type: 'bytes32' }],
+    RosterEntry: EIP712_DEFENSE_PLAN_TYPES.RosterEntry,
+} as const;
+
 export interface DefensePlanTypedData {
     domain: { name: string; version: string; chainId: number };
-    types: typeof EIP712_DEFENSE_PLAN_TYPES;
+    types: typeof EIP712_DEFENSE_PLAN_TYPES | typeof EIP712_DEFENSE_PLAN_V2_TYPES;
     primaryType: 'DefensePlan';
     message: {
         schemaVersion: number;
@@ -198,6 +229,8 @@ export interface DefensePlanTypedData {
         notBefore: bigint;
         expiresAt: bigint;
         revocationNonce: number;
+        /** Version 2 only. */
+        salt?: string;
     };
 }
 
@@ -210,12 +243,13 @@ export function defensePlanTypedData(plan: DefensePlan): DefensePlanTypedData {
     if (chainFamily(checked.domain.chainId) !== 'evm') {
         throw new Error(`EIP-712 typed data is for EVM plans; got ${checked.domain.chainId}`);
     }
+    const version = checked.schemaVersion ?? 1;
     return {
         domain: { name: 'CryptoPets Defense', version: '1', chainId: evmChainIdNumber(checked.domain.chainId) },
-        types: EIP712_DEFENSE_PLAN_TYPES,
+        types: version >= 2 ? EIP712_DEFENSE_PLAN_V2_TYPES : EIP712_DEFENSE_PLAN_TYPES,
         primaryType: 'DefensePlan',
         message: {
-            schemaVersion: TEAM_SCHEMA_VERSIONS.defensePlan,
+            schemaVersion: version,
             chainId: checked.domain.chainId,
             deploymentId: checked.domain.deploymentId,
             defenderOwner: checked.defenderOwner,
@@ -227,6 +261,7 @@ export function defensePlanTypedData(plan: DefensePlan): DefensePlanTypedData {
             notBefore: BigInt(checked.notBefore),
             expiresAt: BigInt(checked.expiresAt),
             revocationNonce: checked.revocationNonce,
+            ...(version >= 2 ? { salt: checked.salt! } : {}),
         },
     };
 }

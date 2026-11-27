@@ -26,8 +26,9 @@ export const SCHEMA_VERSIONS = {
     /** 2 is a team battle's intent; duels still write 1. */
     intent: 2,
     defenseAuthorization: 1,
-    /** A team battle's defence plan: the roster, its ranks, tiles and tactics, and consent. */
-    defensePlan: 1,
+    /** A team battle's defence plan: the roster, its tiles and tactics, and consent. 2 adds a
+     *  random salt, so the public plan hash cannot be matched by trying every roster. */
+    defensePlan: 2,
     /** Delegated battle-intent signing (§D). Not carried by any receipt. */
     sessionDelegation: 1,
     /** 2 adds per-pet equipment (roadmap §4). Version 1 snapshots carry none. 3 is a team
@@ -53,7 +54,8 @@ export type SchemaKind = keyof typeof SCHEMA_VERSIONS;
 const SUPPORTED_VERSIONS: Record<SchemaKind, readonly number[]> = {
     intent: [1, 2],
     defenseAuthorization: [1],
-    defensePlan: [1],
+    // 1 stays supported: plans saved before the salt existed are named by battles already fought.
+    defensePlan: [1, 2],
     sessionDelegation: [1],
     // 1 stays supported: every receipt signed before equipment existed names a v1
     // snapshot, and those have to keep verifying forever (§H).
@@ -75,7 +77,7 @@ const SUPPORTED_VERSIONS: Record<SchemaKind, readonly number[]> = {
 export const DUEL_SCHEMA_VERSIONS = { intent: 1, snapshot: 2, receipt: 1, combatLog: 1 } as const;
 
 /** The layouts a team battle writes. */
-export const TEAM_SCHEMA_VERSIONS = { intent: 2, defensePlan: 1, snapshot: 3, receipt: 2, combatLog: 2 } as const;
+export const TEAM_SCHEMA_VERSIONS = { intent: 2, defensePlan: 2, snapshot: 3, receipt: 2, combatLog: 2 } as const;
 
 /**
  * The highest version this build implements for `kind`. For a kind with a duel and a team

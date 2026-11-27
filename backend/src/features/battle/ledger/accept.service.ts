@@ -30,6 +30,7 @@ import { BATTLE_REFUSALS, CONSENT_REFUSALS, OPEN_BATTLE_REFUSALS, OUTBOX_TOPICS 
 import { assertDuel } from './kind';
 import { buildPetSnapshot } from './snapshot.builder';
 import { servedRuleset, servedRulesetHash } from './ruleset.builder';
+import { isKnownPublished, markPublished } from './rulesetBundle.store';
 import { applyTransition, type ExpectedProgress, openBattle } from './transitions';
 
 /**
@@ -67,6 +68,12 @@ export interface AcceptBattleRequest {
      * to announce it faster.
      */
     roomId?: string;
+    /**
+     * The authenticated wallet making the call. Team acceptance requires it to be the
+     * challenger's: the intent is signed, so a stranger could only start it early, but when a
+     * battle starts is the challenger's to choose.
+     */
+    callerWallet?: string;
 }
 
 export type AcceptRejection = (typeof BATTLE_REFUSALS)[keyof typeof BATTLE_REFUSALS] | ConsentFailure;
@@ -315,10 +322,17 @@ export async function unwindToRejected(battleId: string, reason: string): Promis
  * replayed by anyone (§H), so this runs before the hash is ever referenced rather than as a
  * background job that might lag behind it.
  */
-/** Shared with team acceptance (`teamAccept.service.ts`). */
+/**
+ * Shared with team acceptance (`teamAccept.service.ts`). A bundle is never unpublished, so once
+ * this process has seen one published it does not ask the database again.
+ */
 export async function ensureRulesetPublished(ruleset: Ruleset, expectedHash: Hex): Promise<void> {
+    if (isKnownPublished(expectedHash)) {
+        return;
+    }
     const existing = await prisma.battleRuleset.findUnique({ where: { rulesetHash: expectedHash } });
     if (existing) {
+        markPublished(expectedHash);
         return;
     }
 
@@ -372,6 +386,7 @@ export async function ensureRulesetPublished(ruleset: Ruleset, expectedHash: Hex
             );
         }
     }
+    markPublished(expectedHash);
 }
 
 /** Prisma's Json columns cannot hold a bigint; stringify it in place before storing. */

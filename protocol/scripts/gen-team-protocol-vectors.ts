@@ -107,6 +107,8 @@ const PLAN: DefensePlan = {
     revocationNonce: 0,
 };
 
+const SALTED_PLAN: DefensePlan = { ...PLAN, schemaVersion: 2, salt: `0x${'11'.repeat(32)}` };
+
 const INTENT: TeamBattleIntent = {
     domain: DOMAIN,
     attackerOwner: ATTACKER_OWNER,
@@ -193,6 +195,18 @@ const doc = {
             note: 'The same three pets with the first two swapped. Roster order is slot order, so this is a different plan and a different hash.',
             plan: wire({ ...PLAN, roster: [PLAN.roster[1], PLAN.roster[0], ...PLAN.roster.slice(2)] }),
             expectedPlanHash: hashDefensePlan({ ...PLAN, roster: [PLAN.roster[1]!, PLAN.roster[0]!, ...PLAN.roster.slice(2)] }),
+        },
+        {
+            name: 'salted-plan',
+            note: 'Version 2: the first plan with a salt appended, so its hash cannot be matched by trying rosters.',
+            plan: wire(SALTED_PLAN),
+            expectedPlanHash: hashDefensePlan(SALTED_PLAN),
+        },
+        {
+            name: 'salted-plan-other-salt',
+            note: 'The same version 2 plan under another salt. Nothing but the salt differs, and the hash does.',
+            plan: wire({ ...SALTED_PLAN, salt: `0x${'22'.repeat(32)}` }),
+            expectedPlanHash: hashDefensePlan({ ...SALTED_PLAN, salt: `0x${'22'.repeat(32)}` }),
         },
     ],
     teamIntents: [

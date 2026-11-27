@@ -183,6 +183,37 @@ describe('defence plans', () => {
         expect(typed.message.roster).toHaveLength(3);
         expect(typed.message.roster[2]).toEqual({ petId: 23n, col: 2, row: 0, tactic: 'bodyguard' });
     });
+
+    describe('version 2: the salt', () => {
+        const SALT = `0x${'11'.repeat(32)}` as const;
+        const salted = { ...plan, schemaVersion: 2, salt: SALT };
+
+        it('needs a 32-byte salt, and a version 1 plan may not carry one', () => {
+            expect(() => assertDefensePlan({ ...plan, schemaVersion: 2 })).toThrow(/32-byte salt/);
+            expect(() => assertDefensePlan({ ...salted, salt: '0x1234' as never })).toThrow(/32-byte salt/);
+            expect(() => assertDefensePlan({ ...plan, salt: SALT })).toThrow(/carries no salt/);
+            expect(() => assertDefensePlan({ ...salted, schemaVersion: 3 })).toThrow(/unsupported defensePlan schema version 3/);
+        });
+
+        it('leaves a version 1 plan exactly as it was, with no version or salt added', () => {
+            expect(assertDefensePlan(plan)).not.toHaveProperty('schemaVersion');
+            expect(assertDefensePlan(plan)).not.toHaveProperty('salt');
+            expect(hashDefensePlan({ ...plan, schemaVersion: 1 })).toBe(hashDefensePlan(plan));
+        });
+
+        it('hashes differently under every salt, so the hash cannot be matched by trying rosters', () => {
+            expect(hashDefensePlan(salted)).not.toBe(hashDefensePlan(plan));
+            expect(hashDefensePlan({ ...salted, salt: `0x${'12'.repeat(32)}` })).not.toBe(hashDefensePlan(salted));
+        });
+
+        it('asks the owner to sign the salt, after the fields they read', () => {
+            const typed = defensePlanTypedData(salted);
+            expect(typed.message.schemaVersion).toBe(2);
+            expect(typed.message.salt).toBe(SALT);
+            expect(typed.types.DefensePlan.at(-1)).toEqual({ name: 'salt', type: 'bytes32' });
+            expect(defensePlanTypedData(plan).message).not.toHaveProperty('salt');
+        });
+    });
 });
 
 describe('team intents', () => {

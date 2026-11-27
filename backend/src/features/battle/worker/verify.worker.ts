@@ -1,7 +1,5 @@
 import {
-    type Hex,
     hashCombatLog,
-    loadRulesetBundle,
     type PetProgression,
     type ProgressionDelta,
     type SimOutcome,
@@ -15,6 +13,7 @@ import {
     type ClaimedMessage,
     completeOutbox,
     decodeStoredSnapshot,
+    loadPublishedRuleset,
     OUTBOX_TOPICS,
 } from '@features/battle/ledger';
 import {
@@ -66,11 +65,7 @@ export async function processVerifyMessage(message: ClaimedMessage, nowSeconds: 
         throw new Error(`battle ${battle.battleId} is computed but is missing a computed field`);
     }
 
-    const rulesetRow = await prisma.battleRuleset.findUnique({ where: { rulesetHash: battle.rulesetHash } });
-    if (!rulesetRow) {
-        throw new Error(`no published ruleset bundle for ${battle.rulesetHash}; cannot verify battle ${battle.battleId}`);
-    }
-    const ruleset = loadRulesetBundle(JSON.stringify(rulesetRow.bundle), battle.rulesetHash as Hex);
+    const ruleset = await loadPublishedRuleset(battle.rulesetHash, `verify battle ${battle.battleId}`);
 
     const { attacker, defender } = decodeStoredSnapshot(battle.snapshot);
 

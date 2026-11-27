@@ -413,6 +413,9 @@ model DefensePlan {
   notBefore        BigInt    @map("not_before") // unix seconds
   expiresAt        BigInt    @map("expires_at")
   revocationNonce  Int       @map("revocation_nonce")
+  /// Version 2's random 32 bytes, as signed; null for a version 1 plan. Never served to an
+  /// attacker: it is what stops the public plan hash being matched by trying rosters.
+  salt             String?
   signature        String
   signatureFormat  String    @map("signature_format")
   createdAt        DateTime  @default(now()) @map("created_at")

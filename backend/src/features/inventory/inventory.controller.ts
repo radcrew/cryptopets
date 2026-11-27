@@ -31,6 +31,7 @@ const FAILURES: Record<WriteFailure, { status: number; error: string }> = {
     'unknown-entitlement': { status: 404, error: 'No such entitlement' },
     'already-claimed': { status: 409, error: 'That entitlement has already been claimed' },
     'not-admin': { status: 403, error: 'Not permitted' },
+    'pet-in-battle': { status: 409, error: 'That pet is in a battle right now. Use the item once the battle ends.' },
 };
 
 function isFailure(value: unknown): value is WriteFailure {

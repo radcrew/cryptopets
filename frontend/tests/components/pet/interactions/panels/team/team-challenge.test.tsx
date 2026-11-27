@@ -83,6 +83,15 @@ const basePanel = () => ({
     battleState: null as string | null,
     failureReason: null,
     result: null as unknown,
+    signedIn: true,
+    moving: null as string | null,
+    selectPet: vi.fn(),
+    placeMoving: vi.fn(),
+    inFlight: false,
+    inBattle: false,
+    sceneOpen: false,
+    hideScene: vi.fn(),
+    showScene: vi.fn(),
 });
 let panel = basePanel();
 
@@ -123,18 +132,44 @@ describe('TeamChallenge showdown', () => {
         expect(screen.getByRole('option', { name: /Lv 1–30/ })).toBeInTheDocument();
     });
 
-    it('selects a squad pet, moves it to an empty tile, and taps another pet to select it rather than swap', async () => {
+    it('reports taps to the hook: selecting a pet, moving the picked-up one, and setting a tactic', async () => {
         const user = userEvent.setup();
-        render(<TeamChallenge />);
+        const { unmount } = render(<TeamChallenge />);
         await user.click(screen.getByRole('button', { name: 'Select Mine 1' }));
+        expect(panel.selectPet).toHaveBeenCalledWith('1');
+        // Nothing picked up: an empty tile is not a target, and tapping a pet never swaps.
+        expect(screen.queryByRole('button', { name: /Move here/ })).toBeNull();
         await user.click(screen.getByRole('button', { name: 'Mine 2, front column, top row' }));
+        expect(panel.selectPet).toHaveBeenCalledWith('2');
         expect(placePet).not.toHaveBeenCalled();
-
-        await user.click(screen.getByRole('button', { name: 'Move here: back column, bottom row' }));
-        expect(placePet).toHaveBeenCalledWith('2', 0, 2);
-
         await user.selectOptions(screen.getByRole('combobox', { name: 'Tactic for Mine 1' }), 'bodyguard');
         expect(setTactic).toHaveBeenCalledWith('1', 'bodyguard');
+        unmount();
+
+        panel = { ...basePanel(), moving: '2' };
+        render(<TeamChallenge />);
+        await user.click(screen.getByRole('button', { name: 'Move here: back column, bottom row' }));
+        expect(panel.placeMoving).toHaveBeenCalledWith(0, 2);
+    });
+
+    it('asks a signed-out player to sign in, rather than saying no teams are open', () => {
+        panel = { ...basePanel(), signedIn: false, opponent: null, opponents: [] };
+        render(<TeamChallenge />);
+        expect(screen.getAllByText('Sign in to see teams').length).toBeGreaterThan(0);
+        expect(screen.queryByText(/No teams are open/)).toBeNull();
+    });
+
+    it('locks the squad and the rival while a battle is under way', () => {
+        panel = { ...basePanel(), phase: 'running', battleId: 'b1', inFlight: true, inBattle: true, sceneOpen: false };
+        render(<TeamChallenge />);
+        expect(screen.getByRole('button', { name: 'Cancel' })).toBeDisabled();
+        expect(screen.getByRole('combobox', { name: 'Choose a team to challenge' })).toBeDisabled();
+        expect(screen.getByRole('button', { name: /Random/ })).toBeDisabled();
+        expect(screen.getByRole('button', { name: 'Mine 1, level 10' })).toBeDisabled();
+        // Read-only lineup and zone: no tactic picker, no tile to move to, no pet to pick up.
+        expect(screen.queryByRole('combobox', { name: 'Tactic for Mine 1' })).toBeNull();
+        expect(screen.queryByRole('button', { name: 'Select Mine 1' })).toBeNull();
+        expect(screen.getByText('Your team battle is under way.')).toBeInTheDocument();
     });
 
     it('says why the battle cannot start', () => {
@@ -170,20 +205,38 @@ describe('TeamChallenge showdown', () => {
 });
 
 describe('TeamChallenge battle scene', () => {
-    it('opens full screen with the defenders still hidden, and can be put away and reopened', async () => {
+    it('opens full screen with the defenders still hidden, takes focus, and puts away on Back or Escape', async () => {
         const user = userEvent.setup();
-        panel = { ...basePanel(), phase: 'running', battleId: 'b1', battleState: 'committed' };
-        render(<TeamChallenge />);
+        const running = { phase: 'running', battleId: 'b1', battleState: 'committed', inFlight: true, inBattle: true };
+        panel = { ...basePanel(), ...running, sceneOpen: true };
+        const { unmount } = render(<TeamChallenge />);
 
         const scene = screen.getByRole('dialog', { name: 'Team battle' });
         expect(scene).toHaveTextContent('Waiting for the randomness round');
         expect(within(scene).getByRole('img', { name: 'Battle map' })).toBeInTheDocument();
         expect(within(scene).getByText('Hidden')).toBeInTheDocument();
+        expect(scene).toHaveFocus();
 
         await user.click(within(scene).getByRole('button', { name: '← Back' }));
+        expect(panel.hideScene).toHaveBeenCalledTimes(1);
+        scene.focus();
+        await user.keyboard('{Escape}');
+        expect(panel.hideScene).toHaveBeenCalledTimes(2);
+        unmount();
+
+        // Put away: a banner brings it back.
+        panel = { ...basePanel(), ...running, sceneOpen: false };
+        render(<TeamChallenge />);
         expect(screen.queryByRole('dialog')).toBeNull();
         await user.click(screen.getByRole('button', { name: 'Watch it' }));
-        expect(screen.getByRole('dialog', { name: 'Team battle' })).toBeInTheDocument();
+        expect(panel.showScene).toHaveBeenCalled();
+    });
+
+    it('says a put-away battle has finished, once it has', () => {
+        panel = { ...basePanel(), phase: 'result', battleId: 'b1', inBattle: true, sceneOpen: false };
+        render(<TeamChallenge />);
+        expect(screen.getByText(/Your team battle has finished/)).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: 'See the result' })).toBeInTheDocument();
     });
 
     it('names the defenders the verified result reveals', async () => {
@@ -203,7 +256,7 @@ describe('TeamChallenge battle scene', () => {
             },
             summary: { attackerWon: false, rounds: 3, damage: [[0, 0, 0], [0, 0, 0]], knockouts: [[0, 0, 0], [0, 0, 0]], mvp: null },
         };
-        panel = { ...basePanel(), phase: 'result', battleId: 'b1', battleState: 'signed', result };
+        panel = { ...basePanel(), phase: 'result', battleId: 'b1', battleState: 'signed', result, inBattle: true, sceneOpen: true };
         render(<TeamChallenge />);
 
         expect(screen.getByRole('heading', { name: 'DEFEATED' })).toBeInTheDocument();
@@ -221,10 +274,16 @@ describe('TeamChallenge battle scene', () => {
             battleId: 'b1',
             battleState: 'expired',
             failureReason: 'the defender plan expired',
+            inBattle: true,
+            sceneOpen: true,
         } as never;
         render(<TeamChallenge />);
         expect(screen.getByRole('dialog')).toHaveTextContent('This battle did not finish: the defender plan expired.');
         await user.click(screen.getByRole('button', { name: 'Back to the arena' }));
-        expect(reset).toHaveBeenCalled();
+        expect(reset).toHaveBeenCalledTimes(1);
+        // Escape after a failure means the same: back to the arena.
+        screen.getByRole('dialog').focus();
+        await user.keyboard('{Escape}');
+        expect(reset).toHaveBeenCalledTimes(2);
     });
 });

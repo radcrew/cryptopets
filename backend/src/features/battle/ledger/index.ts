@@ -102,8 +102,10 @@ export {
     toProtocolTeamIntent,
     verifyTeamIntentSignature,
 } from './teamIntent.service';
+export { clearPublishedRulesetCache, loadPublishedRuleset } from './rulesetBundle.store';
 export {
     consumePlanDailyBudget,
+    refundPlanDailyBudget,
     type DefensePlanSummary,
     type DefensePlanWire,
     getLiveDefensePlan,

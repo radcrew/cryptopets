@@ -20,6 +20,7 @@ vi.mock('@repositories/roster.repository', () => ({ getPetById: vi.fn() }));
 import { prisma } from '@config/prisma';
 import {
     consumePlanDailyBudget,
+    refundPlanDailyBudget,
     type DefensePlanWire,
     getLiveDefensePlan,
     revokeDefensePlans,
@@ -51,6 +52,8 @@ const wire: DefensePlanWire = {
     notBefore: NOW - 3600,
     expiresAt: NOW + 86400,
     revocationNonce: 0,
+    schemaVersion: 2,
+    salt: `0x${'5a'.repeat(32)}`,
 };
 
 async function sign(plan: DefensePlanWire, signer: ethers.Wallet = wallet): Promise<string> {
@@ -87,8 +90,23 @@ describe('saving a plan', () => {
             where: { chainId: 'eip155:84532', deploymentId: 'base-sepolia-live', defenderOwner: DEFENDER, revokedAt: null },
             data: { revokedAt: new Date(NOW * 1000) },
         });
-        const stored = vi.mocked(prisma.defensePlan.create).mock.calls[0]?.[0] as { data: { roster: unknown } };
+        const stored = vi.mocked(prisma.defensePlan.create).mock.calls[0]?.[0] as { data: { roster: unknown; salt: unknown } };
         expect(stored.data.roster).toEqual(wire.roster);
+        // Kept so the signature can be checked again later; never served to an attacker.
+        expect(stored.data.salt).toBe(wire.salt);
+    });
+
+    it('refuses a new plan without the salt, since its hash would give the roster away', async () => {
+        const { schemaVersion: _version, salt: _salt, ...unsalted } = wire;
+        const v1 = await submitDefensePlan({
+            plan: unsalted,
+            signature: await sign(unsalted),
+            signatureFormat: 'eip712',
+            authenticatedWallet: DEFENDER,
+            servedRulesetHash: RULESET,
+            nowSeconds: NOW,
+        });
+        expect(v1).toMatchObject({ ok: false, reason: 'malformed-plan', detail: expect.stringMatching(/version 2, with a salt/) });
     });
 
     it.each([
@@ -176,9 +194,18 @@ describe('the daily budget', () => {
     it('counts one team battle and refuses past the cap', async () => {
         vi.mocked(prisma.defensePlanUsage.updateMany).mockResolvedValue({ count: 0 } as never);
         vi.mocked(prisma.defensePlanUsage.create).mockResolvedValue({} as never);
-        expect(await consumePlanDailyBudget('0xplan', 3, NOW)).toEqual({ ok: true, used: 1 });
+        expect(await consumePlanDailyBudget('0xplan', 3, NOW)).toEqual({ ok: true });
 
         vi.mocked(prisma.defensePlanUsage.create).mockRejectedValue(Object.assign(new Error('unique'), { code: 'P2002' }));
         expect(await consumePlanDailyBudget('0xplan', 3, NOW)).toMatchObject({ ok: false });
+    });
+
+    it("gives a refused accept's slot back, never below zero", async () => {
+        vi.mocked(prisma.defensePlanUsage.updateMany).mockResolvedValue({ count: 1 } as never);
+        await refundPlanDailyBudget('0xplan', NOW);
+        expect(prisma.defensePlanUsage.updateMany).toHaveBeenLastCalledWith({
+            where: { planHash: '0xplan', dayBucket: Math.floor(NOW / 86400), count: { gt: 0 } },
+            data: { count: { decrement: 1 } },
+        });
     });
 });

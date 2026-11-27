@@ -1,11 +1,18 @@
 import clsx from 'clsx';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
 import { AuthActionButton } from '@components/common';
 import PetArt from '@components/pet/pet-art';
 import InfoTooltip from '@components/ui/info-tooltip';
-import { SQUAD_SIZE, useTeamBattlePanel } from '@hooks/team/useTeamBattlePanel';
-import { shortAddress, type Tactic, type TeamOpponent, useChainCapabilities, usePetNames } from '@shared/core';
+import { useTeamBattlePanel } from '@hooks/team/useTeamBattlePanel';
+import {
+    shortAddress,
+    SQUAD_SIZE,
+    type Tactic,
+    type TeamOpponent,
+    useChainCapabilities,
+    usePetNames,
+} from '@shared/core';
 
 import duel from '../battle/index.module.css';
 import { type ArtPet, teamPetArt } from './art';
@@ -39,9 +46,7 @@ const teamLabel = (o: TeamOpponent) => `${shortAddress(o.defenderOwner)}'s team`
 const TeamChallenge: React.FC = () => {
     const panel = useTeamBattlePanel();
     const { activeKind } = useChainCapabilities();
-    // The squad pet picked up to move, and a battle whose scene the player closed.
-    const [moving, setMoving] = useState<string | null>(null);
-    const [hiddenBattle, setHiddenBattle] = useState<string | null>(null);
+    const { moving, inFlight } = panel;
 
     const ownPet = useCallback((petId: string) => panel.pets.find((p) => p.id === petId), [panel.pets]);
     const petName = useCallback((petId: string) => ownPet(petId)?.name ?? `Pet ${petId}`, [ownPet]);
@@ -89,12 +94,14 @@ const TeamChallenge: React.FC = () => {
     });
     const railEntries = panel.turnOrder.map((slot) => ({ slot, pet: ownLineup[slot] }));
 
-    const selectPet = (petId: string) => setMoving((current) => (current === petId ? null : petId));
-
     // Why the battle cannot start yet, or that it can.
-    const hint = panel.petsLoading
+    const hint = inFlight
+        ? 'Your team battle is under way.'
+        : panel.petsLoading
         ? 'Loading your pets…'
-        : !opponent
+        : !panel.signedIn
+          ? 'Sign in to challenge a team.'
+          : !opponent
           ? 'Choose a team to challenge.'
           : !opponent.ready
             ? 'This team is resting. Choose another.'
@@ -107,16 +114,14 @@ const TeamChallenge: React.FC = () => {
                   : 'Ready to fight.';
     const blocked = hint !== 'Ready to fight.';
 
-    const opponentEmpty = panel.opponentsLoading
+    const opponentEmpty = !panel.signedIn
+        ? 'Sign in to see teams'
+        : panel.opponentsLoading
         ? 'Finding teams…'
         : panel.opponents.length === 0
           ? 'No teams are open right now'
           : 'Choose a team';
 
-    // The battle scene, from signing to the result. A running battle can be put away and
-    // reopened; the result and a failure stay until the player moves on.
-    const inBattle = panel.phase === 'submitting' || panel.phase === 'running' || panel.phase === 'result' || panel.phase === 'failed';
-    const sceneOpen = inBattle && (panel.battleId === null || hiddenBattle !== panel.battleId);
     // Your squad as it lines up; the defenders' half of the map stays unknown until the result.
     const lineup: BoardFighter[] = panel.squad.map((m, slot) => ({
         side: 0,
@@ -140,11 +145,11 @@ const TeamChallenge: React.FC = () => {
 
     return (
         <>
-            {inBattle && !sceneOpen && (
+            {panel.inBattle && !panel.sceneOpen && (
                 <p className={styles.status} role="status">
-                    Your team battle is still running.{' '}
-                    <button type="button" className={styles.linkButton} onClick={() => setHiddenBattle(null)}>
-                        Watch it
+                    {inFlight ? 'Your team battle is still running.' : 'Your team battle has finished.'}{' '}
+                    <button type="button" className={styles.linkButton} onClick={panel.showScene}>
+                        {inFlight ? 'Watch it' : 'See the result'}
                     </button>
                 </p>
             )}
@@ -175,8 +180,8 @@ const TeamChallenge: React.FC = () => {
                                 slots={SQUAD_SIZE}
                                 pets={ownLineup}
                                 selectedPetId={moving}
-                                onSelect={selectPet}
-                                onTacticChange={panel.setTactic}
+                                onSelect={inFlight ? undefined : panel.selectPet}
+                                onTacticChange={inFlight ? undefined : panel.setTactic}
                             />
                             <ZoneGrid
                                 label="Your zone"
@@ -190,9 +195,9 @@ const TeamChallenge: React.FC = () => {
                                     sub: tileSub(slot, m.tactic),
                                 }))}
                                 selectedPetId={moving}
-                                onPetClick={selectPet}
-                                onEmptyClick={moving ? (col, row) => panel.placePet(moving, col, row) : undefined}
-                                onDropPet={panel.placePet}
+                                onPetClick={inFlight ? undefined : panel.selectPet}
+                                onEmptyClick={moving && !inFlight ? panel.placeMoving : undefined}
+                                onDropPet={inFlight ? undefined : panel.placePet}
                             />
                         </div>
                     </div>
@@ -223,7 +228,7 @@ const TeamChallenge: React.FC = () => {
                                     className={clsx(styles.select, styles.teamSelect)}
                                     aria-label="Choose a team to challenge"
                                     value={opponent?.planHash ?? ''}
-                                    disabled={panel.opponents.length === 0}
+                                    disabled={inFlight || panel.opponents.length === 0}
                                     onChange={(e) =>
                                         panel.chooseOpponent(panel.opponents.find((o) => o.planHash === e.target.value) ?? null)
                                     }
@@ -240,7 +245,7 @@ const TeamChallenge: React.FC = () => {
                                 type="button"
                                 className={duel.combatantSelectBtn}
                                 onClick={panel.chooseRandomOpponent}
-                                disabled={panel.opponents.length === 0}
+                                disabled={inFlight || panel.opponents.length === 0}
                                 title="Pick a random ready team your squad's level qualifies for"
                             >
                                 🎲 Random
@@ -249,7 +254,7 @@ const TeamChallenge: React.FC = () => {
                                 type="button"
                                 className={duel.combatantSelectBtn}
                                 onClick={panel.refreshOpponents}
-                                disabled={panel.opponentsFetching}
+                                disabled={!panel.signedIn || panel.opponentsFetching}
                             >
                                 {panel.opponentsFetching ? '…' : 'Refresh'}
                             </button>
@@ -276,21 +281,14 @@ const TeamChallenge: React.FC = () => {
                     <AuthActionButton tone="magenta" onClick={() => void panel.start()} disabled={!panel.canStart}>
                         ⚔ Start Team Battle
                     </AuthActionButton>
-                    <button
-                        type="button"
-                        onClick={() => {
-                            setMoving(null);
-                            panel.cancel();
-                        }}
-                        className="cancel-button"
-                    >
+                    <button type="button" onClick={panel.cancel} disabled={inFlight} className="cancel-button">
                         Cancel
                     </button>
                 </div>
                 <p className={clsx(styles.startHint, blocked && styles.startHintBlocked)} role="status">
                     {hint}
                 </p>
-                {panel.error && !inBattle && <p className={styles.error}>{panel.error.message}</p>}
+                {panel.error && !panel.inBattle && <p className={styles.error}>{panel.error.message}</p>}
 
                 <TeamPetGrid
                     label="Your pets"
@@ -299,18 +297,14 @@ const TeamChallenge: React.FC = () => {
                     selected={panel.squad.map((m) => m.petId)}
                     max={SQUAD_SIZE}
                     blockResting
-                    onToggle={(petId) => {
-                        if (panel.squad.some((m) => m.petId === petId)) {
-                            if (moving === petId) setMoving(null);
-                            panel.removePet(petId);
-                        } else {
-                            panel.addPet(petId);
-                        }
-                    }}
+                    disabled={inFlight}
+                    onToggle={(petId) =>
+                        panel.squad.some((m) => m.petId === petId) ? panel.removePet(petId) : panel.addPet(petId)
+                    }
                 />
             </div>
 
-            {sceneOpen && (
+            {panel.sceneOpen && (
                 <TeamBattleScene
                     key={panel.battleId ?? 'pending'}
                     phase={panel.phase as ScenePhase}
@@ -320,7 +314,7 @@ const TeamChallenge: React.FC = () => {
                     name={fighterName}
                     rivalLabel={opponent ? teamLabel(opponent) : 'the rival team'}
                     onDone={panel.reset}
-                    onHide={() => setHiddenBattle(panel.battleId)}
+                    onHide={panel.hideScene}
                 />
             )}
         </>

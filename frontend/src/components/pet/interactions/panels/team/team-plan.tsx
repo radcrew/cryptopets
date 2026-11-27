@@ -1,10 +1,19 @@
 import clsx from 'clsx';
 import React, { useEffect, useState } from 'react';
 
+import { AuthActionButton } from '@components/common';
 import InfoTooltip from '@components/ui/info-tooltip';
 import NeonButton from '@components/ui/neon-button';
-import { SQUAD_SIZE } from '@hooks/team/useTeamBattlePanel';
-import { type PlanRosterEntry, type Tactic, useDefensePlan, usePetList } from '@shared/core';
+import {
+    firstFreeTile,
+    type PlanRosterEntry,
+    SQUAD_SIZE,
+    type Tactic,
+    useAuth,
+    useDefensePlan,
+    usePetCooldowns,
+    usePetList,
+} from '@shared/core';
 
 import { type ArtPet, teamPetArt } from './art';
 import { tacticShort } from './tactics';
@@ -20,18 +29,6 @@ import TeamPlanRules, {
 } from './team-plan-rules';
 import styles from './index.module.css';
 
-const TILE_ORDER: readonly [number, number][] = [
-    [2, 1],
-    [2, 0],
-    [2, 2],
-    [1, 1],
-    [1, 0],
-    [1, 2],
-    [0, 1],
-    [0, 0],
-    [0, 2],
-];
-
 /**
  * The defence plan editor: the three pets that defend, each with a home tile and a tactic.
  *
@@ -40,6 +37,9 @@ const TILE_ORDER: readonly [number, number][] = [
  */
 const TeamPlan: React.FC = () => {
     const { pets, isLoading } = usePetList();
+    // Ticks once a second while any pet rests, so the "Resting" labels clear on their own.
+    usePetCooldowns(pets);
+    const { isAuthenticated } = useAuth();
     const petsLoading = isLoading && pets.length === 0;
     const { plan, save, revoke, isPending, error } = useDefensePlan();
     const [roster, setRoster] = useState<PlanRosterEntry[]>([]);
@@ -66,9 +66,7 @@ const TeamPlan: React.FC = () => {
     const add = (petId: string) =>
         setRoster((current) => {
             if (current.length >= SQUAD_SIZE) return current;
-            const free = TILE_ORDER.find(
-                ([col, row]) => !current.some((d) => d.col === col && d.row === row),
-            );
+            const free = firstFreeTile(current);
             return free
                 ? [...current, { petId, col: free[0], row: free[1], tactic: 'focus' }]
                 : current;
@@ -180,7 +178,7 @@ const TeamPlan: React.FC = () => {
                         </InfoTooltip>
                     </h4>
                     <div className={styles.row}>
-                        <NeonButton
+                        <AuthActionButton
                             size="sm"
                             tone="emerald"
                             disabled={
@@ -189,7 +187,7 @@ const TeamPlan: React.FC = () => {
                             onClick={() => void handleSave()}
                         >
                             {isPending ? 'Signing…' : 'Save team'}
-                        </NeonButton>
+                        </AuthActionButton>
                         <NeonButton
                             size="sm"
                             tone="magenta"
@@ -215,7 +213,13 @@ const TeamPlan: React.FC = () => {
                 {message && <p role="status">{message}</p>}
             </div>
             <div className={styles.planSide}>
-                <TeamPlanRules rules={rules} onChange={setRules} plan={plan} disabled={isPending} />
+                <TeamPlanRules
+                    rules={rules}
+                    onChange={setRules}
+                    plan={plan}
+                    signedIn={isAuthenticated}
+                    disabled={isPending}
+                />
                 <TeamFormationCheck roster={roster} pets={pets} />
             </div>
         </div>

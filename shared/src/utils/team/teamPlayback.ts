@@ -11,8 +11,9 @@ import {
     type TeamOutcome,
 } from '@cryptopets/protocol';
 
-/** Re-exported so screens can name a tactic without depending on the protocol package. */
+/** Re-exported so screens can name a tactic, and size a team, without depending on the protocol package. */
 export type { Tactic } from '@cryptopets/protocol';
+export { SQUAD_SIZE } from '@cryptopets/protocol';
 
 /**
  * Team battle playback, platform-neutral (docs/plan-team-battles-3v3.md, Phase 5).

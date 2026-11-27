@@ -32,7 +32,8 @@ export type WriteFailure =
     | 'no-progress-row'
     | 'unknown-entitlement'
     | 'already-claimed'
-    | 'not-admin';
+    | 'not-admin'
+    | 'pet-in-battle';
 
 export interface UseItemResult {
     burnTxHash: string;
@@ -99,6 +100,14 @@ export async function useItem(
     const chainId = servedChainIdForFamily(chain as never);
     if (!chainId) {
         return 'unsupported-chain';
+    }
+
+    // A battle writes the pet's level and XP when it signs, from what was frozen at acceptance,
+    // so an XP grant landing mid-battle would be overwritten and the item wasted. Refused before
+    // the burn, so the item is kept.
+    const lock = await prisma.petBattleLock.findUnique({ where: { chainId_petId: { chainId, petId } }, select: { battleId: true } });
+    if (lock) {
+        return 'pet-in-battle';
     }
 
     const burnTxHash = await client.burnFrom(owner, itemType, 1);

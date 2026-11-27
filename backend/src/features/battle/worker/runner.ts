@@ -138,12 +138,35 @@ export async function drainBattleWorker(
     return { processed };
 }
 
-/** Starts polling on an interval. `workerId` should be unique per process for the outbox lock. */
+/**
+ * Starts polling. `workerId` should be unique per process for the outbox lock.
+ *
+ * Each pass is scheduled when the previous one ends, never on a fixed interval, so passes do not
+ * overlap however slow the database is. A pass that did work usually queued that battle's next
+ * step, due now, so the next pass starts at once rather than a poll interval later; a battle has
+ * four such steps after its drand round, and waiting out the interval at each was most of its
+ * time on a fast database.
+ */
 export function startBattleWorker(workerId: string): BattleWorkerHandle {
-    const timer = setInterval(() => {
-        void runBattleWorkerOnce(workerId).catch((error: Error) => {
-            console.error(`[battle-worker] poll failed: ${error.message}`);
-        });
-    }, env.battle.workerPollIntervalMs);
-    return { stop: () => clearInterval(timer) };
+    let stopped = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const schedule = (delayMs: number) => {
+        if (!stopped) timer = setTimeout(() => void pass(), delayMs);
+    };
+    const pass = async () => {
+        let processed = 0;
+        try {
+            ({ processed } = await runBattleWorkerOnce(workerId));
+        } catch (error) {
+            console.error(`[battle-worker] poll failed: ${(error as Error).message}`);
+        }
+        schedule(processed > 0 ? 0 : env.battle.workerPollIntervalMs);
+    };
+    schedule(env.battle.workerPollIntervalMs);
+    return {
+        stop: () => {
+            stopped = true;
+            clearTimeout(timer);
+        },
+    };
 }

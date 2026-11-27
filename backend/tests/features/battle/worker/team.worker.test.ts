@@ -2,6 +2,8 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { clearPublishedRulesetCache } from '@features/battle/ledger/rulesetBundle.store';
+
 import {
     assertAnyBattleReceipt,
     hashAnyBattleReceipt,
@@ -27,6 +29,9 @@ vi.mock('@features/battle/ledger', async () => ({
         '../../../../src/features/battle/ledger/snapshot.codec',
     )).decodeStoredTeamSnapshot,
     OUTBOX_TOPICS: { verify: 'verify', sign: 'sign', publish: 'publish' },
+    ...(await vi.importActual<typeof import('@features/battle/ledger/rulesetBundle.store')>(
+        '@features/battle/ledger/rulesetBundle.store',
+    )),
 }));
 vi.mock('@features/battle/signer', () => ({
     activeSigningKey: vi.fn(),
@@ -101,6 +106,7 @@ const COMPUTED = {
 let transitions: { request: Record<string, unknown>; tx: Record<string, Record<string, ReturnType<typeof vi.fn>>> }[];
 
 beforeEach(() => {
+    clearPublishedRulesetCache();
     vi.clearAllMocks();
     transitions = [];
     vi.mocked(prisma.battleRuleset.findUnique).mockResolvedValue({ bundle: BUNDLE } as never);

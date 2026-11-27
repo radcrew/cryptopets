@@ -46,6 +46,10 @@ export interface DefensePlanWire {
     notBefore: number;
     expiresAt: number;
     revocationNonce: number;
+    /** Absent means 1. New plans must be 2. */
+    schemaVersion?: number;
+    /** Version 2's random 32 bytes, as hex. */
+    salt?: string;
 }
 
 export interface SubmitPlanRequest {
@@ -85,6 +89,13 @@ export async function submitDefensePlan(request: SubmitPlanRequest): Promise<Sub
         plan = assertDefensePlan(toProtocolPlan(request.plan));
     } catch (error) {
         return reject('malformed-plan', (error as Error).message);
+    }
+
+    // Version 1 plans stay valid for battles already fought under them, but a new one must carry
+    // the salt: without it the plan's public hash gives the hidden roster away to anyone who
+    // tries the defender's possible rosters against it.
+    if ((plan.schemaVersion ?? 1) < 2) {
+        return reject('malformed-plan', 'a new defence plan must be version 2, with a salt');
     }
 
     try {
@@ -156,6 +167,7 @@ export async function submitDefensePlan(request: SubmitPlanRequest): Promise<Sub
                     notBefore: BigInt(plan.notBefore),
                     expiresAt: BigInt(plan.expiresAt),
                     revocationNonce: plan.revocationNonce,
+                    salt: plan.salt ?? null,
                     signature: request.signature,
                     signatureFormat: request.signatureFormat,
                 },
@@ -228,7 +240,7 @@ export async function consumePlanDailyBudget(
     planHash: string,
     maxBattlesPerDay: number,
     nowSeconds: number,
-): Promise<{ ok: true; used: number } | { ok: false; reason: typeof CONSENT_REFUSALS.DAILY_CAP_REACHED }> {
+): Promise<{ ok: true } | { ok: false; reason: typeof CONSENT_REFUSALS.DAILY_CAP_REACHED }> {
     const dayBucket = epochDay(nowSeconds);
     const bump = async () =>
         prisma.defensePlanUsage.updateMany({
@@ -240,7 +252,7 @@ export async function consumePlanDailyBudget(
     if (result.count === 0) {
         try {
             await prisma.defensePlanUsage.create({ data: { planHash, dayBucket, count: 1 } });
-            return { ok: true, used: 1 };
+            return { ok: true };
         } catch (error) {
             if ((error as { code?: string }).code !== 'P2002') throw error;
             result = await bump();
@@ -249,11 +261,19 @@ export async function consumePlanDailyBudget(
     if (result.count === 0) {
         return { ok: false, reason: CONSENT_REFUSALS.DAILY_CAP_REACHED };
     }
-    const row = await prisma.defensePlanUsage.findUnique({
-        where: { planHash_dayBucket: { planHash, dayBucket } },
-        select: { count: true },
+    return { ok: true };
+}
+
+/**
+ * Gives back the use `consumePlanDailyBudget` took, for an acceptance that then opened no
+ * battle. Without it a refused accept still cost the defender a battle, so an attacker could
+ * spend a defender's whole day on challenges that were never going to start.
+ */
+export async function refundPlanDailyBudget(planHash: string, nowSeconds: number): Promise<void> {
+    await prisma.defensePlanUsage.updateMany({
+        where: { planHash, dayBucket: epochDay(nowSeconds), count: { gt: 0 } },
+        data: { count: { decrement: 1 } },
     });
-    return { ok: true, used: row?.count ?? 1 };
 }
 
 /** Verifies the defender's EIP-712 signature over the plan. */
@@ -281,6 +301,8 @@ export function toProtocolPlan(wire: DefensePlanWire): DefensePlan {
         notBefore: wire.notBefore,
         expiresAt: wire.expiresAt,
         revocationNonce: wire.revocationNonce,
+        ...(wire.schemaVersion !== undefined ? { schemaVersion: wire.schemaVersion } : {}),
+        ...(wire.salt !== undefined ? { salt: wire.salt as `0x${string}` } : {}),
     };
 }
 

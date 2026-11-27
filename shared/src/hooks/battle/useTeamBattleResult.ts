@@ -21,9 +21,10 @@ export interface TeamBattleResult {
  * the public battle endpoints once the battle is signed.
  *
  * Checked before it is shown. The receipt must pass the protocol's own validation (its seed
- * follows from its inputs, its draw follows from its seed), and the log must hash to the
- * receipt's `combatLogHash`; `buildTeamPlayback` throws otherwise, and the error is what this
- * returns. A screen that animated an unchecked log could show a fight nobody signed.
+ * follows from its inputs), and the log must hash to the receipt's `combatLogHash`;
+ * `buildTeamPlayback` throws otherwise, and the error is what this returns. A screen that
+ * animated an unchecked log could show a fight nobody signed. It does not check the operator's
+ * signature or replay the fight: that is the standalone verifier's job (§H).
  */
 export function useTeamBattleResult(battleId: string | null | undefined, signed: boolean) {
     const apiClient = useApiClient();

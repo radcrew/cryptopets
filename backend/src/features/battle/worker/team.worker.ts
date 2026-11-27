@@ -4,7 +4,6 @@ import {
     hashTeamBattleReceipt,
     hashTeamCombatLog,
     type Hex,
-    loadRulesetBundle,
     type PetProgression,
     replayTeamBattle,
     type Ruleset,
@@ -16,7 +15,14 @@ import { BattleState } from '@generated/prisma/enums';
 
 import { env } from '@config/env';
 import { prisma } from '@config/prisma';
-import { applyTransition, type ClaimedMessage, completeOutbox, decodeStoredTeamSnapshot, OUTBOX_TOPICS } from '@features/battle/ledger';
+import {
+    applyTransition,
+    type ClaimedMessage,
+    completeOutbox,
+    decodeStoredTeamSnapshot,
+    loadPublishedRuleset,
+    OUTBOX_TOPICS,
+} from '@features/battle/ledger';
 import { activeSigningKey, sign, signerBackendError, SignerRefusedError } from '@features/battle/signer';
 import { recordBattleDrops } from '@features/inventory';
 import { callVerifyTeamBattle, type VerifyTeamBattleWire, verifyPetInputs } from '@grpc-client/verifyBattle';
@@ -257,11 +263,7 @@ export async function processTeamSign(battle: LedgerRow, message: ClaimedMessage
 
 /** The ruleset bundle the battle named, checked against its hash before any field is trusted. */
 async function loadBattleRuleset(battle: LedgerRow): Promise<Ruleset> {
-    const row = await prisma.battleRuleset.findUnique({ where: { rulesetHash: battle.rulesetHash } });
-    if (!row) {
-        throw new Error(`no published ruleset bundle for ${battle.rulesetHash}; cannot process battle ${battle.battleId}`);
-    }
-    return loadRulesetBundle(JSON.stringify(row.bundle), battle.rulesetHash as Hex);
+    return loadPublishedRuleset(battle.rulesetHash, `process battle ${battle.battleId}`);
 }
 
 /** Every disagreement between the stored TypeScript result and Go's, as readable lines. */

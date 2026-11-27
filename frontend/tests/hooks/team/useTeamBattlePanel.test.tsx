@@ -1,7 +1,10 @@
-import { act, renderHook } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { act, renderHook as renderBare } from '@testing-library/react';
+import React from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const submit = vi.fn();
+const backendBattle = vi.fn();
 const state = {
     opponents: [] as unknown[],
     pets: [] as unknown[],
@@ -15,17 +18,31 @@ vi.mock('@shared/core', async () => ({
     useTeamOpponents: () => ({ data: state.opponents, isLoading: false, isFetching: false, refetch: vi.fn() }),
     usePetList: () => ({ pets: state.pets, isLoading: false }),
     useSubmitTeamChallenge: () => ({ submit, isPending: state.pending, error: null }),
-    useBackendBattle: (battleId: string | null) => ({ data: battleId ? state.battle : undefined }),
+    useBackendBattle: (battleId: string | null, options?: { pollIntervalMs?: number }) => {
+        backendBattle(battleId, options);
+        return { data: battleId ? state.battle : undefined };
+    },
+    useAuth: () => ({ isAuthenticated: true }),
     useTeamBattleResult: () => state.result,
 }));
 
 import { useTeamBattlePanel } from '@hooks/team/useTeamBattlePanel';
+
+// The hook invalidates queries after a battle, so every render needs a client.
+let queryClient: QueryClient;
+const renderHook = <T,>(hook: () => T) =>
+    renderBare(hook, {
+        wrapper: ({ children }: { children: React.ReactNode }) => (
+            <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+        ),
+    });
 
 const pet = (id: string, level = 10) => ({ id, name: `Pet ${id}`, dna: 1234567890123456n + BigInt(id), level, rarity: 2, readyAt: 0, speciesId: 3 });
 const OPPONENT = { planHash: '0xplan', defenderOwner: '0xdef', minLevel: 1, maxLevel: 30, expiresAt: 0, ready: true };
 
 beforeEach(() => {
     vi.clearAllMocks();
+    queryClient = new QueryClient();
     state.opponents = [OPPONENT];
     state.pets = [pet('1'), pet('2'), pet('3'), pet('4')];
     state.battle = undefined;
@@ -117,6 +134,98 @@ describe('the challenge screen', () => {
         act(() => result.current.cancel());
         expect(result.current.opponent).toBeNull();
         expect(result.current.squad).toEqual([]);
+    });
+});
+
+describe('while a battle is in flight', () => {
+    const startBattle = async () => {
+        submit.mockResolvedValue({ battleId: 'btl_1' });
+        state.battle = { state: 'computed', failureReason: null };
+        const hook = renderHook(() => useTeamBattlePanel());
+        act(() => {
+            hook.result.current.chooseOpponent(OPPONENT as never);
+            hook.result.current.addPet('1');
+            hook.result.current.addPet('2');
+            hook.result.current.addPet('3');
+        });
+        await act(async () => hook.result.current.start());
+        return hook;
+    };
+
+    it('locks the squad and the rival, so the running battle cannot be dropped', async () => {
+        const { result } = await startBattle();
+        expect(result.current.phase).toBe('running');
+        expect(result.current.inFlight).toBe(true);
+        expect(result.current.canStart).toBe(false);
+
+        act(() => {
+            result.current.removePet('1');
+            result.current.addPet('4');
+            result.current.setTactic('2', 'hunter');
+            result.current.chooseOpponent(null);
+            result.current.cancel();
+            result.current.reset();
+        });
+        expect(result.current.squad.map((m) => m.petId)).toEqual(['1', '2', '3']);
+        expect(result.current.squad[1]?.tactic).toBe('focus');
+        expect(result.current.opponent).toEqual(OPPONENT);
+        expect(result.current.battleId).toBe('btl_1');
+
+        await act(async () => result.current.start());
+        expect(submit).toHaveBeenCalledTimes(1);
+    });
+
+    it('polls the battle every second, since a team battle has no room to push changes', async () => {
+        await startBattle();
+        expect(backendBattle).toHaveBeenLastCalledWith('btl_1', { pollIntervalMs: 1000 });
+    });
+
+    it('re-reads cooldowns and the team list once the battle ends, once', async () => {
+        const invalidate = vi.spyOn(queryClient, 'invalidateQueries');
+        const { result, rerender } = await startBattle();
+        expect(invalidate).not.toHaveBeenCalled();
+
+        state.battle = { state: 'signed', failureReason: null };
+        state.result = { data: { playback: {}, summary: {}, receipt: {} }, isError: false, error: null };
+        rerender();
+        expect(result.current.phase).toBe('result');
+        expect(invalidate).toHaveBeenCalledWith({ queryKey: ['battleProgress'] });
+        expect(invalidate).toHaveBeenCalledWith({ queryKey: ['battle', 'team-opponents'] });
+        rerender();
+        expect(invalidate).toHaveBeenCalledTimes(2);
+    });
+
+    it('can be put away and brought back, and a new battle opens it again', async () => {
+        const { result } = await startBattle();
+        expect(result.current.sceneOpen).toBe(true);
+        act(() => result.current.hideScene());
+        expect(result.current.sceneOpen).toBe(false);
+        act(() => result.current.showScene());
+        expect(result.current.sceneOpen).toBe(true);
+    });
+});
+
+describe('moving a squad pet', () => {
+    it('picks a pet up, moves it to the tile tapped next, and puts it down when tapped again', () => {
+        const { result } = renderHook(() => useTeamBattlePanel());
+        act(() => {
+            result.current.addPet('1');
+            result.current.addPet('2');
+        });
+        act(() => result.current.selectPet('1'));
+        expect(result.current.moving).toBe('1');
+        act(() => result.current.placeMoving(0, 0));
+        expect(result.current.squad.find((m) => m.petId === '1')).toMatchObject({ col: 0, row: 0 });
+        act(() => result.current.selectPet('1'));
+        expect(result.current.moving).toBeNull();
+    });
+
+    it('drops the pick when that pet leaves the squad', () => {
+        const { result } = renderHook(() => useTeamBattlePanel());
+        act(() => result.current.addPet('1'));
+        act(() => result.current.selectPet('1'));
+        act(() => result.current.removePet('1'));
+        expect(result.current.moving).toBeNull();
     });
 });
 

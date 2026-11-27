@@ -41,7 +41,7 @@ import { abandonBattle, claimOutbox, failOutbox, nextOutboxDueAt } from '@featur
 import { processAwaitBeaconMessage } from '@features/battle/worker/beacon.worker';
 import { processComputeMessage } from '@features/battle/worker/compute.worker';
 import { processVerifyMessage } from '@features/battle/worker/verify.worker';
-import { drainBattleWorker, runBattleWorkerOnce } from '@features/battle/worker/runner';
+import { drainBattleWorker, runBattleWorkerOnce, startBattleWorker } from '@features/battle/worker/runner';
 
 const NOW = new Date('2026-07-26T12:00:00.000Z');
 
@@ -164,6 +164,64 @@ describe('the end of the retry road', () => {
         await runBattleWorkerOnce('w1');
 
         expect(abandonBattle).toHaveBeenCalledWith('btl_1', expect.stringContaining('no handler'));
+    });
+});
+
+describe('startBattleWorker', () => {
+    const message = (id: string) => ({ id, battleId: 'btl_1', topic: 'compute', payload: {}, attempts: 1 });
+
+    /** Advances fake time in small steps, letting each pass's awaits finish between them. */
+    const runFor = async (ms: number) => {
+        for (let elapsed = 0; elapsed < ms; elapsed += 50) {
+            await vi.advanceTimersByTimeAsync(50);
+            for (let i = 0; i < 20; i++) await Promise.resolve();
+        }
+    };
+
+    it("runs the next pass at once after one that did work, so a battle's next step does not wait out the interval", async () => {
+        vi.useFakeTimers();
+        const worker = startBattleWorker('w');
+        try {
+            const start = Date.now();
+            const passesAt: number[] = [];
+            const work = [[message('m1')], [message('m2')]];
+            vi.mocked(claimOutbox).mockImplementation(async () => {
+                passesAt.push(Date.now() - start);
+                return work.shift() ?? [];
+            });
+
+            await runFor(4100);
+            // The first pass waits one interval. The two that follow work start at once (Node
+            // clamps a zero delay to 1 ms), and the pass after an idle one waits a full interval.
+            expect(passesAt).toEqual([2000, 2001, 2002, 4002]);
+        } finally {
+            worker.stop();
+            vi.useRealTimers();
+        }
+    });
+
+    it('never starts a pass while the previous one is still running, and stops when asked', async () => {
+        vi.useFakeTimers();
+        const worker = startBattleWorker('w');
+        try {
+            let finish: (messages: never[]) => void = () => {};
+            vi.mocked(claimOutbox)
+                .mockImplementationOnce(() => new Promise((resolve) => (finish = resolve as never)))
+                .mockResolvedValue([]);
+
+            await runFor(12_000); // a slow database: the first pass is still out
+            expect(claimOutbox).toHaveBeenCalledTimes(1);
+            finish([]);
+            await runFor(2100);
+            expect(claimOutbox).toHaveBeenCalledTimes(2);
+
+            worker.stop();
+            await runFor(6000);
+            expect(claimOutbox).toHaveBeenCalledTimes(2);
+        } finally {
+            worker.stop();
+            vi.useRealTimers();
+        }
     });
 });
 

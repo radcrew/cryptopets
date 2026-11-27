@@ -4,6 +4,7 @@ export {
     type DefensePlanTypedData,
     defensePlanTypedData,
     EIP712_DEFENSE_PLAN_TYPES,
+    EIP712_DEFENSE_PLAN_V2_TYPES,
     encodeDefensePlan,
     hashDefensePlan,
     planCovers,

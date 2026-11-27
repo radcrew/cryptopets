@@ -10,6 +10,7 @@ vi.mock('@shared/core', async () => ({
         pets: ['1', '2', '3', '4', '5', '6'].map((id) => ({ id, name: `Pet ${id}`, level: 10, dna: 1n, rarity: 1, readyAt: 0 })),
     }),
     useDefensePlan: () => ({ plan: null, save, revoke, isPending: false, error: null }),
+    useAuth: () => ({ isAuthenticated: true }),
 }));
 
 import TeamPetGrid from '@components/pet/interactions/panels/team/team-pet-grid';
