@@ -7,6 +7,7 @@ import {
     useMarriageInfo,
     usePendingBreed,
     usePetList,
+    type Pet,
     type TxLifecycle,
 } from '@shared/core';
 import { formatTxHashHint } from '@hooks/usePetError';
@@ -28,6 +29,12 @@ export interface UseBreedPanel {
     /** Shows the "hang tight" hint while an async (VRF) breed hasn't minted yet. */
     isAwaitingFulfillment: boolean;
     success: string | null;
+    /**
+     * The pet that just hatched, for the egg-cracking celebration. `pet` is null until the
+     * refreshed list contains it: found by name among pets that did not exist before the breed.
+     */
+    hatchling: { name: string; pet: Pet | null } | null;
+    onHatchlingSeen: () => void;
     hashHint: string | null;
     receipt: TxLifecycle;
 }
@@ -43,6 +50,7 @@ export const useBreedPanel = (): UseBreedPanel => {
 
     const [tab, setTab] = useState<BreedTab>('own');
     const [success, setSuccess] = useState<string | null>(null);
+    const [hatch, setHatch] = useState<{ name: string; knownIds: string[] } | null>(null);
     const autoSwitched = useRef(false);
 
     // ── My Pets tab state ──────────────────────────────────────────────────────
@@ -112,6 +120,7 @@ export const useBreedPanel = (): UseBreedPanel => {
     const handleSuccess = useCallback(
         ({ name }: { name: string }) => {
             setSuccess(`"${name}" created!`);
+            setHatch({ name, knownIds: pets.map((p) => p.id) });
             setOwnPet1('');
             setOwnPet2('');
             setOwnChildName('');
@@ -119,8 +128,18 @@ export const useBreedPanel = (): UseBreedPanel => {
             setSpouseChildName('');
             void refetch();
         },
-        [refetch],
+        [pets, refetch],
     );
+
+    const hatchling = useMemo(
+        () =>
+            hatch && {
+                name: hatch.name,
+                pet: pets.find((p) => p.name === hatch.name && !hatch.knownIds.includes(p.id)) ?? null,
+            },
+        [hatch, pets],
+    );
+    const onHatchlingSeen = useCallback(() => setHatch(null), []);
 
     const breed = useBreedPets({ onSuccess: handleSuccess });
 
@@ -201,6 +220,8 @@ export const useBreedPanel = (): UseBreedPanel => {
         onBreed,
         isAwaitingFulfillment: breed.isAwaitingFulfillment,
         success,
+        hatchling,
+        onHatchlingSeen,
         hashHint,
         receipt: breed.lifecycle,
     };

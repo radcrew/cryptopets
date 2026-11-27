@@ -13,11 +13,13 @@ import {
     usePetList,
     type InventoryEntry,
     type ItemDefinition,
+    type PendingItem,
 } from '@shared/core';
 
 import DashboardPanel from '@components/common/dashboard-panel';
 import SessionGate from '@components/common/session-gate';
-import ItemArt from '@components/item/item-art';
+import ItemArt, { hasItemArt } from '@components/item/item-art';
+import Celebration from '@components/game/celebration';
 import EquipPanel from '@components/pet/interactions/panels/equip';
 import PetSelect from '@components/ui/pet-select';
 import Icon, { MuscleIcon, RefreshIcon } from '@components/ui/icon';
@@ -136,6 +138,8 @@ const Inventory: React.FC = () => {
 
     const { entries, isLoading, error, refetch } = useInventory({ chain });
     const { pending, claim, claimingId, claimError } = usePendingItems(chain);
+    /** The drop just claimed, opened like a chest. */
+    const [loot, setLoot] = useState<PendingItem | null>(null);
     const { pets } = usePetList();
     const { spend, isPending: isSpending, error: spendError } = useSpendItem();
 
@@ -409,7 +413,14 @@ const Inventory: React.FC = () => {
                                         <button
                                             type="button"
                                             className={styles.claim}
-                                            onClick={() => void claim(entry.entitlementId)}
+                                            // A failed claim is already reported through claimError,
+                                            // so the rejection only has to be caught, not shown again.
+                                            onClick={() =>
+                                                claim(entry.entitlementId).then(
+                                                    () => setLoot(entry),
+                                                    () => undefined,
+                                                )
+                                            }
                                             disabled={claimingId != null}
                                         >
                                             {claimingId === entry.entitlementId ? 'Claiming…' : 'Claim'}
@@ -517,6 +528,18 @@ const Inventory: React.FC = () => {
                     error={spendError as Error | null}
                 />
             ) : null}
+
+            {loot && (
+                <Celebration
+                    intro="chest"
+                    title="Loot!"
+                    sub={`${loot.item.name} ×${loot.quantity} · ${getRarityName(loot.item.rarity)}`}
+                    art={hasItemArt(loot.item.itemType) ? <ItemArt item={loot.item} size="feature" /> : undefined}
+                    tone={getRarityColor(loot.item.rarity)}
+                    sound="chest"
+                    onClose={() => setLoot(null)}
+                />
+            )}
         </SessionGate>
     );
 };

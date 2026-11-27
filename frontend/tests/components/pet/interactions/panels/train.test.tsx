@@ -38,6 +38,7 @@ vi.mock('@shared/core', () => ({
     // No art service in these tests: PetArt renders the emoji alone.
     petArtUrl: () => null,
     getPetClass: () => 'Warrior',
+    getRarityColor: () => '#7dd6ff',
     getXpNumbers: () => ({ xpCurrent: 10, xpMax: 100 }),
     getXpPercent: () => 10,
     getReadyPetsUnified: (pets: { id: string; level: number }[]) => pets.map((p) => ({ id: p.id, pet: p })),
@@ -96,6 +97,16 @@ describe('TrainPanel', () => {
         act(() => { capturedOnSuccess?.(); });
         expect(screen.getByText('Pet trained successfully!')).toBeInTheDocument();
         expect(petList.refetch).toHaveBeenCalled();
+    });
+
+    it('celebrates the trained pet, and waits for the refreshed list before claiming any XP', async () => {
+        render(<TrainPanel />);
+        await choosePet('Rex');
+        act(() => { capturedOnSuccess?.(); });
+
+        const card = screen.getByRole('dialog', { name: 'Trained!' });
+        expect(card).toHaveTextContent('Rex worked hard and earned XP');
+        expect(card).toHaveTextContent('Counting the XP…');
     });
 
     it('shows Training... label while pending', () => {

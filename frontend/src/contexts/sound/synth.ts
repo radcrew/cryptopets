@@ -5,7 +5,20 @@
  * refuse to start audio before the page has had a user gesture, and creating the context
  * early only produces a suspended one and a console warning.
  */
-export type SoundName = 'tap' | 'success' | 'error' | 'heartbeat' | 'hit' | 'crit' | 'magic' | 'victory' | 'defeat';
+export type SoundName =
+    | 'tap'
+    | 'success'
+    | 'error'
+    | 'heartbeat'
+    | 'hit'
+    | 'crit'
+    | 'magic'
+    | 'victory'
+    | 'defeat'
+    | 'levelUp'
+    | 'crack'
+    | 'hatch'
+    | 'chest';
 
 type Tone = {
     kind?: 'tone';
@@ -51,6 +64,20 @@ const SOUNDS: Record<SoundName, Note[]> = {
     magic: [{ freq: 380, dur: 0.38, type: 'sine', vol: 0.14, slide: 1300 }],
     victory: arpeggio([523, 659, 784, 1047, 1319], 0.1, 0.3, 0.16),
     defeat: arpeggio([392, 330, 262], 0.16, 0.34, 0.13),
+    levelUp: arpeggio([523, 659, 784, 1047, 1319, 1568], 0.07),
+    crack: [
+        { kind: 'noise', dur: 0.09, vol: 0.45, band: 3200 },
+        { freq: 1800, dur: 0.05, type: 'square', vol: 0.06 },
+    ],
+    hatch: [
+        ...arpeggio([392, 523, 659, 784, 1047], 0.05, 0.7, 0.12),
+        { kind: 'noise', dur: 0.6, vol: 0.18, band: 6000 },
+    ],
+    chest: [
+        { freq: 220, dur: 1.1, type: 'sawtooth', vol: 0.06, slide: 990 },
+        { freq: 988, dur: 0.08, type: 'square', vol: 0.09, delay: 0.5 },
+        { freq: 1319, dur: 0.14, type: 'square', vol: 0.09, delay: 0.57 },
+    ],
 };
 
 export type Synth = { play: (name: SoundName) => void };

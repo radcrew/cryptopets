@@ -5,6 +5,7 @@ import NeonButton from '@components/ui/neon-button';
 import PetPicker from '@components/ui/pet-picker';
 import {
     getPetClass,
+    getRarityColor,
     getReadyPetsUnified,
     getXpNumbers,
     getXpPercent,
@@ -12,6 +13,7 @@ import {
     useFees,
     useLevelUpPet,
     usePetList,
+    type Pet,
 } from '@shared/core';
 import { useNotifyError } from '@hooks/useNotifyError';
 import { useTxErrorToast } from '@hooks/useTxErrorToast';
@@ -21,6 +23,7 @@ import SyncMetadataButton from './sync-metadata-button';
 import PetShowcase from '../_shared/pet-showcase';
 import styles from './index.module.css';
 import PetArt from '@components/pet/pet-art';
+import Celebration from '@components/game/celebration';
 
 export type LevelUpPanelProps = {
     isStandaloneView?: boolean;
@@ -34,10 +37,14 @@ const LevelUpPanel: React.FC<LevelUpPanelProps> = ({ isStandaloneView = true }) 
     const [selectedPet, setSelectedPet] = useState<string>('');
     const [success, setSuccess] = useState<string | null>(null);
     const [leveledUpPetId, setLeveledUpPetId] = useState<string | null>(null);
+    /** The pet to celebrate, read at success time: a level-up is always exactly one level. */
+    const [celebrated, setCelebrated] = useState<{ pet: Pet; level: number } | null>(null);
 
     // Settlement is lifecycle-driven (EVM: receipt confirmed; Solana: resolve).
     const handleLevelUpComplete = () => {
         setLeveledUpPetId(selectedPet);
+        const pet = pets.find((p) => String(p.id) === selectedPet);
+        if (pet) setCelebrated({ pet, level: pet.level + 1 });
         setSuccess('Pet leveled up successfully!');
         setSelectedPet('');
         refetch();
@@ -205,6 +212,17 @@ const LevelUpPanel: React.FC<LevelUpPanelProps> = ({ isStandaloneView = true }) 
                     {success}
                     <SyncMetadataButton petId={leveledUpPetId ?? undefined} />
                 </div>
+            )}
+
+            {celebrated && (
+                <Celebration
+                    title="Level up!"
+                    sub={`${celebrated.pet.name} reached level ${celebrated.level}`}
+                    art={<PetArt pet={celebrated.pet} fill />}
+                    tone={getRarityColor(celebrated.pet.rarity)}
+                    sound="levelUp"
+                    onClose={() => setCelebrated(null)}
+                />
             )}
 
             <TransactionStatus lifecycle={lifecycle} />

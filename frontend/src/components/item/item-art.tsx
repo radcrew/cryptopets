@@ -39,7 +39,7 @@ const fallbackUrl = (itemType: string): string | null =>
  * of the art unconditionally, so nothing outside needs to ask. An exported predicate with no
  * caller is worse than dead code — the next reader builds against a seam nobody validated.
  */
-const hasItemArt = (itemType: string): boolean => artUrl(itemType) !== null;
+export const hasItemArt = (itemType: string): boolean => artUrl(itemType) !== null;
 
 type ItemArtProps = {
     item: Pick<ItemDefinition, 'itemType' | 'name'>;

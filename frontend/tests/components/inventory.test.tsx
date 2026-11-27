@@ -394,13 +394,27 @@ describe('items waiting to be claimed', () => {
     });
 
     it('claims the entitlement it was asked about', async () => {
-        const claim = vi.fn();
+        // A promise, as the real claim returns: the screen waits on it to open the drop.
+        const claim = vi.fn().mockResolvedValue(undefined);
         usePendingItems.mockReturnValue({ pending: [pending], claim, claimingId: null, claimError: null });
 
         renderBag();
         await userEvent.click(screen.getByRole('button', { name: 'Claim' }));
 
         expect(claim).toHaveBeenCalledWith('e1');
+    });
+
+    it('opens the drop like a chest once the claim lands, and not when it fails', async () => {
+        const claim = vi.fn().mockRejectedValueOnce(new Error('no gas')).mockResolvedValue(undefined);
+        usePendingItems.mockReturnValue({ pending: [pending], claim, claimingId: null, claimError: null });
+
+        renderBag();
+        await userEvent.click(screen.getByRole('button', { name: 'Claim' }));
+        expect(screen.queryByRole('dialog', { name: 'Loot!' })).toBeNull();
+
+        await userEvent.click(screen.getByRole('button', { name: 'Claim' }));
+        await userEvent.click(await screen.findByRole('button', { name: 'Open the chest' }));
+        expect(await screen.findByText(/Lesser Tonic ×2/, { selector: 'p' })).toBeInTheDocument();
     });
 
     // One claim at a time: each sends a transaction from the backend's wallet, and a player

@@ -118,3 +118,34 @@
         animation: none;
     }
 }
+
+/* The XP bar in the training celebration. */
+.xpGain {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.xpGainTrack {
+    height: 12px;
+    border-radius: 999px;
+    background: #1a1f44;
+    overflow: hidden;
+}
+
+.xpGainFill {
+    display: block;
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--cp-cyan), var(--cp-violet), var(--cp-magenta));
+    transition: width 0.9s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.xpGainText {
+    font-family: var(--cp-title-font);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    color: var(--cp-emerald);
+}

@@ -58,6 +58,7 @@ vi.mock('@shared/core', () => ({
     getPetClass: () => 'Warrior',
     getPetProperties: () => ({ life: 70, attack: 50, defense: 40, intelligence: 60 }),
     getRarityColor: () => '#8aa0ff',
+    getRarityName: () => 'Rare',
     getRarityName: () => 'Common',
     getGeneration: () => 1,
     getLifePercent: () => 80,
@@ -167,6 +168,19 @@ describe('BreedPanel — My Pets tab (cycle selectors)', () => {
 
         expect(screen.getByText('"Junior" created!')).toBeInTheDocument();
         expect(petList.refetch).toHaveBeenCalled();
+    });
+
+    it('hatches the offspring from an egg cracked in three taps', async () => {
+        render(<BreedPanel />);
+        act(() => {
+            capturedOnSuccess?.({ name: 'Junior' });
+        });
+
+        for (let i = 0; i < 3; i++) {
+            await userEvent.click(screen.getByRole('button', { name: /Tap the egg/ }));
+        }
+        // The child is not in the mocked list, so the reveal names it without art.
+        expect(await screen.findByText('Meet Junior')).toBeInTheDocument();
     });
 
     it('shows the awaiting-fulfillment label and hint', () => {

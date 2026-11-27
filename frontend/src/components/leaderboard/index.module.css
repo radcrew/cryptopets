@@ -56,6 +56,8 @@
     align-items: end;
     gap: 12px;
     flex-shrink: 0;
+    /* Room above the cards for the medals, and the crown over first place. */
+    padding-top: 48px;
 }
 
 .podiumCard {
@@ -121,13 +123,36 @@
     order: 3;
 }
 
+/* A round medal straddling the top edge of the card, in the place's own metal. */
 .podiumRank {
-    font-family: var(--cp-title-font);
-    font-size: 0.85rem;
-    font-weight: 700;
-    letter-spacing: 1.5px;
-    color: var(--medal);
+    position: absolute;
+    top: -18px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    font-family: var(--cp-display-font);
+    font-size: 1rem;
+    color: #1a1030;
+    background: radial-gradient(circle at 35% 30%, #fff, var(--medal) 55%, rgb(from var(--medal) r g b / 70%));
+    box-shadow: 0 3px 0 rgb(0 0 0 / 35%), 0 0 14px rgb(from var(--medal) r g b / 50%);
     font-variant-numeric: tabular-nums;
+}
+
+.isLeader .podiumRank::after {
+    content: '';
+    position: absolute;
+    bottom: calc(100% - 2px);
+    left: 50%;
+    width: 42px;
+    height: 28px;
+    margin-left: -21px;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 32'%3E%3Cpath d='M4 28 L2 8 L14 18 L24 2 L34 18 L46 8 L44 28 Z' fill='%23ffd25a' stroke='%23a86a10' stroke-width='1.5'/%3E%3Ccircle cx='24' cy='19' r='3' fill='%23ff7bcb'/%3E%3Ccircle cx='12' cy='23' r='2' fill='%237dd6ff'/%3E%3Ccircle cx='36' cy='23' r='2' fill='%237dd6ff'/%3E%3C/svg%3E") no-repeat center / contain;
+    filter: drop-shadow(0 0 8px rgb(255 210 90 / 70%));
+    animation: crown-float 2.4s ease-in-out infinite;
 }
 
 /* PetArt draws at 1em, so font-size is the lever; see PetArt. */
@@ -151,10 +176,10 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    font-family: var(--cp-title-font);
-    font-size: 1rem;
-    font-weight: 700;
-    letter-spacing: 0.3px;
+    font-family: var(--cp-display-font);
+    font-size: 0.95rem;
+    font-weight: 400;
+    letter-spacing: 0.03em;
 }
 
 .podiumSub,
@@ -175,6 +200,69 @@
 
 .dash {
     opacity: 0.35;
+}
+
+/* Game dressing: the cards stand like plinths with a solid step under them, and rise in on
+   load, second and third either side of the leader. */
+.podiumCard {
+    border-radius: 18px 18px 8px 8px;
+    box-shadow: 0 8px 0 rgb(from var(--medal) r g b / 26%), 0 18px 30px rgb(0 0 0 / 45%);
+    transform-origin: bottom;
+    animation: plinth-rise 0.7s var(--cp-ease-spring) both;
+}
+
+.podiumCard.silver {
+    animation-delay: 0.1s;
+}
+
+.podiumCard.gold {
+    animation-delay: 0.25s;
+}
+
+.podiumCard.bronze {
+    animation-delay: 0.4s;
+}
+
+.podiumCard.isLeader {
+    box-shadow: 0 10px 0 rgb(from var(--medal) r g b / 34%), 0 0 40px rgb(from var(--medal) r g b / 22%),
+        0 18px 30px rgb(0 0 0 / 45%);
+}
+
+/* Slow light behind the leader's pet. */
+.isLeader .podiumArt {
+    position: relative;
+    isolation: isolate;
+}
+
+.isLeader .podiumArt::before {
+    content: '';
+    position: absolute;
+    inset: -45%;
+    z-index: -1;
+    border-radius: 50%;
+    background: repeating-conic-gradient(rgb(from var(--medal) r g b / 24%) 0 10deg, transparent 10deg 20deg);
+    -webkit-mask-image: radial-gradient(circle, #000 20%, transparent 66%);
+    mask-image: radial-gradient(circle, #000 20%, transparent 66%);
+    animation: rays-spin 18s linear infinite;
+}
+
+@keyframes plinth-rise {
+    from {
+        transform: scaleY(0.2) translateY(30px);
+        opacity: 0;
+    }
+}
+
+@keyframes crown-float {
+    50% {
+        transform: translateY(-4px) rotate(-4deg);
+    }
+}
+
+@keyframes rays-spin {
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 @media (max-width: 620px) {

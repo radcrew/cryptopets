@@ -33,6 +33,7 @@ vi.mock('@shared/core', () => ({
     // No art service in these tests: PetArt renders the emoji alone.
     petArtUrl: () => null,
     getPetClass: () => 'Warrior',
+    getRarityColor: () => '#7dd6ff',
     getXpNumbers: () => ({ xpCurrent: 10, xpMax: 100 }),
     getXpPercent: () => 10,
     getReadyPetsUnified: (pets: { id: string; level: number }[]) => pets.map((p) => ({ id: p.id, pet: p })),
@@ -124,5 +125,18 @@ describe('LevelUpPanel', () => {
 
         expect(screen.getByText('Pet leveled up successfully!')).toBeInTheDocument();
         expect(petList.refetch).toHaveBeenCalled();
+    });
+
+    it('celebrates the pet that leveled, exactly one level up, until dismissed', async () => {
+        render(<LevelUpPanel />);
+        await choosePet('Beta');
+
+        act(() => {
+            capturedOnSuccess?.();
+        });
+
+        expect(screen.getByRole('dialog', { name: 'Level up!' })).toHaveTextContent('Beta reached level 6');
+        await userEvent.click(screen.getByRole('button', { name: 'Nice!' }));
+        expect(screen.queryByRole('dialog', { name: 'Level up!' })).toBeNull();
     });
 });

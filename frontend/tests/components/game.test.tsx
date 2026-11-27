@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 
 // jsdom has no Web Audio, so the synth is a spy: these tests are about which cue plays when.
 const play = vi.fn();
@@ -9,6 +10,7 @@ const pulse = { round: 100, nextBeatAt: 0 };
 vi.mock('@shared/core', () => ({ usePulseRound: () => pulse }));
 
 import { SoundProvider } from '@contexts/sound';
+import Celebration from '@components/game/celebration';
 import PulseMoment from '@components/game/pulse-moment';
 import ResultStamp from '@components/game/result-stamp';
 import StrikePop, { type StrikeCue } from '@components/game/strike-pop';
@@ -79,6 +81,24 @@ describe('ResultStamp', () => {
         const { container } = render(withSound(<ResultStamp won={false}>DEFEATED</ResultStamp>));
         expect(play).toHaveBeenCalledWith('defeat');
         expect(container.querySelectorAll('i')).toHaveLength(0);
+    });
+});
+
+describe('Celebration', () => {
+    it('plays its sound on the reveal, not while the chest is still shut', async () => {
+        render(withSound(<Celebration intro="chest" title="Loot!" sub="Lesser Tonic ×2" sound="chest" onClose={() => {}} />));
+        expect(play).not.toHaveBeenCalledWith('chest');
+
+        await userEvent.click(screen.getByRole('button', { name: 'Open the chest' }));
+        expect(await screen.findByText('Lesser Tonic ×2')).toBeInTheDocument();
+        expect(play).toHaveBeenCalledWith('chest');
+    });
+
+    it('closes on Escape at any stage, so the egg never stands between a player and the page', async () => {
+        const onClose = vi.fn();
+        render(withSound(<Celebration intro="egg" title="It hatched!" sound="hatch" onClose={onClose} />));
+        await userEvent.keyboard('{Escape}');
+        expect(onClose).toHaveBeenCalled();
     });
 });
 

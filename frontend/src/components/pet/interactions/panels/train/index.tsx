@@ -4,6 +4,7 @@ import NeonButton from '@components/ui/neon-button';
 import PetPicker from '@components/ui/pet-picker';
 import {
     getPetClass,
+    getRarityColor,
     getReadyPetsUnified,
     getXpNumbers,
     getXpPercent,
@@ -11,6 +12,7 @@ import {
     useFees,
     useTrainPet,
     usePetList,
+    type Pet,
 } from '@shared/core';
 import { useNotifyError } from '@hooks/useNotifyError';
 import { useTxErrorToast } from '@hooks/useTxErrorToast';
@@ -18,6 +20,8 @@ import Icon, { CheckIcon } from '@components/ui/icon';
 import { Tones } from '@constants/tones';
 import styles from './index.module.css';
 import PetArt from '@components/pet/pet-art';
+import Celebration from '@components/game/celebration';
+import XpGain from './xp-gain';
 
 export type TrainPanelProps = {
     isStandaloneView?: boolean;
@@ -30,8 +34,11 @@ const TrainPanel: React.FC<TrainPanelProps> = ({ isStandaloneView = true }) => {
 
     const [selectedPet, setSelectedPet] = useState<string>('');
     const [success, setSuccess] = useState<string | null>(null);
+    /** The pet to celebrate, as it was before training, so its XP bar can fill from there. */
+    const [trained, setTrained] = useState<Pet | null>(null);
 
     const handleTrainComplete = () => {
+        setTrained(pets.find((p) => String(p.id) === selectedPet) ?? null);
         setSuccess('Pet trained successfully!');
         setSelectedPet('');
         refetch();
@@ -174,6 +181,19 @@ const TrainPanel: React.FC<TrainPanelProps> = ({ isStandaloneView = true }) => {
                     <Icon as={CheckIcon} tone={Tones.Emerald} />
                     {success}
                 </div>
+            )}
+
+            {trained && (
+                <Celebration
+                    title="Trained!"
+                    sub={`${trained.name} worked hard and earned XP`}
+                    art={<PetArt pet={trained} fill />}
+                    tone={getRarityColor(trained.rarity)}
+                    sound="levelUp"
+                    onClose={() => setTrained(null)}
+                >
+                    <XpGain before={trained} />
+                </Celebration>
             )}
 
             <TransactionStatus lifecycle={lifecycle} />
