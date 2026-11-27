@@ -132,7 +132,6 @@ export {
     enqueueOutbox,
     failOutbox,
     listDeadLetters,
-    nextOutboxDueAt,
     requeueDeadLetter,
     type OutboxMessage,
     type OutboxTopic,

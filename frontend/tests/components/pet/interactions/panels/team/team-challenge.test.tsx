@@ -120,10 +120,12 @@ describe('TeamChallenge showdown', () => {
         expect(within(mine).getAllByText('Empty slot')).toHaveLength(1);
 
         const order = screen.getByRole('list', { name: "Your squad's turn order" });
-        expect(within(order).getAllByRole('listitem').map((li) => li.textContent)).toEqual([
-            '11st: Mine 2',
-            '22nd: Mine 1',
-        ]);
+        // Checked by label rather than by whole text: each entry also holds the pet's art, which is an
+        // image where the art service is configured and an emoji where it is not, as in CI.
+        const entries = within(order).getAllByRole('listitem');
+        expect(entries).toHaveLength(2);
+        expect(entries[0]).toHaveTextContent('1st: Mine 2');
+        expect(entries[1]).toHaveTextContent('2nd: Mine 1');
 
         // The defenders: three unknown rows and an unknown zone, with no pet or tactic anywhere.
         const theirs = screen.getByRole('list', { name: 'Rival team' });
