@@ -31,6 +31,16 @@
     animation: twinkle 3s ease-in-out infinite;
 }
 
+/* The Pulse hangs at the top of the sky, centred over its reflection. */
+.pulse {
+    position: absolute;
+    left: 50%;
+    top: 5%;
+    z-index: 2;
+    width: clamp(96px, 13cqw, 150px);
+    transform: translateX(-50%);
+}
+
 .sea {
     position: absolute;
     left: 0;

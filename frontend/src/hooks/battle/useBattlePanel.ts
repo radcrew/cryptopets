@@ -37,6 +37,7 @@ import {
 import type { BattleOverlayProps } from '@components/pet/interactions/panels/battle/parts/battle-overlay';
 import type { BattleSetupProps } from '@components/pet/interactions/panels/battle/parts/battle-setup';
 import type { MechanicalLogLine } from '@components/pet/interactions/panels/battle/types';
+import { strikeLabel } from '@components/game/strike-pop/label';
 
 interface UseBattlePanelArgs {
     isStandaloneView: boolean;
@@ -514,6 +515,24 @@ export const useBattlePanel = ({ isStandaloneView }: UseBattlePanelArgs): UseBat
                 : null,
         [battle.liveReplay, animation.history, fighterDisplayName, opponentDisplayName],
     );
+    // The strike playing now, for the damage pop over its victim. Keyed on the strike itself
+    // (a stable element of the log) so a re-render never replays the pop or its sound.
+    const lastStrike = battle.liveReplay ? animation.history[animation.history.length - 1] : undefined;
+    const strikeCount = animation.history.length;
+    const liveStrike = useMemo(
+        () =>
+            lastStrike
+                ? {
+                      id: strikeCount,
+                      victim: lastStrike.attacker === 1 ? ('enemy' as const) : ('fighter' as const),
+                      damage: lastStrike.damage.toString(),
+                      crit: lastStrike.crit,
+                      magic: lastStrike.isMagic,
+                      label: strikeLabel(lastStrike),
+                  }
+                : null,
+        [lastStrike, strikeCount],
+    );
 
     const overlay: BattleOverlayProps = {
         open: overlayOpen,
@@ -548,6 +567,9 @@ export const useBattlePanel = ({ isStandaloneView }: UseBattlePanelArgs): UseBat
         // no GameConfig wired up — see the liveLog comment above for the same fallback rule).
         canReplay: Boolean(battle.liveReplay?.log?.length),
         onWatchReplay: handleWatchReplay,
+        // Only while the round itself is outstanding: once `seeded`, the Pulse has spoken.
+        awaitingPulse: battle.state === 'accepted' || battle.state === 'committed',
+        liveStrike,
     };
 
     const setup: BattleSetupProps = {

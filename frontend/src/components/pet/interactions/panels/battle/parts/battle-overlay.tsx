@@ -18,6 +18,9 @@ import type { MechanicalLogLine } from '../types';
 import styles from '../index.module.css';
 import vsClashImage from '@assets/images/background/vs.png';
 import PetArt from '@components/pet/pet-art';
+import PulseMoment from '@components/game/pulse-moment';
+import ResultStamp from '@components/game/result-stamp';
+import StrikePop, { type StrikeCue } from '@components/game/strike-pop';
 
 export type BattleOverlayProps = {
     open: boolean;
@@ -66,6 +69,10 @@ export type BattleOverlayProps = {
     /** Restarts the fight animation from the first strike, then returns to the result
      *  screen automatically once it finishes again. */
     onWatchReplay: () => void;
+    /** Waiting on the committed drand round: the Pulse takes the centre of the arena. */
+    awaitingPulse?: boolean;
+    /** The strike playing now, popped over whichever pet took it. Same fallback rule as liveLog. */
+    liveStrike?: (StrikeCue & { victim: 'fighter' | 'enemy' }) | null;
 };
 
 /** Pet banter panel — the fighters' conversation, shown in the right-hand rail. */
@@ -235,6 +242,8 @@ const BattleOverlay: React.FC<BattleOverlayProps> = ({
     liveLog,
     canReplay,
     onWatchReplay,
+    awaitingPulse = false,
+    liveStrike = null,
 }) => {
     if (!open) return null;
 
@@ -283,9 +292,14 @@ const BattleOverlay: React.FC<BattleOverlayProps> = ({
                                     <span className={clsx(styles.sceneAvatar, styles.isFighter)} aria-hidden>
                                         {fighterAvatar}
                                     </span>
+                                    {liveStrike?.victim === 'fighter' && <StrikePop key={liveStrike.id} cue={liveStrike} />}
                                     <span className={clsx(styles.sceneLabel, styles.isFighter)}>{fighterName}</span>
                                 </div>
-                                <img className={styles.sceneClash} src={vsClashImage} alt="" aria-hidden />
+                                {awaitingPulse ? (
+                                    <PulseMoment />
+                                ) : (
+                                    <img className={styles.sceneClash} src={vsClashImage} alt="" aria-hidden />
+                                )}
                                 <div className={styles.sceneFighter}>
                                     <span
                                         className={clsx(styles.sceneHit, styles.sceneHitOut, battleStarted && styles.isActive)}
@@ -296,6 +310,7 @@ const BattleOverlay: React.FC<BattleOverlayProps> = ({
                                     <span className={clsx(styles.sceneAvatar, styles.isEnemy)} aria-hidden>
                                         {enemyAvatar}
                                     </span>
+                                    {liveStrike?.victim === 'enemy' && <StrikePop key={liveStrike.id} cue={liveStrike} />}
                                     <span className={clsx(styles.sceneLabel, styles.isEnemy)}>{opponentName}</span>
                                 </div>
                             </div>
@@ -339,9 +354,13 @@ const BattleOverlay: React.FC<BattleOverlayProps> = ({
                             <div className={styles.sceneArt} aria-hidden>
                                 <BattleResultArt outcome={battleOutcome} />
                             </div>
-                            <div className={styles.sceneResultTitle}>
-                                {battleOutcome === null ? 'Resolving…' : isVictory ? 'VICTORY!' : 'DEFEATED'}
-                            </div>
+                            {battleOutcome === null ? (
+                                <div className={styles.sceneResultTitle}>Resolving…</div>
+                            ) : (
+                                <ResultStamp won={isVictory} className={styles.sceneResultTitle}>
+                                    {isVictory ? 'VICTORY!' : 'DEFEATED'}
+                                </ResultStamp>
+                            )}
                             <div className={styles.sceneResultSub}>
                                 {battleOutcome === null
                                     ? 'Checking battle outcome…'

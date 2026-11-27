@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useBattleConfig, useChainCapabilities, usePetList } from '@shared/core';
 
+import PulseOrb from '@components/game/pulse-orb';
 import { BATTLE_PATH } from '@constants/interactionRoutes';
 import Places from './parts/places';
-import PulseOrb from './parts/pulse-orb';
 import ShoreDefs from './parts/shore-defs';
 import ShorePet from './parts/shore-pet';
 import styles from './index.module.css';
@@ -50,7 +50,9 @@ const ShoreScene: React.FC = () => {
                     />
                 ))}
             </div>
-            <PulseOrb />
+            <div className={styles.pulse}>
+                <PulseOrb />
+            </div>
             <div className={styles.sea} aria-hidden>
                 <div className={styles.reflection} />
                 {[styles.waveBack, styles.waveMid, styles.waveFront].map((wave) => (

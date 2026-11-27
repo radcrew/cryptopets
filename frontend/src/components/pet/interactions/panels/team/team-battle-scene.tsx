@@ -2,6 +2,10 @@ import clsx from 'clsx';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import PetArt from '@components/pet/pet-art';
+import PulseMoment from '@components/game/pulse-moment';
+import ResultStamp from '@components/game/result-stamp';
+import StrikePop from '@components/game/strike-pop';
+import { strikeLabel } from '@components/game/strike-pop/label';
 import NeonButton from '@components/ui/neon-button';
 import { describeStrike, type TeamBattleResult } from '@shared/core';
 
@@ -30,6 +34,8 @@ export interface TeamBattleSceneProps {
     onHide?: () => void;
     /** Milliseconds per strike. */
     stepMs?: number;
+    /** Waiting on the committed drand round, so the Pulse is shown beating. */
+    awaitingPulse?: boolean;
 }
 
 const SIDE_NAMES = ['Your squad', 'Rival team'] as const;
@@ -55,6 +61,7 @@ const TeamBattleScene: React.FC<TeamBattleSceneProps> = ({
     onDone,
     onHide,
     stepMs = 650,
+    awaitingPulse = false,
 }) => {
     const frames = useMemo(() => result?.playback.frames ?? [], [result]);
     const [index, setIndex] = useState(0);
@@ -93,6 +100,20 @@ const TeamBattleScene: React.FC<TeamBattleSceneProps> = ({
     }));
     const strike = frame?.strike;
     const enemy = strike ? (strike.side === 0 ? 1 : 0) : 0;
+    // Keyed on the frame's own strike, so a re-render never replays the pop or its sound.
+    const cue = useMemo(
+        () =>
+            strike
+                ? {
+                      id: shown,
+                      damage: strike.damage.toString(),
+                      crit: strike.crit,
+                      magic: strike.isMagic,
+                      label: strikeLabel(strike),
+                  }
+                : null,
+        [strike, shown],
+    );
 
     // The newest strike stays in view as the log grows.
     const logRef = useRef<HTMLDivElement>(null);
@@ -152,9 +173,13 @@ const TeamBattleScene: React.FC<TeamBattleSceneProps> = ({
                                         outcome={{ result: won ? 'victory' : 'defeat', leveledUp }}
                                     />
                                 </div>
-                                <h3 className={clsx(duel.sceneResultTitle, styles.sceneTitle)}>
+                                <ResultStamp
+                                    won={won}
+                                    as="h3"
+                                    className={clsx(duel.sceneResultTitle, styles.sceneTitle)}
+                                >
                                     {won ? 'VICTORY!' : 'DEFEATED'}
-                                </h3>
+                                </ResultStamp>
                                 <div className={duel.sceneResultSub}>
                                     {won
                                         ? leveledUp
@@ -300,6 +325,7 @@ const TeamBattleScene: React.FC<TeamBattleSceneProps> = ({
                                 actor={strike ? { side: strike.side, slot: strike.actor } : null}
                                 victim={strike ? { side: enemy, slot: strike.victim } : null}
                                 concealedSide={result ? undefined : 1}
+                                victimPop={cue && <StrikePop key={cue.id} cue={cue} />}
                             />
                         </div>
 
@@ -322,6 +348,7 @@ const TeamBattleScene: React.FC<TeamBattleSceneProps> = ({
                             </div>
                         ) : (
                             <div className={styles.sceneControls}>
+                                {awaitingPulse && <PulseMoment />}
                                 {status && (
                                     <p
                                         className={clsx(

@@ -110,6 +110,10 @@ button.tile:focus-visible {
 }
 
 .victim {
+    position: relative;
+    z-index: 2;
+    /* Only the tile being hit lets its content out, so its damage pop can rise above it. */
+    overflow: visible;
     box-shadow: 0 0 0 2px #ff6b8a;
 }
 

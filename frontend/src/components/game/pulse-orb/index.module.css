@@ -1,12 +1,8 @@
-/* CSS Module — class names are local; reference via `import styles from './pulse-orb.module.css'`. */
+/* CSS Module — class names are local; reference via `import styles from './index.module.css'`. */
 .pulse {
-    position: absolute;
-    left: 50%;
-    top: 5%;
-    width: clamp(96px, 13cqw, 150px);
+    position: relative;
+    width: 100%;
     aspect-ratio: 1;
-    transform: translateX(-50%);
-    z-index: 2;
 }
 
 .halo {

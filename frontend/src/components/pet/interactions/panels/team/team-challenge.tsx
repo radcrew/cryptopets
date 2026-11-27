@@ -315,6 +315,10 @@ const TeamChallenge: React.FC = () => {
                     rivalLabel={opponent ? teamLabel(opponent) : 'the rival team'}
                     onDone={panel.reset}
                     onHide={panel.hideScene}
+                    awaitingPulse={
+                        panel.phase === 'running' &&
+                        (panel.battleState === 'accepted' || panel.battleState === 'committed')
+                    }
                 />
             )}
         </>

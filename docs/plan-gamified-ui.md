@@ -32,4 +32,5 @@ while every existing feature keeps working. The reference is the clickable game-
 
 - Phase 1: done on `feat/gamified-ui`. Every route checked visually at desktop width.
 - Phase 2: done. The Shore sits above the gallery on `/main`. Its size follows the scene's own width through a container query, because a pinned sidebar makes the scene far narrower than the window. Below 820px of scene width only the Hall, Nest and Arena are drawn; the other doors stay in the sidebar. Only the Battle Arena accepts a preselected pet today, so a pet's card offers Battle and nothing else.
-- Phases 3 to 5: not started.
+- Phase 3: done. Three pieces in `frontend/src/components/game/` serve both the duel and Team 3v3: the Pulse moment, strike pops and the result stamp. The client is never told which drand round a battle committed to, so the Pulse moment shows the live beat while the battle is `accepted` or `committed`, and never claims a round number. Checked visually on the battle overlay preview; a live team battle was not run, since it needs a wallet signature.
+- Phases 4 and 5: not started.

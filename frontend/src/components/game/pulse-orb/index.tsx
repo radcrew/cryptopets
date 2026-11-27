@@ -1,13 +1,15 @@
 import React from 'react';
 import { usePulseRound } from '@shared/core';
 
-import styles from './pulse-orb.module.css';
+import styles from './index.module.css';
 
 const RUNES = 'THE PULSE ✦ EVERY THREE SECONDS ✦ NOBODY KNOWS THE NEXT BEAT ✦';
 
 /**
- * The Pulse: the drand beat every battle is seeded from, drawn as the Shore's moon.
+ * The Pulse: the drand beat every battle is seeded from. The Shore's moon, and the orb a
+ * fight waits on before it resolves.
  *
+ * It fills its container's width, so placement and size belong to the caller.
  * The round is the real quicknet round by the local clock. The core, the shockwave
  * and the countdown ring are keyed by it, so each remounts on the beat and its CSS
  * animation starts over without any timers here.

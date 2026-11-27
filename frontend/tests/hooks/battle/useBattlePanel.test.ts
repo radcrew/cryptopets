@@ -26,6 +26,17 @@ const battleOutcome = { battleOutcome: null as null | object, applyResolvedOutco
 const resultDialogue = { resultTurns: [], dialogueLoading: false, attackerName: '', defenderName: '', markResultDialogueDone: vi.fn(), resultDialogueDone: false, resetResultDialogue: vi.fn() };
 vi.mock('@hooks/battle/useResultDialogue', () => ({ useResultDialogue: () => resultDialogue }));
 
+/** A strike as the combat log really records it: the HP after it, plus the damage and flags the
+ *  scene pops over its victim. */
+const strike = (attacker: 1 | 2, hp1After: bigint, hp2After: bigint) => ({
+    attacker,
+    hp1After,
+    hp2After,
+    damage: 10n,
+    crit: false,
+    isMagic: false,
+    elementMult: 100,
+});
 const battle = { mutate: vi.fn(), clearErrors: vi.fn(), isPending: false, isConfirming: false, error: null, hash: undefined as string | undefined, phase: null, liveReplay: null as null | { result: { firstWins: boolean }; log: unknown[]; startHp1: bigint; startHp2: bigint }, lifecycle: { phase: 'idle' } };
 const taunts = { generate: vi.fn(), reset: vi.fn(), isLoading: false, turns: [] as unknown[] };
 const createRoom = vi.fn().mockResolvedValue(null);
@@ -282,8 +293,8 @@ describe('useBattlePanel', () => {
             battle.liveReplay = {
                 result: { firstWins: true },
                 log: [
-                    { attacker: 1, hp1After: 100n, hp2After: 80n },
-                    { attacker: 2, hp1After: 90n, hp2After: 80n },
+                    strike(1, 100n, 80n),
+                    strike(2, 90n, 80n),
                 ],
                 startHp1: 100n,
                 startHp2: 100n,
@@ -312,7 +323,7 @@ describe('useBattlePanel', () => {
         try {
             battle.liveReplay = {
                 result: { firstWins: true },
-                log: [{ attacker: 1, hp1After: 100n, hp2After: 80n }],
+                log: [strike(1, 100n, 80n)],
                 startHp1: 100n,
                 startHp2: 100n,
             };
@@ -346,7 +357,7 @@ describe('useBattlePanel', () => {
         try {
             battle.liveReplay = {
                 result: { firstWins: true },
-                log: [{ attacker: 1, hp1After: 100n, hp2After: 80n }],
+                log: [strike(1, 100n, 80n)],
                 startHp1: 100n,
                 startHp2: 100n,
             };

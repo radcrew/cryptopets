@@ -138,13 +138,15 @@ export interface BattleBoardProps {
     victim?: { side: 0 | 1; slot: number } | null;
     /** A side whose half is drawn as unknown, for defenders not yet revealed. */
     concealedSide?: 0 | 1;
+    /** Drawn inside the victim's tile, such as the strike's damage pop. */
+    victimPop?: React.ReactNode;
 }
 
 /**
  * The 6×3 battle map, read-only: the attackers' zone on the left (front at the centre line),
  * the defenders' on the right. Columns are board columns, 0 to 5.
  */
-export const BattleBoard: React.FC<BattleBoardProps> = ({ fighters, actor, victim, concealedSide }) => (
+export const BattleBoard: React.FC<BattleBoardProps> = ({ fighters, actor, victim, concealedSide, victimPop }) => (
     <div className={styles.board} role="img" aria-label="Battle map">
         {[0, 1, 2].map((row) =>
             [0, 1, 2, -1, 3, 4, 5].map((x) => {
@@ -180,6 +182,7 @@ export const BattleBoard: React.FC<BattleBoardProps> = ({ fighters, actor, victi
                         <div className={styles.hpTrack}>
                             <div className={styles.hpFill} style={{ width: `${pct}%` }} />
                         </div>
+                        {is(victim) && victimPop}
                     </div>
                 );
             }),

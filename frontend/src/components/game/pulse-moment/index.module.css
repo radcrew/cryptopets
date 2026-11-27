@@ -1,0 +1,38 @@
+/* CSS Module — class names are local; reference via `import styles from './index.module.css'`. */
+.moment {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    text-align: center;
+    animation: rise 0.5s var(--cp-ease-spring);
+}
+
+.orb {
+    width: clamp(96px, 11vw, 140px);
+    /* Room for the orb's round plaque, which hangs below it. */
+    margin-bottom: 36px;
+}
+
+.title {
+    margin: 0;
+    font-family: var(--cp-lore-font);
+    font-size: clamp(14px, 1.4vw, 18px);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: #e7dcff;
+    text-shadow: 0 0 18px rgb(181 140 255 / 80%);
+}
+
+.sub {
+    margin: 0;
+    font-size: 12px;
+    color: var(--cp-text-muted-dark);
+}
+
+@keyframes rise {
+    from {
+        transform: translateY(12px) scale(0.9);
+        opacity: 0;
+    }
+}

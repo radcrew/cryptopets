@@ -1,0 +1,92 @@
+/* CSS Module — class names are local; reference via `import styles from './index.module.css'`. */
+.wrap {
+    position: relative;
+    display: grid;
+    place-items: center;
+}
+
+.stamp {
+    position: relative;
+    z-index: 1;
+    font-family: var(--cp-display-font);
+    font-weight: 400;
+    animation: stamp 0.6s var(--cp-ease-spring) both;
+}
+
+.win {
+    background: linear-gradient(180deg, #fff6c8, #ffd25a 55%, #ff9f3a);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    filter: drop-shadow(0 4px 0 #6a3a00) drop-shadow(0 0 24px rgb(255 210 90 / 60%));
+}
+
+/* A loss keeps the panel's own defeat colour; the stamp only adds weight. */
+.lose {
+    filter: drop-shadow(0 4px 0 #1a1a26);
+}
+
+/* Slow-turning light behind a win. */
+.rays {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 420px;
+    height: 420px;
+    margin: -210px 0 0 -210px;
+    border-radius: 50%;
+    background: repeating-conic-gradient(rgb(255 210 90 / 16%) 0 10deg, transparent 10deg 20deg);
+    -webkit-mask-image: radial-gradient(circle, #000 18%, transparent 66%);
+    mask-image: radial-gradient(circle, #000 18%, transparent 66%);
+    animation: spin 18s linear infinite;
+    pointer-events: none;
+}
+
+.confetti {
+    position: absolute;
+    inset: -40px -60px auto;
+    height: 0;
+    pointer-events: none;
+}
+
+.confetti i {
+    position: absolute;
+    top: 0;
+    width: 8px;
+    height: 4px;
+    border-radius: 1px;
+    opacity: 0;
+    animation: fall 1.8s ease-in forwards;
+}
+
+@keyframes stamp {
+    0% {
+        transform: scale(2.6) rotate(-12deg);
+        opacity: 0;
+    }
+    60% {
+        transform: scale(0.94) rotate(-3deg);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1) rotate(-3deg);
+        opacity: 1;
+    }
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes fall {
+    0% {
+        transform: translateY(0) rotate(0deg);
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(240px) rotate(540deg);
+        opacity: 0;
+    }
+}
