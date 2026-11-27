@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import type { Pet } from '@shared/core';
+import PetPicker from '@components/ui/pet-picker';
 import PendingBreedNotice from './pending-breed-notice';
 import BreedParentsPreview from './breed-parents-preview';
 import styles from '../index.module.css';
@@ -76,7 +77,7 @@ const OwnPetsTab: React.FC<OwnPetsTabProps> = ({
 
     return (
         <div className={styles.tabPanel}>
-            <p className={styles.tabHint}>Cycle each side to choose two of your pets to breed.</p>
+            <p className={styles.tabHint}>Pick two parents from your pets, or cycle each side.</p>
             <BreedParentsPreview
                 petA={parentA}
                 petB={parentB}
@@ -86,6 +87,30 @@ const OwnPetsTab: React.FC<OwnPetsTabProps> = ({
                 onPrevB={() => cycle(pet2, pet1, -1, onPet2Change)}
                 onNextB={() => cycle(pet2, pet1, 1, onPet2Change)}
             />
+            {/* The nest's rosters: each parent picked from the pets the other is not. */}
+            <div className={styles.parentRosters}>
+                <section className={styles.parentRoster} aria-label="First parent">
+                    <div className={styles.parentRosterHead}>First parent</div>
+                    <PetPicker
+                        layout="strip"
+                        label="Choose the first parent"
+                        pets={allPets.filter(({ id }) => id !== pet2)}
+                        value={pet1}
+                        onChange={onPet1Change}
+                    />
+                </section>
+                <section className={styles.parentRoster} aria-label="Second parent">
+                    <div className={styles.parentRosterHead}>Second parent</div>
+                    <PetPicker
+                        layout="strip"
+                        label="Choose the second parent"
+                        pets={allPets.filter(({ id }) => id !== pet1)}
+                        value={pet2}
+                        onChange={onPet2Change}
+                    />
+                </section>
+            </div>
+
             {areRelated && (
                 <p className={styles.relativeWarning}>
                     These pets are relatives and cannot breed together.

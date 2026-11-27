@@ -74,6 +74,9 @@
     gap: 14px;
     flex: 1;
     min-height: 0;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgb(255 207 112 / 35%) transparent;
 }
 
 .tabHint {
@@ -155,8 +158,9 @@
     align-items: center;
     gap: 12px;
     margin-bottom: 10px;
-    flex: 1;
-    min-height: 0;
+    /* Never squeezed below its cards: with the rosters under it, shrinking made the cards
+       spill over them. The tab scrolls instead when the screen is short. */
+    flex: 0 0 auto;
 }
 
 /* Parent column = card + Prev/Next cycle row (mock-style selection) */
@@ -717,5 +721,35 @@
     .dnaCompatArc,
     .parentAvatar {
         animation: none;
+    }
+}
+
+/* The nest's rosters under the parent cards: one portrait strip per parent. */
+.parentRosters {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 12px;
+}
+
+.parentRoster {
+    min-width: 0;
+    padding: 10px 12px 6px;
+    border-radius: 18px;
+    background: rgb(8 10 28 / 55%);
+    box-shadow: inset 0 0 0 1px rgb(255 207 112 / 30%);
+}
+
+.parentRosterHead {
+    font-family: var(--cp-display-font);
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--cp-amber);
+}
+
+@media (max-width: 760px) {
+    .parentRosters {
+        grid-template-columns: 1fr;
     }
 }

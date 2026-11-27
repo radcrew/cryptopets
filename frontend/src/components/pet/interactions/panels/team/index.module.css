@@ -66,9 +66,9 @@
     margin: 0;
     overflow: hidden;
     container-type: inline-size;
-    border-radius: 8px;
-    border: 1px dashed rgba(255, 255, 255, 0.18);
-    background: rgba(255, 255, 255, 0.03);
+    border-radius: 14px;
+    border: 1px dashed rgba(255, 255, 255, 0.16);
+    background: rgb(8 10 28 / 45%);
     color: inherit;
     font: inherit;
     font-size: 0.75rem;
@@ -92,13 +92,15 @@ button.tile:focus-visible {
 
 .occupied {
     border-style: solid;
-    border-color: rgba(67, 211, 255, 0.5);
-    background: rgba(67, 211, 255, 0.08);
+    border-color: rgba(67, 211, 255, 0.6);
+    background: rgba(67, 211, 255, 0.1);
+    box-shadow: 0 0 14px rgba(67, 211, 255, 0.18);
 }
 
 .rival {
-    border-color: rgba(255, 92, 200, 0.5);
-    background: rgba(255, 92, 200, 0.08);
+    border-color: rgba(255, 92, 200, 0.6);
+    background: rgba(255, 92, 200, 0.1);
+    box-shadow: 0 0 14px rgba(255, 92, 200, 0.18);
 }
 
 .selected {
@@ -592,34 +594,51 @@ button.tile:focus-visible {
 }
 
 .petTile {
+    --rc: #8b4513;
+
     position: relative;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 3px;
+    gap: 5px;
     min-width: 0;
-    padding: 8px 6px 6px;
-    border: 1px solid rgb(125 214 255 / 22%);
-    border-radius: 10px;
-    background: rgb(4 10 26 / 92%);
-    box-shadow: inset 0 0 18px rgb(125 214 255 / 4%);
-    color: rgb(195 210 255 / 78%);
+    padding: 4px 2px;
+    border: 0;
+    border-radius: 16px;
+    background: none;
+    color: rgb(225 232 255 / 82%);
     font: inherit;
     cursor: pointer;
-    transition: border-color 0.18s ease, box-shadow 0.18s ease, color 0.18s ease,
-        transform 0.18s ease;
+    transition: color 0.18s ease, transform 0.25s var(--cp-ease-spring);
+}
+
+/* The rarity ladder, matching getRarityColor in @shared/core. */
+.petTile[data-rarity='2'] {
+    --rc: #c0c0c0;
+}
+
+.petTile[data-rarity='3'] {
+    --rc: #ffd700;
+}
+
+.petTile[data-rarity='4'] {
+    --rc: #ff69b4;
+}
+
+.petTile[data-rarity='5'] {
+    --rc: #8a2be2;
 }
 
 .petTile:hover:not(:disabled) {
-    border-color: rgb(125 214 255 / 55%);
     color: #f6f3ff;
-    transform: translateY(-2px);
+    transform: translateY(-3px);
+    border-color: transparent;
+    box-shadow: none;
 }
 
 .petTile:focus-visible {
-    outline: none;
-    border-color: var(--cp-cyan);
-    box-shadow: 0 0 0 2px var(--cp-cyan);
+    outline: 3px solid var(--cp-cyan);
+    outline-offset: 2px;
 }
 
 .petTile:disabled {
@@ -628,10 +647,12 @@ button.tile:focus-visible {
 }
 
 .petTileChosen {
-    border-color: var(--cp-cyan);
-    background: rgb(125 214 255 / 10%);
-    box-shadow: 0 0 0 1px rgb(125 214 255 / 45%), 0 0 16px rgb(125 214 255 / 22%);
-    color: #f6f3ff;
+    color: #fff;
+    transform: translateY(-4px) scale(1.06);
+}
+
+.petTileChosen .petArt {
+    box-shadow: 0 0 0 3px #fff, 0 0 0 6px var(--rc), 0 0 26px var(--rc), 0 8px 14px rgb(0 0 0 / 45%);
 }
 
 /* A chosen pet's place in the order: its slot in the squad or the defence team. */
@@ -640,14 +661,15 @@ button.tile:focus-visible {
     top: 4px;
     left: 4px;
     z-index: 1;
-    min-width: 18px;
-    height: 18px;
+    min-width: 22px;
+    height: 22px;
     border-radius: 999px;
-    background: var(--cp-cyan, #7dd6ff);
-    color: #04101f;
+    background: linear-gradient(180deg, #ff9ad8, #d6409c);
+    box-shadow: 0 2px 0 #6e1650;
+    color: #fff;
+    font-family: var(--cp-display-font);
     font-size: 11px;
-    font-weight: 700;
-    line-height: 18px;
+    line-height: 22px;
     text-align: center;
 }
 
@@ -655,20 +677,22 @@ button.tile:focus-visible {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 100%;
+    width: 70px;
     aspect-ratio: 1;
     font-size: 2.4rem;
     line-height: 1;
-    border-radius: 8px;
+    border-radius: 50%;
     overflow: hidden;
-    background: radial-gradient(circle at 50% 45%, rgb(125 214 255 / 14%), transparent 70%);
+    background: radial-gradient(circle at 50% 40%, #1d2250, #0a0d24);
+    box-shadow: 0 0 0 3px var(--rc), 0 0 14px -2px var(--rc), 0 6px 12px rgb(0 0 0 / 45%);
 }
 
 .petArt img {
-    border-radius: 8px;
+    border-radius: 50%;
 }
 
 .petName {
+    order: 2;
     max-width: 100%;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -677,17 +701,23 @@ button.tile:focus-visible {
     font-weight: 600;
 }
 
+/* The level on a gold badge tucked under the portrait, as in PetPicker. */
 .petLevel {
+    order: 1;
+    position: relative;
+    z-index: 1;
+    margin: -16px 0 0;
     padding: 1px 8px;
-    border: 1px solid rgb(125 214 255 / 30%);
     border-radius: 999px;
-    background: rgb(5 13 30 / 85%);
-    color: var(--cp-cyan);
-    font-size: 10px;
-    font-weight: 700;
+    background: linear-gradient(180deg, #ffe08a, #ffad3b);
+    box-shadow: 0 2px 0 #8a4a12;
+    color: #2a1600;
+    font-family: var(--cp-display-font);
+    font-size: 9.5px;
 }
 
 .petResting {
+    order: 3;
     color: var(--color-warning, #f5b14c);
     font-size: 10px;
 }

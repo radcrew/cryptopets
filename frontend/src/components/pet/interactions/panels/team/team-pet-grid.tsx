@@ -49,6 +49,7 @@ const TeamPetGrid: React.FC<TeamPetGridProps> = ({ pets, selected, max, onToggle
                         aria-pressed={chosen}
                         aria-label={`${pet.name}, level ${pet.level}${resting ? ', resting' : ''}`}
                         className={clsx(styles.petTile, chosen && styles.petTileChosen)}
+                        data-rarity={pet.rarity}
                         disabled={disabled || (!chosen && (full || (blockResting && resting)))}
                         onClick={() => onToggle(pet.id)}
                     >

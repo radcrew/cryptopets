@@ -19,13 +19,14 @@
     display: flex;
     align-items: center;
     gap: 6px;
-    padding: 0 38px 0 14px; /* right room for chevron / clear */
-    border: 1px solid rgb(125 214 255 / 28%);
-    border-radius: 4px;
-    background: rgb(4 10 26 / 96%);
+    padding: 0 38px 0 16px; /* right room for chevron / clear */
+    border: 1px solid rgb(125 214 255 / 35%);
+    /* A rounded glass pill, matching the pet dropdown beside it. */
+    border-radius: 999px;
+    background: rgb(8 10 28 / 72%);
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
-    box-shadow: inset 0 0 20px rgb(125 214 255 / 4%), inset 0 1px 0 rgb(125 214 255 / 8%);
-    min-height: 48px;
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 10%), 0 6px 14px rgb(0 0 0 / 35%);
+    min-height: 52px;
     cursor: text;
 
     &:hover:not(.isSelected) {
@@ -119,11 +120,10 @@
 
 .psdDropdown {
     /* position/top/left/width/z-index are applied inline by the portal — only visual styles here */
-    background: rgb(4 10 26 / 98%);
-    border: 1px solid rgb(125 214 255 / 30%);
-    border-radius: 4px;
-    box-shadow: 0 8px 32px rgb(0 0 0 / 55%), 0 0 0 1px rgb(125 214 255 / 10%),
-        inset 0 1px 0 rgb(125 214 255 / 8%);
+    background: linear-gradient(170deg, rgb(20 26 64 / 98%), rgb(10 13 36 / 98%) 70%);
+    border: none;
+    border-radius: 18px;
+    box-shadow: 0 0 0 2px rgb(181 140 255 / 45%), 0 18px 40px rgb(0 0 0 / 55%);
     overflow: hidden;
     max-height: 240px;
     overflow-y: auto;

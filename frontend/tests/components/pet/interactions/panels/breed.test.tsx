@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { act, render, screen } from '@testing-library/react';
+import { act, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 const navigate = vi.fn();
@@ -124,9 +124,13 @@ describe('BreedPanel — My Pets tab (cycle selectors)', () => {
     it('auto-selects the first two pets and breeds them with a trimmed name', async () => {
         render(<BreedPanel />);
 
-        // Both parents are pre-filled from the roster (Alpha + Beta shown on the cards).
-        expect(screen.getByText('Alpha')).toBeInTheDocument();
-        expect(screen.getByText('Beta')).toBeInTheDocument();
+        // Both parents are pre-filled: Alpha is chosen in the first roster, Beta in the second.
+        const first = screen.getByRole('radiogroup', { name: 'Choose the first parent' });
+        const second = screen.getByRole('radiogroup', { name: 'Choose the second parent' });
+        expect(within(first).getByRole('radio', { name: /Alpha/ })).toHaveAttribute('aria-checked', 'true');
+        expect(within(second).getByRole('radio', { name: /Beta/ })).toHaveAttribute('aria-checked', 'true');
+        // Neither roster offers the pet the other parent already is.
+        expect(within(first).queryByRole('radio', { name: /Beta/ })).toBeNull();
 
         await userEvent.type(screen.getByPlaceholderText('Name for the new pet…'), '  Gamma  ');
         await userEvent.click(screen.getByRole('button', { name: 'Breed Pets' }));
