@@ -12,8 +12,6 @@
     max-height: 320px;
     overflow-y: auto;
     padding: var(--cp-bleed);
-    scrollbar-width: thin;
-    scrollbar-color: rgb(125 214 255 / 35%) transparent;
 }
 
 /* One row along the bottom of a scene, scrolling sideways. */

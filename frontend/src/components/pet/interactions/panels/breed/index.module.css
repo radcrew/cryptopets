@@ -77,8 +77,6 @@
     flex: 1;
     min-height: 0;
     overflow-y: auto;
-    scrollbar-width: thin;
-    scrollbar-color: rgb(255 207 112 / 35%) transparent;
 }
 
 .tabHint {
@@ -94,8 +92,9 @@
     color: rgb(255 181 67 / 72%);
     padding: 8px 12px;
     background: rgb(255 181 67 / 5%);
-    border: 1px solid rgb(255 181 67 / 16%);
-    border-radius: 6px;
+    border: 0;
+    border-radius: var(--cp-r-box);
+    box-shadow: inset 0 0 0 1px rgb(255 181 67 / 14%), 0 0 24px -12px rgb(255 181 67 / 45%);
 
     strong {
         color: #ffd07b;
@@ -108,8 +107,9 @@
     color: rgb(255 110 110 / 85%);
     padding: 8px 12px;
     background: rgb(255 80 80 / 6%);
-    border: 1px solid rgb(255 80 80 / 20%);
-    border-radius: 6px;
+    border: 0;
+    border-radius: var(--cp-r-box);
+    box-shadow: inset 0 0 0 1px rgb(255 80 80 / 18%), 0 0 24px -12px rgb(255 80 80 / 45%);
 }
 
 /* Empty state when no pets are married */
@@ -146,9 +146,9 @@
 .parentRoster {
     min-width: 0;
     padding: 10px 12px 6px;
-    border-radius: 18px;
-    background: rgb(8 10 28 / 55%);
-    box-shadow: inset 0 0 0 1px rgb(255 207 112 / 30%);
+    border-radius: var(--cp-r-tray);
+    background: radial-gradient(ellipse 60% 70% at 50% 0%, rgb(255 207 112 / 9%), transparent 70%), var(--cp-soft-fill);
+    box-shadow: var(--cp-soft-rim), 0 0 40px -16px rgb(255 207 112 / 45%), var(--cp-soft-drop);
 }
 
 .parentRosterHead {

@@ -293,6 +293,20 @@ const TeamChallenge: React.FC = () => {
                     </div>
                 </div>
 
+                {/* The pets that fill the board, under it and above the key that starts the fight. */}
+                <TeamPetGrid
+                    label="Your pets"
+                    pets={panel.pets}
+                    loading={panel.petsLoading}
+                    selected={panel.squad.map((m) => m.petId)}
+                    max={SQUAD_SIZE}
+                    blockResting
+                    disabled={inFlight}
+                    onToggle={(petId) =>
+                        panel.squad.some((m) => m.petId === petId) ? panel.removePet(petId) : panel.addPet(petId)
+                    }
+                />
+
                 <div className={duel.actions}>
                     <AuthActionButton tone="magenta" onClick={() => void panel.start()} disabled={!panel.canStart}>
                         ⚔ Start Team Battle
@@ -306,18 +320,6 @@ const TeamChallenge: React.FC = () => {
                 </p>
                 {panel.error && !panel.inBattle && <p className={styles.error}>{panel.error.message}</p>}
 
-                <TeamPetGrid
-                    label="Your pets"
-                    pets={panel.pets}
-                    loading={panel.petsLoading}
-                    selected={panel.squad.map((m) => m.petId)}
-                    max={SQUAD_SIZE}
-                    blockResting
-                    disabled={inFlight}
-                    onToggle={(petId) =>
-                        panel.squad.some((m) => m.petId === petId) ? panel.removePet(petId) : panel.addPet(petId)
-                    }
-                />
             </div>
 
             {panel.sceneOpen && (

@@ -8,15 +8,18 @@
     flex: 1 1 auto;
     min-height: 0;
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(min(100%, 190px), 1fr));
+    /* Fixed-width stones, centred: a player with two stones sees them in the middle of the
+       Hall, not huddled in its corner. */
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 190px), 220px));
+    justify-content: center;
     align-content: start;
     gap: 16px;
     margin: 0 calc(-1 * var(--cp-bleed));
-    padding: var(--cp-bleed);
+    padding: var(--cp-bleed) var(--cp-bleed) calc(var(--cp-bleed) + var(--cp-fade));
     overflow-y: auto;
     list-style: none;
-    scrollbar-width: thin;
-    scrollbar-color: rgb(181 140 255 / 40%) transparent;
+    -webkit-mask-image: var(--cp-fade-mask);
+    mask-image: var(--cp-fade-mask);
 }
 
 .stone {

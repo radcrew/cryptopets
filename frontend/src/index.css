@@ -75,6 +75,43 @@ h1 {
     cursor: not-allowed;
 }
 
+/* One scrollbar everywhere: a slim rounded thumb, no track and no arrow buttons. Components
+   do not set their own scrollbar width or colour, because in Chrome either one switches this
+   off and brings back the system bar with its arrows. Firefox has no such pseudo-elements and
+   takes the standard properties instead. */
+@supports selector(::-webkit-scrollbar) {
+    ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+
+    ::-webkit-scrollbar-track,
+    ::-webkit-scrollbar-corner {
+        background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        border: 2px solid transparent;
+        border-radius: 999px;
+        background: rgb(125 214 255 / 28%) padding-box;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background-color: rgb(125 214 255 / 50%);
+    }
+
+    ::-webkit-scrollbar-button {
+        display: none;
+    }
+}
+
+@supports not selector(::-webkit-scrollbar) {
+    * {
+        scrollbar-width: thin;
+        scrollbar-color: rgb(125 214 255 / 30%) transparent;
+    }
+}
+
 /* One focus ring for everything a keyboard can reach. Shown only for keyboard focus
    (`:focus-visible`), so a mouse click never leaves a ring behind. A component that draws
    its own focus state, such as a portrait's white ring, turns this off with its own class. */

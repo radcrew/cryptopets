@@ -33,7 +33,7 @@
     padding: 20px 20px 22px;
     border-radius: 22px;
     background: linear-gradient(160deg, #2c1e40, #170f27 70%);
-    box-shadow: 0 0 0 2px var(--rc), 0 0 40px -10px var(--rc), inset 0 0 60px rgb(0 0 0 / 45%),
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--rc) 55%, transparent), inset 0 1px 0 rgb(255 255 255 / 9%), 0 0 40px -10px var(--rc), inset 0 0 60px rgb(0 0 0 / 45%),
         0 30px 70px rgb(0 0 0 / 60%);
     animation: rise 0.45s var(--cp-ease-spring);
 }

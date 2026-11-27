@@ -37,7 +37,9 @@
     overflow-y: auto;
     /* Into the page body's padding, so your own row's glow is not cut at the edge. */
     margin: 0 calc(-1 * var(--cp-bleed));
-    padding: 4px var(--cp-bleed) var(--cp-bleed);
+    padding: 12px var(--cp-bleed) calc(var(--cp-bleed) + var(--cp-fade));
+    -webkit-mask-image: var(--cp-fade-mask);
+    mask-image: var(--cp-fade-mask);
 }
 
 /* The plaques hang down the middle of the Hall rather than across the whole wall. */

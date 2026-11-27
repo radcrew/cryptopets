@@ -49,9 +49,6 @@ const ProposeTab: React.FC<ProposeTabProps> = ({
 
     return (
         <div className={styles.tabPanel}>
-            <p className={styles.tabHint}>
-                Choose one of your pets, then find your partner&apos;s pet to propose.
-            </p>
             {/* The altar: your pet on one side, the partner's on the other, the proposal between. */}
             <div className={altar.scene}>
                 <PetStage pet={myPetObj} tone="magenta" emptyHint="Choose your pet below." />
@@ -98,6 +95,7 @@ const ProposeTab: React.FC<ProposeTabProps> = ({
                     disabled={busy}
                     label="Your pet"
                     emptyHint="You have no pets on this chain yet."
+                    layout="strip"
                 />
             </div>
 

@@ -21,7 +21,7 @@
     padding: 14px 16px;
     border-radius: 18px;
     background: linear-gradient(170deg, #141a40, #0a0d24 70%);
-    box-shadow: 0 0 0 2px rgb(125 214 255 / 35%);
+    box-shadow: 0 0 0 1px color-mix(in srgb, rgb(125 214 255 / 35%) 55%, transparent), inset 0 1px 0 rgb(255 255 255 / 9%);
 }
 
 .ring {
@@ -148,7 +148,7 @@
     z-index: 1;
     filter: none;
     background: linear-gradient(90deg, #17305e, #2f6fb0 50%, #17305e);
-    box-shadow: 0 0 0 2px var(--cp-cyan), 0 0 30px rgb(125 214 255 / 45%);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--cp-cyan) 55%, transparent), inset 0 1px 0 rgb(255 255 255 / 9%), 0 0 30px rgb(125 214 255 / 45%);
 }
 
 .number {
@@ -169,7 +169,7 @@
     font-size: 20px;
     color: rgb(125 214 255 / 60%);
     background: #050816;
-    box-shadow: 0 0 0 2px rgb(255 255 255 / 20%);
+    box-shadow: 0 0 0 1px color-mix(in srgb, rgb(255 255 255 / 20%) 55%, transparent), inset 0 1px 0 rgb(255 255 255 / 9%);
 }
 
 .info b {

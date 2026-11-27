@@ -170,7 +170,10 @@
     padding: 14px;
     border-radius: 22px;
     background: linear-gradient(170deg, rgb(20 26 64 / 96%), rgb(10 13 36 / 97%) 70%);
-    box-shadow: 0 0 0 2px rgb(181 140 255 / 45%), 0 0 40px rgb(181 140 255 / 15%), 0 24px 60px rgb(0 0 0 / 60%);
+    /* Blurs the page behind it, so a bright scene element never shows through the tiles. */
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+    box-shadow: 0 0 0 1px color-mix(in srgb, rgb(181 140 255 / 45%) 55%, transparent), inset 0 1px 0 rgb(255 255 255 / 9%), 0 0 40px rgb(181 140 255 / 15%), 0 24px 60px rgb(0 0 0 / 60%);
     animation: rise 0.3s var(--cp-ease-spring);
 }
 

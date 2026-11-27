@@ -121,6 +121,27 @@
 }
 
 /* =============================================================================
+   Soft surfaces. Nothing in the game is drawn with a hard outline: a card is a deep
+   gradient whose top edge catches the light, with a faint rim and a soft shadow under
+   it, and a glow in its page's colour where it needs one. Corners come from one scale.
+   ============================================================================= */
+:root {
+    --cp-r-chip: 10px;
+    --cp-r-box: 16px;
+    --cp-r-card: 22px;
+    --cp-r-tray: 28px;
+
+    --cp-soft-fill: linear-gradient(170deg, rgb(28 34 84 / 70%), rgb(10 13 36 / 78%) 70%);
+    --cp-soft-rim: inset 0 1px 0 rgb(255 255 255 / 9%), inset 0 0 0 1px rgb(255 255 255 / 4%);
+    --cp-soft-drop: 0 22px 44px -18px rgb(0 0 0 / 65%);
+
+    /* Where a page scrolls, its content fades out over this distance rather than being
+       cut off by a hard line above the dock. */
+    --cp-fade: 28px;
+    --cp-fade-mask: linear-gradient(180deg, transparent 0, #000 10px, #000 calc(100% - var(--cp-fade)), transparent 100%);
+}
+
+/* =============================================================================
    Semantic tokens (layout shell, gallery, modals)
    ============================================================================= */
 :root {

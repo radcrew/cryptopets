@@ -201,7 +201,7 @@
 
 .wins,
 .losses {
-    border-radius: 8px;
+    border-radius: 999px;
     padding: 2px 8px;
     font: 400 13px var(--cp-display-font);
 }
@@ -259,8 +259,9 @@
     align-items: center;
     gap: 4px;
     padding: 6px;
-    border-radius: 14px;
-    border: 1px dashed rgb(255 255 255 / 18%);
+    border-radius: var(--cp-r-box);
+    background: rgb(255 255 255 / 3%);
+    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 7%);
     font-size: 22px;
     text-align: center;
 }
@@ -277,9 +278,10 @@
     overflow-wrap: anywhere;
 }
 
+/* Worn gear glows in the pet's rarity rather than sitting in a drawn box. */
 .slotWorn {
-    border: 1px solid var(--rc);
     background: color-mix(in srgb, var(--rc) 10%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--rc) 45%, transparent), 0 0 18px -8px var(--rc);
 }
 
 .cooldowns {

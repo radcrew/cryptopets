@@ -87,7 +87,7 @@
     border-radius: 18px;
     background: radial-gradient(circle at 50% 0%, rgb(255 210 90 / 14%), transparent 55%),
         linear-gradient(170deg, #141a40, #0a0d24 70%);
-    box-shadow: 0 0 0 2px var(--rc), 0 0 20px -8px var(--rc), 0 10px 22px rgb(0 0 0 / 45%);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--rc) 55%, transparent), inset 0 1px 0 rgb(255 255 255 / 9%), 0 0 20px -8px var(--rc), 0 10px 22px rgb(0 0 0 / 45%);
 }
 
 .art {
@@ -178,7 +178,7 @@
     padding: 14px 16px;
     border-radius: 18px;
     background: linear-gradient(170deg, #141a40, #0a0d24 70%);
-    box-shadow: 0 0 0 2px rgb(255 210 90 / 30%);
+    box-shadow: 0 0 0 1px color-mix(in srgb, rgb(255 210 90 / 30%) 55%, transparent), inset 0 1px 0 rgb(255 255 255 / 9%);
 }
 
 .heading {

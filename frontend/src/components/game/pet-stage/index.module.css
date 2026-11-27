@@ -56,7 +56,9 @@
     z-index: 1;
     display: grid;
     place-items: center;
-    width: min(190px, 52vw);
+    /* Scales with the screen's height as well as its width: on a laptop the stage would
+       otherwise push the roster and the page's main key below the fold. */
+    width: min(52vw, clamp(120px, 18vh, 190px));
     aspect-ratio: 1;
     overflow: hidden;
     border-radius: 50%;
@@ -66,7 +68,7 @@
 }
 
 .emoji {
-    font-size: clamp(70px, 18vw, 110px);
+    font-size: clamp(60px, min(18vw, 10vh), 110px);
     line-height: 1;
 }
 
@@ -77,7 +79,7 @@
 }
 
 .ghost {
-    font: 400 clamp(56px, 12vw, 80px) var(--cp-display-font);
+    font: 400 clamp(48px, min(12vw, 7vh), 80px) var(--cp-display-font);
     color: rgb(var(--tone) / 70%);
     text-shadow: 0 0 24px rgb(var(--tone) / 60%);
 }
@@ -103,7 +105,7 @@
     padding: 6px 18px;
     border-radius: 14px;
     background: rgb(8 10 28 / 78%);
-    box-shadow: inset 0 0 0 1px rgb(var(--tone) / 40%);
+    box-shadow: var(--cp-soft-rim), 0 0 24px -10px rgb(var(--tone) / 55%);
     text-align: center;
 }
 
@@ -135,9 +137,9 @@
     gap: 12px;
     width: min(340px, 100%);
     padding: 16px 18px;
-    border-radius: 20px;
+    border-radius: var(--cp-r-card);
     background: linear-gradient(170deg, rgb(23 29 72 / 88%), rgb(10 13 36 / 92%));
-    box-shadow: 0 0 0 2px rgb(var(--tone) / 45%), 0 16px 34px rgb(0 0 0 / 45%);
+    box-shadow: var(--cp-soft-rim), 0 0 40px -14px rgb(var(--tone) / 55%), var(--cp-soft-drop);
 }
 
 .kicker {

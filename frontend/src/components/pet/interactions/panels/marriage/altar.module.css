@@ -31,7 +31,8 @@
     gap: 16px;
     width: 100%;
     max-width: 220px;
-    min-height: 200px;
+    /* Shorter on a short screen, so the roster under the altar is not pushed out of sight. */
+    min-height: clamp(150px, 24vh, 200px);
     padding: 30px 14px 16px;
 }
 

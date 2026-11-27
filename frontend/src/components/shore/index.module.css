@@ -1,6 +1,8 @@
 /* CSS Module — class names are local; reference via `import styles from './index.module.css'`.
-   Layers, back to front: sky, the Pulse, sea, sand, places, pets. The horizon sits at
-   56% from the top, which the places in parts/places.module.css are anchored to. */
+   Layers, back to front: sky, the Pulse, sea, land, places, pets. The horizon sits at 38%
+   from the top. The land is a cove: its shoreline runs from about 47% at both ends down to
+   57% in the bay, so the back row of places (`--place-back`) and the front row
+   (`--place-floor`) in parts/places.module.css both stand on it, never in the water. */
 /* A size container, so the places and pets scale with the scene rather than the window:
    a scene is not always as wide as the viewport. */
 .shore {
@@ -17,6 +19,7 @@
 /* The home screen: edge to edge under the HUD and the dock, places raised to clear the dock. */
 .full {
     --place-floor: 35%;
+    --place-back: 44%;
     flex: 1;
     height: auto;
     min-height: 0;
@@ -25,15 +28,17 @@
     box-shadow: none;
 }
 
+/* Below the HUD, which floats over the top of the scene and is two rows tall on a phone. */
 .full .pulse {
-    top: 9%;
+    top: max(9%, calc(var(--hud-space, 78px) + 6px));
 }
 
 .sky {
     position: absolute;
     inset: 0;
     background: radial-gradient(ellipse 50% 45% at 50% 14%, rgb(181 140 255 / 30%), transparent 70%),
-        linear-gradient(180deg, #070a1f 0%, #121040 38%, #2a1754 56%, #3b1d58 64%);
+        radial-gradient(ellipse 70% 14% at 50% 38%, rgb(255 154 216 / 22%), transparent 70%),
+        linear-gradient(180deg, #070a1f 0%, #121040 24%, #2a1754 36%, #3b1d58 42%);
 }
 
 .star {
@@ -52,33 +57,32 @@
     left: 50%;
     top: 5%;
     z-index: 2;
-    width: clamp(96px, 13cqw, 150px);
+    width: clamp(72px, 13cqw, 150px);
     transform: translateX(-50%);
 }
 
+/* The sea, out at the horizon and behind the land. */
 .sea {
     position: absolute;
     left: 0;
     right: 0;
-    top: 56%;
-    height: 18%;
+    top: 38%;
+    height: 24%;
     overflow: hidden;
-    background: linear-gradient(180deg, #1c2a6b 0%, #0c1640 100%);
+    background: linear-gradient(180deg, #2a3a82 0%, #1c2a6b 18%, #0c1640 100%);
 }
 
-/* The Pulse's light on the water, under the orb. */
+/* The Pulse's light on the water: a soft path of moonlight down to the bay. */
 .reflection {
     position: absolute;
     top: 0;
     left: 50%;
-    width: clamp(48px, 7cqw, 76px);
+    width: clamp(90px, 14cqw, 200px);
     height: 100%;
     transform: translateX(-50%);
-    border-radius: 50% 50% 40% 40%;
-    background: linear-gradient(180deg, rgb(201 176 255 / 60%), rgb(125 214 255 / 15%) 60%, transparent);
-    -webkit-mask-image: repeating-linear-gradient(180deg, #000 0 3px, transparent 3px 7px);
-    mask-image: repeating-linear-gradient(180deg, #000 0 3px, transparent 3px 7px);
-    animation: shimmer 2.4s ease-in-out infinite;
+    background: radial-gradient(ellipse 50% 100% at 50% 0%, rgb(220 200 255 / 50%), rgb(125 214 255 / 12%) 55%, transparent 75%);
+    filter: blur(2px);
+    animation: shimmer 3.2s ease-in-out infinite;
 }
 
 .waveBack,
@@ -114,15 +118,37 @@
     fill: #132056;
 }
 
-.sand {
+/* The land, from just below the horizon to the bottom of the scene. Stretched to the scene
+   rather than scaled, so the cove keeps its shape at any width. */
+.land {
     position: absolute;
-    left: -12%;
-    right: -12%;
-    bottom: -30%;
-    height: 64%;
-    border-radius: 50% 50% 0 0 / 26% 26% 0 0;
-    background: radial-gradient(ellipse 70% 55% at 50% 0%, #5a466e 0%, #3a2a4e 45%, #221833 80%);
-    box-shadow: 0 -10px 40px rgb(181 140 255 / 15%);
+    left: 0;
+    right: 0;
+    top: 47%;
+    bottom: 0;
+    width: 100%;
+    height: 53%;
+}
+
+/* Surf along the shoreline: a thin moonlit line over a wider soft glow. */
+.surf,
+.surfGlow {
+    fill: none;
+    vector-effect: non-scaling-stroke;
+    stroke-linecap: round;
+}
+
+.surf {
+    stroke: #e4eaff;
+    stroke-width: 2;
+    stroke-opacity: 0.55;
+    animation: surf 4s ease-in-out infinite;
+}
+
+.surfGlow {
+    stroke: #9fd8ff;
+    stroke-width: 10;
+    stroke-opacity: 0.14;
 }
 
 .lantern {
@@ -189,8 +215,14 @@ div.sign {
 
 @keyframes shimmer {
     50% {
-        transform: translateX(-50%) scaleX(0.8);
-        opacity: 0.7;
+        transform: translateX(-50%) scaleX(0.85);
+        opacity: 0.75;
+    }
+}
+
+@keyframes surf {
+    50% {
+        stroke-opacity: 0.25;
     }
 }
 

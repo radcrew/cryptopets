@@ -15,7 +15,7 @@
     max-width: 400px;
     border-radius: 18px;
     background: linear-gradient(170deg, #171d48, #0a0d24 72%);
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--ring) 65%, transparent),
+    box-shadow: 0 0 0 1px color-mix(in srgb, color-mix(in srgb, var(--ring) 65%, transparent) 55%, transparent), inset 0 1px 0 rgb(255 255 255 / 9%),
         0 0 26px -6px color-mix(in srgb, var(--ring) 70%, transparent), 0 12px 28px rgb(0 0 0 / 45%);
     animation: tx-slide-in var(--tx-slide-duration) var(--cp-ease-spring);
 

@@ -153,10 +153,10 @@
     flex-direction: column;
     align-items: center;
     min-width: 46px;
-    padding: 4px 6px;
-    border-radius: 10px;
-    background: rgb(8 10 28 / 72%);
-    box-shadow: inset 0 0 0 1px var(--bay-soft);
+    padding: 5px 8px;
+    border-radius: var(--cp-r-box);
+    background: var(--cp-soft-fill);
+    box-shadow: var(--cp-soft-rim), 0 0 18px -8px var(--bay);
 }
 
 .combatantStats small {
@@ -377,13 +377,14 @@
 .roster {
     min-width: 0;
     padding: 10px 12px 6px;
-    border-radius: 18px;
-    background: rgb(8 10 28 / 55%);
-    box-shadow: inset 0 0 0 1px rgb(125 214 255 / 28%);
+    border-radius: var(--cp-r-tray);
+    background: radial-gradient(ellipse 60% 70% at 50% 0%, rgb(125 214 255 / 9%), transparent 70%), var(--cp-soft-fill);
+    box-shadow: var(--cp-soft-rim), 0 0 40px -16px rgb(125 214 255 / 45%), var(--cp-soft-drop);
 }
 
 .rosterRival {
-    box-shadow: inset 0 0 0 1px rgb(255 123 203 / 32%);
+    background: radial-gradient(ellipse 60% 70% at 50% 0%, rgb(255 123 203 / 9%), transparent 70%), var(--cp-soft-fill);
+    box-shadow: var(--cp-soft-rim), 0 0 40px -16px rgb(255 123 203 / 45%), var(--cp-soft-drop);
 }
 
 .rosterHead {
@@ -959,8 +960,9 @@
     margin: 0 20px 20px;
     padding: 12px 16px;
     background: rgb(5 13 30 / 88%);
-    border: 1px solid rgb(101 131 255 / 18%);
-    border-radius: 8px;
+    border: 0;
+    border-radius: var(--cp-r-box);
+    box-shadow: var(--cp-soft-rim);
     max-height: 190px;
 }
 
@@ -971,8 +973,6 @@
     flex-direction: column;
     padding-top: 32px;
     overflow-y: auto;
-    scrollbar-width: thin;
-    scrollbar-color: rgb(125 214 255 / 35%) transparent;
 
     /* The dialogue markup comes from the global battle-dialogue.css component. */
     :global(.battle-dialogue) {
@@ -1033,8 +1033,6 @@
     flex: 1;
     min-height: 0;
     overflow-y: auto;
-    scrollbar-width: thin;
-    scrollbar-color: rgb(255 214 125 / 30%) transparent;
 }
 
 .mechLogEntry {
@@ -1303,8 +1301,9 @@
 .pendingNotice {
     margin: 10px 0;
     padding: 10px 12px;
-    border: 1px solid rgb(255 207 112 / 35%);
-    border-radius: 8px;
+    border: 0;
+    border-radius: var(--cp-r-box);
+    box-shadow: inset 0 0 0 1px rgb(255 207 112 / 22%), 0 0 26px -10px rgb(255 207 112 / 45%);
     background: rgb(40 28 5 / 45%);
     color: var(--cp-amber, #ffcf70);
     font-size: var(--cp-font-size-sm);

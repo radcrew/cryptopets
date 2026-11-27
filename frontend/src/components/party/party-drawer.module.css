@@ -22,7 +22,7 @@
     padding: 16px 18px 20px;
     border-radius: 26px;
     background: linear-gradient(170deg, #171d48, #0a0d24 72%);
-    box-shadow: 0 0 0 2px rgb(125 214 255 / 45%), 0 0 50px -10px rgb(125 214 255 / 45%), 0 -10px 60px rgb(0 0 0 / 55%);
+    box-shadow: 0 0 0 1px color-mix(in srgb, rgb(125 214 255 / 45%) 55%, transparent), inset 0 1px 0 rgb(255 255 255 / 9%), 0 0 50px -10px rgb(125 214 255 / 45%), 0 -10px 60px rgb(0 0 0 / 55%);
     animation: slide 0.4s var(--cp-ease-spring);
 }
 

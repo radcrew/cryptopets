@@ -41,7 +41,9 @@
     scrollbar-gutter: stable;
     /* Into the page body's padding, so a hovered slot's lift and glow are not cut off. */
     margin: 0 calc(-1 * var(--cp-bleed));
-    padding: 0 var(--cp-bleed) var(--cp-bleed);
+    padding: 0 var(--cp-bleed) calc(var(--cp-bleed) + var(--cp-fade));
+    -webkit-mask-image: var(--cp-fade-mask);
+    mask-image: var(--cp-fade-mask);
 }
 
 /* A pouch's name, on a leather tag stitched to the bag. */

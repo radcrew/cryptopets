@@ -20,7 +20,7 @@
         background: radial-gradient(circle at 50% 0%, rgb(181 140 255 / 18%), transparent 55%),
             linear-gradient(170deg, #171d48, #0a0d24 72%);
         color: #eef0ff;
-        box-shadow: 0 0 0 2px rgb(181 140 255 / 60%), 0 0 50px -10px rgb(181 140 255 / 60%),
+        box-shadow: 0 0 0 1px color-mix(in srgb, rgb(181 140 255 / 60%) 55%, transparent), inset 0 1px 0 rgb(255 255 255 / 9%), 0 0 50px -10px rgb(181 140 255 / 60%),
             0 30px 70px rgb(0 0 0 / 60%);
         animation: neon-modal-rise 0.4s var(--cp-ease-spring);
 

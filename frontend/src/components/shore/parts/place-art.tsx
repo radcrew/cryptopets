@@ -15,9 +15,9 @@ const arenaTop = (x: number) => {
 };
 
 export const HallArt: React.FC = () => (
-    <svg viewBox="0 0 160 220" preserveAspectRatio="xMidYMax meet" aria-hidden>
+    <svg viewBox="0 0 160 190" preserveAspectRatio="xMidYMax meet" aria-hidden>
         <path className={styles.glow} d="M80 58 L42 -40 H118 Z" fill="#ffd25a" fillOpacity=".12" />
-        <path d="M14 186 Q80 166 146 186 L124 204 Q100 220 80 218 Q60 220 36 204 Z" fill="#251d44" stroke="#4a3a78" />
+        <rect x="18" y="183" width="124" height="7" rx="3.5" fill="url(#shore-marble)" stroke="#5b4d9a" />
         <rect x="26" y="174" width="108" height="10" rx="2" fill="url(#shore-marble)" stroke="#5b4d9a" />
         <rect x="34" y="165" width="92" height="10" rx="2" fill="url(#shore-marble)" stroke="#5b4d9a" />
         <rect className={styles.glow} x="50" y="110" width="60" height="55" fill="#ffd25a" fillOpacity=".2" />
@@ -190,7 +190,6 @@ export const NestArt: React.FC = () => (
 /** A straw training dummy with a target, and a sword stuck in the sand. */
 export const TrainingArt: React.FC = () => (
     <svg viewBox="0 0 120 130" aria-hidden>
-        <ellipse cx="60" cy="122" rx="44" ry="6" fill="#000" fillOpacity=".3" />
         <rect x="56" y="40" width="8" height="82" rx="2" fill="url(#shore-wood)" />
         <rect x="26" y="52" width="68" height="7" rx="3" fill="url(#shore-wood)" />
         <ellipse cx="60" cy="76" rx="20" ry="26" fill="#d9b27a" stroke="#8a5a2c" strokeWidth="2" />
@@ -211,7 +210,6 @@ const RUNE_ROWS = [30, 46, 62, 78];
 /** The Ledger Stones: three standing stones, the tallest carved with runes that glow in turn. */
 export const StonesArt: React.FC = () => (
     <svg viewBox="0 0 120 110" aria-hidden>
-        <ellipse cx="60" cy="104" rx="54" ry="5" fill="#000" fillOpacity=".3" />
         <path d="M10 104 V60 C10 51 16 46 24 46 S38 51 38 60 V104 Z" fill="url(#shore-stone)" stroke="#2c3a7a" />
         <path d="M82 104 V64 C82 56 88 52 95 52 S108 56 108 64 V104 Z" fill="url(#shore-stone)" stroke="#2c3a7a" />
         <path d="M38 104 V26 C38 14 48 6 60 6 S82 14 82 26 V104 Z" fill="url(#shore-stone)" stroke="#6b5cb0" />

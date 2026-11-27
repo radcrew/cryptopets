@@ -9,17 +9,25 @@ import styles from './shore-pet.module.css';
 const X_MIN = 6;
 const X_MAX = 94;
 
-
 type Spot = { x: number; y: number };
 /** The strip of sand pets walk on, in percent of the scene's height. */
 export type Lane = { min: number; max: number };
 
+/** The stretch of beach a pet keeps to: its own column, less a margin, so two pets never
+ *  wander into each other however long the page stays open. */
+type Band = { min: number; max: number };
+
+const bandFor = (index: number, count: number): Band => {
+    const width = (X_MAX - X_MIN) / Math.max(count, 1);
+    const left = X_MIN + index * width;
+    return { min: left + width * 0.2, max: left + width * 0.8 };
+};
+
 /** A stable starting spot from the pet's id, so a re-render never teleports anyone. */
-const startSpot = (id: string, index: number, count: number, lane: Lane): Spot => {
+const startSpot = (id: string, band: Band, lane: Lane): Spot => {
     let h = 0;
     for (const ch of id) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
-    const column = (index + 0.5) / Math.max(count, 1);
-    return { x: X_MIN + column * (X_MAX - X_MIN), y: lane.min + ((h % 100) / 100) * (lane.max - lane.min) };
+    return { x: (band.min + band.max) / 2, y: lane.min + ((h % 100) / 100) * (lane.max - lane.min) };
 };
 
 const prefersStill = () => globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
@@ -30,7 +38,7 @@ type Walk = { spot: Spot; seconds: number; facingLeft: boolean; walking: boolean
  * A short stroll, a rest of a few seconds, then another stroll. Slow on purpose: the
  * Shore should feel lived in, not busy. Never moves under reduced motion.
  */
-const useWander = (start: Spot, lane: Lane): Walk => {
+const useWander = (start: Spot, band: Band, lane: Lane): Walk => {
     const [walk, setWalk] = useState<Walk>({ spot: start, seconds: 0, facingLeft: false, walking: false });
     const spot = useRef(start);
 
@@ -39,7 +47,7 @@ const useWander = (start: Spot, lane: Lane): Walk => {
         let timer: ReturnType<typeof setTimeout>;
         const stroll = () => {
             const from = spot.current;
-            const x = Math.min(X_MAX, Math.max(X_MIN, from.x + (Math.random() - 0.5) * 18));
+            const x = Math.min(band.max, Math.max(band.min, from.x + (Math.random() - 0.5) * (band.max - band.min)));
             const y = Math.min(lane.max, Math.max(lane.min, from.y + (Math.random() - 0.5) * 5));
             const seconds = Math.max(4, Math.hypot(x - from.x, (y - from.y) * 2) * 0.9);
             spot.current = { x, y };
@@ -52,7 +60,7 @@ const useWander = (start: Spot, lane: Lane): Walk => {
         };
         timer = setTimeout(stroll, 1000 + Math.random() * 4000);
         return () => clearTimeout(timer);
-    }, [lane]);
+    }, [band.min, band.max, lane]);
 
     return walk;
 };
@@ -68,8 +76,9 @@ type ShorePetProps = {
 
 /** One of the player's pets, strolling on the sand. Tapping it opens its sheet. */
 const ShorePet: React.FC<ShorePetProps> = ({ pet, index, count, lane, onOpen }) => {
-    const [start] = useState(() => startSpot(pet.id, index, count, lane));
-    const walk = useWander(start, lane);
+    const band = bandFor(index, count);
+    const [start] = useState(() => startSpot(pet.id, band, lane));
+    const walk = useWander(start, band, lane);
     const color = getRarityColor(pet.rarity);
 
     return (

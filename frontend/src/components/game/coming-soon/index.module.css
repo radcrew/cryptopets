@@ -5,7 +5,7 @@
     border-radius: 22px;
     padding: 16px;
     background: rgb(8 10 28 / 45%);
-    box-shadow: inset 0 0 0 2px rgb(255 210 90 / 35%);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, rgb(255 210 90 / 35%) 55%, transparent), inset 0 1px 0 rgb(255 255 255 / 9%);
 }
 
 /* A corner ribbon, like a "new" sash on a shop sign. */

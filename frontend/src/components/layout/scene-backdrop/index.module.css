@@ -29,14 +29,15 @@
         linear-gradient(180deg, #070a1f 0%, #121040 40%, #2a1754 62%, #3b1d58 70%);
 }
 
+/* The sea behind a page: it fades in from the sky rather than starting at a drawn line,
+   since a hard horizon would cut straight across the page's trays and cards. */
 .sea {
     position: absolute;
     left: 0;
     right: 0;
-    top: 68%;
-    height: 14%;
-    background: linear-gradient(180deg, #1c2a6b, #0c1640);
-    box-shadow: inset 0 2px 0 rgb(125 214 255 / 35%);
+    top: 62%;
+    height: 22%;
+    background: linear-gradient(180deg, rgb(28 42 107 / 0%) 0%, rgb(28 42 107 / 75%) 35%, #0c1640 100%);
 }
 
 .sand {
@@ -47,6 +48,9 @@
     height: 56%;
     border-radius: 50% 50% 0 0 / 26% 26% 0 0;
     background: radial-gradient(ellipse 70% 55% at 50% 0%, #5a466e, #3a2a4e 45%, #221833 80%);
+    /* A soft line of surf where it meets the water, not a hard edge. */
+    box-shadow: 0 -6px 30px rgb(159 216 255 / 14%);
+    filter: blur(0.6px);
 }
 
 /* ---- The arena ---- */

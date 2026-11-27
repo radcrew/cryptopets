@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import clsx from 'clsx';
 import { useBattleConfig, useChainCapabilities, usePetList } from '@shared/core';
 
@@ -12,6 +12,10 @@ import styles from './index.module.css';
 /** More than this and the beach turns into a crowd; the party (the dock's Pets key) has everyone. */
 const MAX_WALKERS = 8;
 
+/** The width one walking pet needs for its portrait and its name, in pixels. A narrower beach
+ *  shows fewer pets rather than stacking them on top of each other. */
+const WALKER_ROOM = 90;
+
 /** Fixed rather than random so the sky is the same on every render and every visit. */
 const STARS = Array.from({ length: 48 }, (_, i) => ({
     left: (i * 37.7) % 100,
@@ -20,6 +24,10 @@ const STARS = Array.from({ length: 48 }, (_, i) => ({
 }));
 
 const LANTERNS = [12, 34, 48, 66, 90];
+
+/** The cove's shoreline, in the land drawing's 1000 by 500 box: high ground at both ends, where
+ *  the Hall and the Tower stand, and a bay in the middle under the Pulse. */
+const SHORELINE = 'M0 30 C110 4 250 10 330 52 C410 92 590 92 670 52 C750 10 890 4 1000 30';
 
 /** The strip of sand pets walk on, in percent of the scene's height. Full screen it sits
  *  higher, clear of the dock that floats over the bottom of the screen. */
@@ -39,11 +47,22 @@ const ShoreScene: React.FC<{ fullscreen?: boolean }> = ({ fullscreen = false }) 
     const { pets, isLoading } = usePetList();
     const { data: battleConfig } = useBattleConfig();
     const { openPet, openSummon } = useParty();
+    const scene = useRef<HTMLElement>(null);
+    const [width, setWidth] = useState<number | null>(null);
 
-    const walkers = isConnected ? pets.slice(0, MAX_WALKERS) : [];
+    useEffect(() => {
+        const el = scene.current;
+        if (!el || typeof ResizeObserver === 'undefined') return undefined;
+        const observer = new ResizeObserver(([entry]) => setWidth(entry.contentRect.width));
+        observer.observe(el);
+        return () => observer.disconnect();
+    }, []);
+
+    const room = width === null ? MAX_WALKERS : Math.max(3, Math.floor(width / WALKER_ROOM));
+    const walkers = isConnected ? pets.slice(0, Math.min(MAX_WALKERS, room)) : [];
 
     return (
-        <section className={clsx(styles.shore, fullscreen && styles.full)} aria-label="The Quiet Shore">
+        <section ref={scene} className={clsx(styles.shore, fullscreen && styles.full)} aria-label="The Quiet Shore">
             <ShoreDefs />
             <div className={styles.sky} aria-hidden>
                 {STARS.map((s, i) => (
@@ -65,7 +84,20 @@ const ShoreScene: React.FC<{ fullscreen?: boolean }> = ({ fullscreen = false }) 
                     </svg>
                 ))}
             </div>
-            <div className={styles.sand} aria-hidden />
+            <svg className={styles.land} viewBox="0 0 1000 500" preserveAspectRatio="none" aria-hidden>
+                <defs>
+                    <linearGradient id="shore-land" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0" stopColor="#8a739c" />
+                        <stop offset=".05" stopColor="#5d4a78" />
+                        <stop offset=".22" stopColor="#2f2e52" />
+                        <stop offset=".6" stopColor="#1f1f3a" />
+                        <stop offset="1" stopColor="#141428" />
+                    </linearGradient>
+                </defs>
+                <path d={`${SHORELINE} V500 H0 Z`} fill="url(#shore-land)" />
+                <path className={styles.surfGlow} d={SHORELINE} />
+                <path className={styles.surf} d={SHORELINE} />
+            </svg>
             {LANTERNS.map((x, i) => (
                 <span
                     key={x}

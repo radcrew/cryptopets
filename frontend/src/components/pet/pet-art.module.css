@@ -4,12 +4,13 @@
 /* Sized in em, like the art itself, so it tracks whatever font-size the caller set —
    PetArt is rendered at 1em in a leaderboard row, at 5.5rem in the rename hero, and
    filling a card in the gallery. A fixed pixel size would be a speck in one and a slab
-   in another. */
+   in another. The floor keeps it a ring where the art sits in small text, such as a
+   portrait in the party, where 0.45em came out as a 7px smudge. */
 .spinner {
-    width: 0.45em;
-    height: 0.45em;
+    width: max(18px, 0.45em);
+    height: max(18px, 0.45em);
     box-sizing: border-box;
-    border: 0.07em solid rgb(125 214 255 / 22%);
+    border: max(2.5px, 0.07em) solid rgb(125 214 255 / 22%);
     border-block-start-color: var(--cp-cyan, #7dd6ff);
     border-radius: 50%;
     animation: cp-art-spin 0.9s linear infinite;

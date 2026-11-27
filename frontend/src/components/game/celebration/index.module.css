@@ -25,7 +25,7 @@
     border-radius: 26px;
     text-align: center;
     background: linear-gradient(170deg, #141a40, #0a0d24 70%);
-    box-shadow: 0 0 0 2px var(--tone), 0 0 50px color-mix(in srgb, var(--tone) 35%, transparent),
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--tone) 55%, transparent), inset 0 1px 0 rgb(255 255 255 / 9%), 0 0 50px color-mix(in srgb, var(--tone) 35%, transparent),
         0 30px 80px rgb(0 0 0 / 60%);
     animation: card-in 0.5s var(--cp-ease-spring);
 }

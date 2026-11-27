@@ -34,10 +34,10 @@
     flex-direction: column;
     align-items: center;
     min-width: 46px;
-    padding: 4px 6px;
-    border-radius: 10px;
-    background: rgb(8 10 28 / 72%);
-    box-shadow: inset 0 0 0 1px rgb(255 207 112 / 25%);
+    padding: 5px 8px;
+    border-radius: var(--cp-r-box);
+    background: var(--cp-soft-fill);
+    box-shadow: var(--cp-soft-rim), 0 0 18px -8px rgb(255 207 112 / 45%);
 }
 
 .stats small {

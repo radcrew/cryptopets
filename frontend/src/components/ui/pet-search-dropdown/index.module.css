@@ -123,12 +123,10 @@
     background: linear-gradient(170deg, rgb(20 26 64 / 98%), rgb(10 13 36 / 98%) 70%);
     border: none;
     border-radius: 18px;
-    box-shadow: 0 0 0 2px rgb(181 140 255 / 45%), 0 18px 40px rgb(0 0 0 / 55%);
+    box-shadow: 0 0 0 1px color-mix(in srgb, rgb(181 140 255 / 45%) 55%, transparent), inset 0 1px 0 rgb(255 255 255 / 9%), 0 18px 40px rgb(0 0 0 / 55%);
     overflow: hidden;
     max-height: 240px;
     overflow-y: auto;
-    scrollbar-width: thin;
-    scrollbar-color: var(--cp-cyan) transparent;
 }
 
 .psdStateRow {

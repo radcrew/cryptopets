@@ -329,8 +329,6 @@
     resize: none;
     overflow-y: auto;
     line-height: 1.4;
-    scrollbar-width: thin;
-    scrollbar-color: rgb(181 140 255 / 28%) transparent;
 }
 
 .composer textarea:focus {
@@ -566,8 +564,6 @@
        too, and the grid then draws a horizontal scrollbar it has no use for. */
     overflow-x: hidden;
     overscroll-behavior: contain;
-    scrollbar-width: thin;
-    scrollbar-color: rgb(148 163 184 / 35%) transparent;
 }
 
 /* Flipped downward when the component measures too little room above; see PICKER_MAX_HEIGHT. */

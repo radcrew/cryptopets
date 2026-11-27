@@ -1,6 +1,7 @@
 /* CSS Module — class names are local; reference via `import styles from './places.module.css'`.
-   Each place is anchored to the horizon or the sand line and sized by width alone; its
-   aspect ratio matches its art's viewBox so the drawing never stretches. */
+   Each place stands on the land, in the back row on the high ground (`--place-back`) or the
+   front row by the beach (`--place-floor`), and is sized by width alone; its aspect ratio
+   matches its art's viewBox so the drawing never stretches. */
 .place {
     position: absolute;
     z-index: 1;
@@ -18,10 +19,23 @@
     }
 
     &:focus-visible {
-        outline: 3px solid var(--cp-cyan);
+        outline: 3px solid var(--cp-focus-ring);
         outline-offset: 4px;
         border-radius: 16px;
     }
+}
+
+/* Its shadow on the ground, so the place reads as standing on the land. */
+.place::after {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    left: 6%;
+    right: 6%;
+    bottom: -6px;
+    height: 14px;
+    border-radius: 50%;
+    background: radial-gradient(closest-side, rgb(4 4 16 / 60%), transparent);
 }
 
 .art {
@@ -60,16 +74,16 @@
     --tag: var(--cp-gold);
     /* Far enough in that its sign, wider than the Hall, clears the scene's left edge. */
     left: max(2%, 32px);
-    bottom: 44%;
+    bottom: var(--place-back, 44%);
     width: clamp(90px, 11cqw, 140px);
-    aspect-ratio: 160 / 220;
+    aspect-ratio: 160 / 190;
 }
 
-/* On the far horizon, behind the team camp: a mode still to come. */
+/* On the high ground behind the team camp: a mode still to come. */
 .tower {
     --tag: var(--cp-cyan);
     right: 13%;
-    bottom: 44%;
+    bottom: var(--place-back, 44%);
     width: clamp(64px, 7cqw, 104px);
     aspect-ratio: 120 / 320;
 }
@@ -134,7 +148,20 @@
 
     /* Clear of the Hall's sign, which is wider than the Hall itself. */
     .nest {
-        left: 30%;
+        left: 28%;
+    }
+
+    /* The Arena moves in from the edge and the Tower keeps the right-hand high ground, so the
+       Arena's roof no longer stands in front of the Tower and its sign. */
+    .arena {
+        right: auto;
+        left: 49%;
+        width: clamp(116px, 30cqw, 160px);
+    }
+
+    /* In far enough that its sign, wider than the Tower, clears the edge. */
+    .tower {
+        right: max(4%, 20px);
     }
 }
 

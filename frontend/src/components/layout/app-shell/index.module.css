@@ -24,8 +24,6 @@
     box-sizing: border-box;
     overflow: auto;
     padding: var(--hud-space) var(--cp-spacing-lg) var(--dock-space);
-    scrollbar-width: thin;
-    scrollbar-color: rgb(125 214 255 / 35%) transparent;
 }
 
 /* Pages sit centred on their scene at a readable width rather than spanning a wide screen. */
@@ -35,13 +33,15 @@
     margin-inline: auto;
 }
 
-/* The Shore: edge to edge, under the HUD and the dock. */
-.full {
+/* The Shore: edge to edge, under the HUD and the dock. Doubled up (`.stage.full`) so the
+   phone rule below, which pads every page's sides, cannot reopen strips of the scene
+   backdrop down both edges of the Shore. */
+.stage.full {
     padding: 0;
     overflow: hidden;
 }
 
-.full > * {
+.stage.full > * {
     max-width: none;
 }
 
@@ -53,7 +53,7 @@
 }
 
 /* The HUD wraps the wallet onto a second row here (see hud/index.module.css). */
-@media (max-width: 560px) {
+@media (max-width: 640px) {
     .shell {
         --hud-space: 112px;
     }

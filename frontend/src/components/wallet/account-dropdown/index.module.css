@@ -144,24 +144,6 @@
             max-height: 200px;
             overflow-y: auto;
             padding-right: 4px;
-
-            &::-webkit-scrollbar {
-                width: 4px;
-            }
-
-            &::-webkit-scrollbar-track {
-                background: rgb(9 20 42 / 85%);
-                border-radius: 2px;
-            }
-
-            &::-webkit-scrollbar-thumb {
-                background: rgb(30 157 255 / 50%);
-                border-radius: 2px;
-            }
-
-            &::-webkit-scrollbar-thumb:hover {
-                background: rgb(30 157 255 / 66%);
-            }
         }
 
         .empty {

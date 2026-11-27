@@ -37,16 +37,19 @@
     }
 }
 
+/* Shrinks before anything else in the HUD does; its two lines cut off with an ellipsis
+   rather than spilling out under the pieces beside it. */
 .plate {
     display: flex;
     align-items: center;
     gap: 10px;
+    flex: 0 1 auto;
     min-width: 0;
-    padding: 5px 14px 5px 5px;
+    padding: 5px 16px 5px 5px;
     border-radius: 999px;
     background: rgb(8 10 28 / 82%);
-    border: 1px solid rgb(255 210 90 / 45%);
-    box-shadow: 0 6px 20px rgb(0 0 0 / 40%);
+    box-shadow: 0 0 0 1px rgb(255 210 90 / 32%), inset 0 1px 0 rgb(255 255 255 / 8%),
+        0 0 20px -8px rgb(255 210 90 / 55%), 0 6px 20px rgb(0 0 0 / 40%);
 }
 
 .ring {
@@ -73,6 +76,8 @@
 .who b {
     font-size: 14px;
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .who span {
@@ -95,8 +100,8 @@
     padding: 6px 12px;
     border-radius: 999px;
     background: rgb(8 10 28 / 82%);
-    border: 1px solid rgb(255 138 107 / 55%);
-    box-shadow: 0 6px 20px rgb(0 0 0 / 35%);
+    box-shadow: 0 0 0 1px rgb(255 138 107 / 38%), inset 0 1px 0 rgb(255 255 255 / 8%),
+        0 0 20px -8px rgb(255 138 107 / 55%), 0 6px 20px rgb(0 0 0 / 35%);
     font-family: var(--cp-title-font);
     font-size: 13px;
     font-weight: 600;
@@ -122,16 +127,20 @@
     width: 40px;
     height: 40px;
     padding: 0;
+    border: 0;
     border-radius: 50%;
-    border: 1px solid rgb(125 214 255 / 35%);
     background: rgb(8 10 28 / 82%);
-    box-shadow: 0 6px 16px rgb(0 0 0 / 40%);
+    box-shadow: 0 0 0 1px rgb(125 214 255 / 30%), inset 0 1px 0 rgb(255 255 255 / 8%), 0 6px 16px rgb(0 0 0 / 40%);
     font-size: 18px;
-    transition: transform 0.2s var(--cp-ease-spring), border-color 0.2s ease, opacity 0.2s ease;
+    transition: transform 0.2s var(--cp-ease-spring), box-shadow 0.2s ease, opacity 0.2s ease;
 
     &:hover {
         transform: translateY(-2px);
-        border-color: var(--cp-cyan);
+        box-shadow: 0 0 0 1px var(--cp-cyan), 0 0 16px -4px rgb(125 214 255 / 70%), 0 8px 18px rgb(0 0 0 / 45%);
+    }
+
+    &:active {
+        transform: none;
     }
 
     &[aria-pressed='false'] {
@@ -151,7 +160,7 @@
     padding: 12px 14px 14px;
     border-radius: 18px;
     background: linear-gradient(170deg, #141a40, #0a0d24 70%);
-    box-shadow: 0 0 0 2px rgb(181 140 255 / 45%), 0 18px 40px rgb(0 0 0 / 55%);
+    box-shadow: 0 0 0 1px color-mix(in srgb, rgb(181 140 255 / 45%) 55%, transparent), inset 0 1px 0 rgb(255 255 255 / 9%), 0 18px 40px rgb(0 0 0 / 55%);
     animation: drop 0.3s var(--cp-ease-spring);
 }
 
@@ -269,14 +278,31 @@
     gap: 8px;
 }
 
-@media (max-width: 760px) {
-    .streak small,
+@media (max-width: 1100px) {
+    .streak small {
+        display: none;
+    }
+}
+
+@media (max-width: 860px) {
     .who span {
         display: none;
     }
 }
 
-@media (max-width: 560px) {
+@media (max-width: 700px) {
+    .who {
+        display: none;
+    }
+
+    /* Only the rank ring is left, which must not be squeezed. */
+    .plate {
+        flex-shrink: 0;
+        padding: 3px;
+    }
+}
+
+@media (max-width: 640px) {
     /* Too narrow for the wallet beside everything else: it takes a second row of its own. */
     .hud {
         flex-wrap: wrap;

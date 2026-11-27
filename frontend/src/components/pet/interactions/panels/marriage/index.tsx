@@ -45,25 +45,7 @@ const MarriagePanel: React.FC<MarriagePanelProps> = ({ isStandaloneView = true }
 
                 <MarriageTabBar tab={tab} onChange={onTabChange} proposalCount={proposalCount} />
 
-                {tab === 'propose' && (
-                    <>
-                        <div className={styles.benefits}>
-                            <span className={styles.benefitsHeart} aria-hidden>
-                                💝
-                            </span>
-                            <div>
-                                <div className={styles.benefitsTitle}>
-                                    Marriage unlocks cross-owner breeding
-                                </div>
-                                <div className={styles.benefitsSub}>
-                                    Bond two pets to breed across wallets — propose, accept, or
-                                    divorce anytime.
-                                </div>
-                            </div>
-                        </div>
-                        <ProposeTab {...proposeTab} />
-                    </>
-                )}
+                {tab === 'propose' && <ProposeTab {...proposeTab} />}
 
                 {tab === 'accept' && <AcceptTab {...acceptTab} />}
 

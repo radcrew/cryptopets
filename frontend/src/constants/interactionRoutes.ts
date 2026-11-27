@@ -44,7 +44,7 @@ export const STANDALONE_INTERACTION_HEADERS: Record<
     marriage: {
         Icon: MarriageIcon,
         label: 'Marriage',
-        sub: 'Marry two pets to unlock cross-owner breeding',
+        sub: 'Marry two pets to breed across wallets. Propose, accept, or divorce any time.',
     },
     changename: { Icon: QuillIcon, label: 'Rename Pet', sub: "Change your pet's name" },
     defense: {
