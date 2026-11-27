@@ -15,6 +15,7 @@ import {
 } from '@shared/core';
 
 import DashboardPanel from '@components/common/dashboard-panel';
+import GateScene from '@components/game/gate-scene';
 import { LedgerTablet } from '@components/game/ledger-stone';
 import StateCard from '@components/pet/interactions/state-card';
 import PetArt from '@components/pet/pet-art';
@@ -110,12 +111,14 @@ const LedgerStones: React.FC = () => {
 
     if (!isConnected) {
         return (
-            <StateCard
-                containerClassName="wallet-disconnected"
-                title={TITLE}
-                description="Connect your wallet to read the stones of your battles."
-                back={back}
-            />
+            <StateCard title={TITLE} back={back}>
+                <GateScene
+                    kind="wallet"
+                    title="Connect your wallet"
+                    text="Connect your wallet to read the stones of your battles."
+                    hint="Use the Connect Wallet key at the top of the screen."
+                />
+            </StateCard>
         );
     }
 

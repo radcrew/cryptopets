@@ -1,0 +1,92 @@
+/* CSS Module — class names are local; reference via `import styles from './index.module.css'`.
+   A closed gate: the emblem of what is missing in a glowing ring, the sign below it, then
+   the key. Centred in whatever space the page gives it. `--gate` is the kind's colour. */
+.gate {
+    --gate: 181 140 255;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    width: min(440px, 100%);
+    min-height: 44vh;
+    margin: auto;
+    justify-content: center;
+    text-align: center;
+}
+
+.wallet {
+    --gate: 125 214 255;
+}
+
+.lock {
+    --gate: 255 207 112;
+}
+
+.egg {
+    --gate: 255 154 216;
+}
+
+.emblem {
+    display: grid;
+    place-items: center;
+    width: 112px;
+    height: 112px;
+    margin-bottom: 6px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgb(var(--gate) / 26%), rgb(10 13 36) 70%);
+    box-shadow: 0 0 0 3px rgb(var(--gate) / 70%), 0 0 40px rgb(var(--gate) / 45%),
+        inset 0 0 26px rgb(var(--gate) / 30%);
+    font-size: 52px;
+    line-height: 1;
+    animation: float 3.4s ease-in-out infinite;
+}
+
+.title {
+    margin: 0;
+    font: 400 clamp(18px, 3vw, 24px) var(--cp-display-font);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #fff;
+    text-shadow: 0 3px 0 #2a1050;
+}
+
+.text {
+    max-width: 36ch;
+    margin: 0;
+    padding: 8px 16px;
+    border-radius: 16px;
+    background: rgb(8 10 28 / 72%);
+    box-shadow: inset 0 0 0 1px rgb(var(--gate) / 30%);
+    font-size: 14px;
+    line-height: 1.5;
+    color: #e2e4f4;
+}
+
+.key {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 6px;
+}
+
+.hint {
+    max-width: 40ch;
+    margin: 0;
+    font-size: 12.5px;
+    line-height: 1.45;
+    color: var(--cp-text-muted-dark);
+}
+
+@keyframes float {
+    50% {
+        transform: translateY(-8px);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .emblem {
+        animation: none;
+    }
+}

@@ -1,8 +1,11 @@
 /* CSS Module — class names are local; reference via `import styles from './index.module.css'`. */
+/* Centred under the HUD rather than in its corner, where the wallet keys are. */
 .viewport {
     position: fixed;
-    top: 16px;
-    right: 16px;
+    top: 86px;
+    left: 50%;
+    transform: translateX(-50%);
+    align-items: center;
     z-index: 10000;
     display: flex;
     flex-direction: column;
@@ -12,30 +15,32 @@
 }
 
 .toast {
+    --ring: 125 214 255;
+
     pointer-events: auto;
     display: grid;
     grid-template-columns: auto 1fr auto;
     align-items: start;
     gap: 10px;
+    width: 100%;
+    box-sizing: border-box;
     padding: 12px 12px 12px 14px;
-    border-radius: 10px;
-    background: linear-gradient(180deg, rgb(10 16 32 / 96%), rgb(6 10 22 / 98%));
-    border: 1px solid rgb(125 214 255 / 28%);
-    box-shadow: 0 10px 28px rgb(0 0 0 / 42%), inset 0 0 16px rgb(125 214 255 / 6%);
-    animation: toast-enter 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+    border: 0;
+    border-radius: 18px;
+    background: linear-gradient(170deg, #171d48, #0a0d24 72%);
+    box-shadow: 0 0 0 2px rgb(var(--ring) / 65%), 0 0 26px -6px rgb(var(--ring) / 70%), 0 12px 28px rgb(0 0 0 / 45%);
+    animation: toast-enter 0.45s var(--cp-ease-spring);
 
     &.error {
-        border-color: rgb(255 110 196 / 42%);
-        box-shadow: 0 10px 28px rgb(0 0 0 / 42%), inset 0 0 16px rgb(255 110 196 / 10%);
+        --ring: 255 110 196;
     }
 
     &.info {
-        border-color: rgb(125 214 255 / 32%);
+        --ring: 125 214 255;
     }
 
     &.success {
-        border-color: rgb(0 255 157 / 42%);
-        box-shadow: 0 10px 28px rgb(0 0 0 / 42%), inset 0 0 16px rgb(0 255 157 / 10%);
+        --ring: 0 255 157;
     }
 
     .icon {
@@ -70,12 +75,12 @@
 @keyframes toast-enter {
     from {
         opacity: 0;
-        transform: translateX(16px) translateY(-4px);
+        transform: translateY(-18px) scale(0.92);
     }
 
     to {
         opacity: 1;
-        transform: translateX(0) translateY(0);
+        transform: translateY(0) scale(1);
     }
 }
 
@@ -85,10 +90,9 @@
     }
 }
 
-@media (max-width: 480px) {
+/* A phone's HUD is two rows tall. */
+@media (max-width: 560px) {
     .viewport {
-        left: 16px;
-        right: 16px;
-        width: auto;
+        top: 120px;
     }
 }

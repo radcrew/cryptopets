@@ -2,6 +2,7 @@ import React, { type ReactNode } from 'react';
 import { useAuth, useChainCapabilities } from '@shared/core';
 
 import AuthActionButton from '@components/common/auth-action-button';
+import GateScene from '@components/game/gate-scene';
 import StateCard from '@components/pet/interactions/state-card';
 import type { NeonButtonTone } from '@components/ui/neon-button';
 import styles from './index.module.css';
@@ -31,9 +32,10 @@ export type SessionGateProps = {
  * the real answer is "we have not asked who you are yet", and neither tells the player
  * what to do about it.
  *
- * Signing in is one click, so this offers the button rather than an explanation. It is
- * the same `AuthActionButton` the battle, breed and marriage panels already use, so the
- * prompt reads the same wherever a player meets it.
+ * Signing in is one click, so each state is a closed gate with its key (`GateScene`) and
+ * one line on what the key does. The sign-in key is the same `AuthActionButton` the
+ * battle, breed and marriage panels already use, so it reads the same wherever a player
+ * meets it.
  */
 const SessionGate: React.FC<SessionGateProps> = ({
     title,
@@ -48,30 +50,28 @@ const SessionGate: React.FC<SessionGateProps> = ({
 
     if (!isConnected) {
         return (
-            <StateCard
-                // The literal name is load-bearing: StateCard centers the description
-                // only when it sees it, matching every other disconnected screen. The
-                // hashed class rides alongside, and `includes` still finds the literal.
-                containerClassName={`wallet-disconnected ${styles.fill}`}
-                title={title}
-                description={connectPrompt}
-                back={back}
-            />
+            <StateCard containerClassName={styles.fill} title={title} back={back}>
+                <GateScene
+                    kind="wallet"
+                    title="Connect your wallet"
+                    text={connectPrompt}
+                    hint="Use the Connect Wallet key at the top of the screen."
+                />
+            </StateCard>
         );
     }
 
     if (!isAuthenticated) {
-        // Deliberately not the `wallet-disconnected` variant: that one routes the
-        // description into a centered slot and drops children, so the button would
-        // vanish.
         return (
-            <StateCard
-                containerClassName={`${styles.fill} ${styles.signIn}`}
-                title={title}
-                description={signInPrompt}
-                back={back}
-            >
-                <AuthActionButton tone={tone}>Sign in</AuthActionButton>
+            <StateCard containerClassName={styles.fill} title={title} back={back}>
+                <GateScene
+                    kind="lock"
+                    title="Sign in to play"
+                    text={signInPrompt}
+                    hint="Signing in proves this wallet is yours. It is a free signature, not a transaction."
+                >
+                    <AuthActionButton tone={tone}>Sign in</AuthActionButton>
+                </GateScene>
             </StateCard>
         );
     }

@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import React from 'react';
 
 const capabilities = { isConnected: false, kind: 'evm' };
@@ -32,6 +33,8 @@ vi.mock('@components/pet/interactions/state-card', () => ({
 }));
 vi.mock('@constants/tones', () => ({ Tones: { Violet: 'violet' } }));
 vi.mock('react-router-dom', () => ({ useNavigate: () => vi.fn() }));
+const party = vi.hoisted(() => ({ openParty: vi.fn(), openPet: vi.fn(), openSummon: vi.fn() }));
+vi.mock('@contexts/party', () => ({ useParty: () => party }));
 
 import InteractionStandalone from '@components/pet/interactions/standalone';
 
@@ -72,6 +75,17 @@ describe('InteractionStandalone', () => {
             </InteractionStandalone>,
         );
         expect(screen.getByTestId('state-card')).toHaveTextContent("don't have any pets");
+    });
+
+    it('offers to summon a pet rather than sending the player to look for where', async () => {
+        capabilities.isConnected = true;
+        render(
+            <InteractionStandalone action="breed" minPets={1}>
+                <span>content</span>
+            </InteractionStandalone>,
+        );
+        await userEvent.click(screen.getByRole('button', { name: 'Summon a pet' }));
+        expect(party.openSummon).toHaveBeenCalled();
     });
 
     it('shows not-enough-pets state when minPets > 1 and only one pet exists', () => {

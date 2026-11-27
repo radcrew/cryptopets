@@ -7,13 +7,3 @@
 .fill {
     height: 100%;
 }
-
-/* The connect-wallet variant routes its description into DashboardPanel's `.state-body`,
-   which already centres. The sign-in variant renders into `.panel-body`, which does not,
-   so a full-height card would strand the prompt and its button against the top edge. */
-.signIn :global(.panel-body) {
-    align-items: center;
-    justify-content: center;
-    gap: 14px;
-    text-align: center;
-}

@@ -113,7 +113,7 @@ describe('Chat', () => {
 
         renderChat();
 
-        expect(screen.getByText(/Connect your wallet/i)).toBeInTheDocument();
+        expect(screen.getByRole('heading', { name: 'Connect your wallet' })).toBeInTheDocument();
     });
 
     // The normal state for most players, and it must not read as a failed load.

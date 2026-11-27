@@ -79,7 +79,7 @@ describe('Leaderboard', () => {
 
         renderBoard();
 
-        expect(screen.getByText(/Connect your wallet/i)).toBeInTheDocument();
+        expect(screen.getByRole('heading', { name: 'Connect your wallet' })).toBeInTheDocument();
     });
 
     // The empty state said "No battles on record yet", which is a claim about the game
