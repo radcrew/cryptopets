@@ -69,13 +69,16 @@
         outline-offset: 3px;
     }
 
-    &:disabled {
+    /* aria-disabled too: a key that is busy but must keep keyboard focus looks the same. */
+    &:disabled,
+    &[aria-disabled='true'] {
         cursor: not-allowed;
         transform: none;
         filter: grayscale(0.85) brightness(0.7);
     }
 
-    &:disabled::before {
+    &:disabled::before,
+    &[aria-disabled='true']::before {
         display: none;
     }
 

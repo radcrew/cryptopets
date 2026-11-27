@@ -142,6 +142,8 @@ export const useBattlePets = (options?: UseBattlePetsOptions) => {
         },
         /** Every local check and its verdict, so a UI can show *why* a result is trusted. */
         checks: verified.data?.checks ?? [],
+        /** The receipt those checks ran on, once fetched, so a UI can say which battle they cover. */
+        verifiedReceipt: verified.data?.receipt ?? null,
         /**
          * The battle's server-side state and, if it failed, why.
          *

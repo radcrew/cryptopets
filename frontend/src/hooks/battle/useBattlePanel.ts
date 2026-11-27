@@ -534,6 +534,22 @@ export const useBattlePanel = ({ isStandaloneView }: UseBattlePanelArgs): UseBat
         [lastStrike, strikeCount],
     );
 
+    // The checks this browser ran on the signed receipt, carved into the Ledger Stone.
+    const receipt = battle.verifiedReceipt;
+    const ledger = useMemo(
+        () =>
+            receipt && battle.checks.length > 0
+                ? {
+                      battleId: receipt.battleId,
+                      sequence: receipt.sequence,
+                      round: receipt.beacon.round,
+                      rounds: receipt.result.rounds,
+                      checks: battle.checks,
+                  }
+                : null,
+        [receipt, battle.checks],
+    );
+
     const overlay: BattleOverlayProps = {
         open: overlayOpen,
         showResult,
@@ -570,6 +586,7 @@ export const useBattlePanel = ({ isStandaloneView }: UseBattlePanelArgs): UseBat
         // Only while the round itself is outstanding: once `seeded`, the Pulse has spoken.
         awaitingPulse: battle.state === 'accepted' || battle.state === 'committed',
         liveStrike,
+        ledger,
     };
 
     const setup: BattleSetupProps = {

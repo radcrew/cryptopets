@@ -18,7 +18,8 @@ export type SoundName =
     | 'levelUp'
     | 'crack'
     | 'hatch'
-    | 'chest';
+    | 'chest'
+    | 'rune';
 
 type Tone = {
     kind?: 'tone';
@@ -77,6 +78,11 @@ const SOUNDS: Record<SoundName, Note[]> = {
         { freq: 220, dur: 1.1, type: 'sawtooth', vol: 0.06, slide: 990 },
         { freq: 988, dur: 0.08, type: 'square', vol: 0.09, delay: 0.5 },
         { freq: 1319, dur: 0.14, type: 'square', vol: 0.09, delay: 0.57 },
+    ],
+    // A struck bell with a faint overtone, for a rune lighting on the Ledger Stone.
+    rune: [
+        { freq: 1175, dur: 0.4, type: 'sine', vol: 0.12 },
+        { freq: 2350, dur: 0.22, type: 'sine', vol: 0.04, delay: 0.01 },
     ],
 };
 

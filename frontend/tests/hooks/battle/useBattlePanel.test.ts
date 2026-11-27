@@ -37,7 +37,7 @@ const strike = (attacker: 1 | 2, hp1After: bigint, hp2After: bigint) => ({
     isMagic: false,
     elementMult: 100,
 });
-const battle = { mutate: vi.fn(), clearErrors: vi.fn(), isPending: false, isConfirming: false, error: null, hash: undefined as string | undefined, phase: null, liveReplay: null as null | { result: { firstWins: boolean }; log: unknown[]; startHp1: bigint; startHp2: bigint }, lifecycle: { phase: 'idle' } };
+const battle = { mutate: vi.fn(), clearErrors: vi.fn(), isPending: false, isConfirming: false, error: null, hash: undefined as string | undefined, phase: null, liveReplay: null as null | { result: { firstWins: boolean }; log: unknown[]; startHp1: bigint; startHp2: bigint }, lifecycle: { phase: 'idle' }, verifiedReceipt: null as null | { battleId: string; sequence: number; beacon: { round: number }; result: { rounds: number } }, checks: [] as { check: string; ok: boolean }[] };
 const taunts = { generate: vi.fn(), reset: vi.fn(), isLoading: false, turns: [] as unknown[] };
 const createRoom = vi.fn().mockResolvedValue(null);
 const refetchOpponents = vi.fn();
@@ -95,7 +95,7 @@ import { useBattlePanel } from '@hooks/battle/useBattlePanel';
 
 beforeEach(() => {
     vi.clearAllMocks();
-    Object.assign(battle, { isPending: false, isConfirming: false, error: null, hash: undefined, phase: null, liveReplay: null });
+    Object.assign(battle, { isPending: false, isConfirming: false, error: null, hash: undefined, phase: null, liveReplay: null, verifiedReceipt: null, checks: [] });
     Object.assign(taunts, { isLoading: false, turns: [] });
     mocks.locationState = null;
     mocks.params = {};
@@ -119,6 +119,21 @@ describe('useBattlePanel', () => {
         const { result } = renderHook(() => useBattlePanel({ isStandaloneView: false }));
         expect(result.current.overlay).toBeDefined();
         expect(result.current.setup).toBeDefined();
+    });
+
+    it('carves no Ledger Stone until a receipt has been checked', () => {
+        const { result } = renderHook(() => useBattlePanel({ isStandaloneView: false }));
+        expect(result.current.overlay.ledger).toBeNull();
+    });
+
+    it('hands the Ledger Stone the checks this browser ran and the receipt they cover', () => {
+        const checks = [{ check: 'combat-replay', ok: true }];
+        Object.assign(battle, {
+            verifiedReceipt: { battleId: 'b_9', sequence: 31, beacon: { round: 777 }, result: { rounds: 6 } },
+            checks,
+        });
+        const { result } = renderHook(() => useBattlePanel({ isStandaloneView: false }));
+        expect(result.current.overlay.ledger).toEqual({ battleId: 'b_9', sequence: 31, round: 777, rounds: 6, checks });
     });
 
     it('setup.battleDisabled is true when no fighter or opponent is selected', () => {

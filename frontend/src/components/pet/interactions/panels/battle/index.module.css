@@ -1277,27 +1277,38 @@
     flex-wrap: wrap;
 }
 
+/* Chunky game keys with a depth edge, like the game's other buttons. `--key` is the face,
+   `--key-edge` the darker side it stands on. */
 .resultDone,
-.resultReplay {
-    appearance: none;
-    border-radius: 2px;
-    padding: 11px 22px;
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0.6px;
-    text-transform: uppercase;
-    cursor: pointer;
-    transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
-}
+.resultReplay,
+.resultStone {
+    --key: linear-gradient(180deg, #8fe3ff, #2a9fd6);
+    --key-edge: #0f4a6e;
 
-.resultDone {
-    background: transparent;
-    border: 1px solid rgb(125 214 255 / 28%);
-    color: var(--cp-cyan);
+    appearance: none;
+    border: 0;
+    border-radius: 14px;
+    padding: 12px 22px;
+    font-family: var(--cp-display-font);
+    font-size: 13px;
+    font-weight: 400;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #fff;
+    text-shadow: 0 1px 0 rgb(0 0 0 / 35%);
+    background: var(--key);
+    box-shadow: inset 0 2px 0 rgb(255 255 255 / 35%), 0 5px 0 var(--key-edge), 0 10px 18px rgb(0 0 0 / 35%);
+    cursor: pointer;
+    transition: transform 0.12s var(--cp-ease-spring), box-shadow 0.12s ease;
 
     &:hover:not(:disabled) {
-        border-color: var(--cp-cyan);
-        box-shadow: 0 0 10px rgb(125 214 255 / 22%);
+        transform: translateY(-2px);
+        box-shadow: inset 0 2px 0 rgb(255 255 255 / 35%), 0 7px 0 var(--key-edge), 0 14px 22px rgb(0 0 0 / 40%);
+    }
+
+    &:active:not(:disabled) {
+        transform: translateY(4px);
+        box-shadow: inset 0 2px 0 rgb(255 255 255 / 35%), 0 1px 0 var(--key-edge);
     }
 
     &:disabled {
@@ -1307,14 +1318,16 @@
 }
 
 .resultReplay {
-    background: transparent;
-    border: 1px solid rgb(255 207 112 / 28%);
-    color: var(--cp-amber, #ffcf70);
+    --key: linear-gradient(180deg, #ffe08a, #ffad3b);
+    --key-edge: #8a4a12;
 
-    &:hover {
-        border-color: var(--cp-amber, #ffcf70);
-        box-shadow: 0 0 10px rgb(255 207 112 / 22%);
-    }
+    color: #2a1600;
+    text-shadow: none;
+}
+
+.resultStone {
+    --key: linear-gradient(180deg, #cfb3ff, #8a62ff);
+    --key-edge: #43278f;
 }
 
 /* battle-only keyframe, kept with its sole consumer. */

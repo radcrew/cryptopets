@@ -1,0 +1,228 @@
+/* CSS Module — class names are local; reference via `import styles from './index.module.css'`.
+   A carved stone tablet over the page: dark rock, an arched top, runes that light violet. */
+.veil {
+    position: fixed;
+    inset: 0;
+    z-index: var(--cp-z-modal);
+    display: grid;
+    place-items: center;
+    overflow-y: auto;
+    padding: 16px;
+    background: radial-gradient(circle at 50% 30%, rgb(181 140 255 / 20%), transparent 55%), rgb(3 4 14 / 78%);
+    backdrop-filter: blur(3px);
+    animation: fade 0.3s ease;
+}
+
+.tablet {
+    position: relative;
+    box-sizing: border-box;
+    width: min(520px, 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 30px 24px 22px;
+    border-radius: 120px 120px 18px 18px / 80px 80px 18px 18px;
+    text-align: center;
+    background: linear-gradient(170deg, #3a3f52, #1c1f2c 70%);
+    box-shadow: inset 0 0 50px rgb(0 0 0 / 60%), inset 0 2px 0 rgb(255 255 255 / 12%),
+        0 0 50px rgb(181 140 255 / 20%), 0 30px 60px rgb(0 0 0 / 60%);
+    animation: rise 0.45s var(--cp-ease-spring);
+}
+
+.close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 40px;
+    height: 40px;
+    border: 0;
+    border-radius: 50%;
+    background: rgb(8 10 28 / 85%);
+    box-shadow: inset 0 0 0 1px rgb(181 140 255 / 40%);
+    color: #c9cbe0;
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.close:hover {
+    color: #fff;
+    background: rgb(0 0 0 / 55%);
+}
+
+/* Lettering cut into the rock: a dark edge below, a faint light edge above. */
+.title {
+    margin: 0;
+    font: 700 clamp(17px, 3vw, 23px) var(--cp-lore-font);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    text-wrap: balance;
+    color: #e2e4ee;
+    text-shadow: 0 1px 0 #000, 0 -1px 0 rgb(255 255 255 / 10%);
+}
+
+.caption {
+    margin: 0;
+    font: 700 12.5px var(--cp-lore-font);
+    letter-spacing: 0.06em;
+    color: #a9aec2;
+}
+
+.runes {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: 100%;
+    margin: 6px 0 0;
+    padding: 0;
+    list-style: none;
+    text-align: left;
+}
+
+.rune {
+    display: grid;
+    grid-template-columns: 30px minmax(0, 1fr);
+    gap: 10px;
+    align-items: center;
+    padding: 6px 8px;
+    border-radius: 10px;
+    font: 700 14px var(--cp-lore-font);
+    color: #6e7386;
+    transition: color 0.3s ease, background 0.3s ease;
+}
+
+.rune small {
+    display: block;
+    font: 400 12.5px var(--cp-content-font);
+    letter-spacing: 0;
+    color: #6e7386;
+    overflow-wrap: anywhere;
+}
+
+.glyph {
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    border: 1px solid #555b70;
+    border-radius: 50%;
+    font: 700 13px var(--cp-lore-font);
+    color: #6e7386;
+}
+
+.lit {
+    color: #efeaff;
+    background: rgb(181 140 255 / 10%);
+}
+
+.lit small {
+    color: #b9b4d4;
+}
+
+.lit .glyph {
+    border-color: var(--cp-violet);
+    background: var(--cp-violet);
+    color: #10081f;
+    box-shadow: 0 0 16px var(--cp-violet);
+    animation: pop 0.4s var(--cp-ease-spring);
+}
+
+.cracked {
+    color: #ffd0d8;
+    background: rgb(255 92 122 / 12%);
+}
+
+.cracked small {
+    color: #ffb3c0;
+}
+
+.cracked .glyph {
+    border-color: #ff5c7a;
+    background: #ff5c7a;
+    box-shadow: 0 0 16px #ff5c7a;
+}
+
+.verdict {
+    display: grid;
+    place-items: center;
+    min-height: 44px;
+}
+
+.stamp {
+    font: 700 clamp(19px, 4vw, 28px) var(--cp-lore-font);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #efeaff;
+    text-shadow: 0 0 18px var(--cp-violet);
+    animation: stamp 0.5s var(--cp-ease-spring);
+}
+
+.stampCracked {
+    color: #ffd0d8;
+    text-shadow: 0 0 18px #ff5c7a;
+}
+
+.note {
+    max-width: 44ch;
+    margin: 4px 0 0;
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: #8b90a6;
+}
+
+.id {
+    margin: 0;
+    font-size: 11.5px;
+    color: #6e7386;
+}
+
+.id code {
+    user-select: all;
+    overflow-wrap: anywhere;
+    color: #a9aec2;
+}
+
+.srOnly {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
+
+@keyframes fade {
+    from {
+        opacity: 0;
+    }
+}
+
+@keyframes rise {
+    from {
+        opacity: 0;
+        transform: translateY(24px) scale(0.96);
+    }
+}
+
+@keyframes pop {
+    from {
+        transform: scale(0.4);
+    }
+}
+
+@keyframes stamp {
+    from {
+        opacity: 0;
+        transform: scale(1.8) rotate(-4deg);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .veil,
+    .tablet,
+    .lit .glyph,
+    .stamp {
+        animation: none;
+    }
+}

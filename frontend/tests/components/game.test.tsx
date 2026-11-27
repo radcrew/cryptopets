@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
@@ -12,6 +12,7 @@ vi.mock('@shared/core', () => ({ usePulseRound: () => pulse }));
 import { SoundProvider } from '@contexts/sound';
 import Celebration from '@components/game/celebration';
 import ComingSoon from '@components/game/coming-soon';
+import LedgerStone, { type LedgerRecord } from '@components/game/ledger-stone';
 import PulseMoment from '@components/game/pulse-moment';
 import ResultStamp from '@components/game/result-stamp';
 import StrikePop, { type StrikeCue } from '@components/game/strike-pop';
@@ -114,6 +115,59 @@ describe('ComingSoon', () => {
         // Inside an inert container: browsers make it unclickable and skip it for the keyboard and
         // screen readers. jsdom does not implement inert, so the attribute is what is checked.
         expect(screen.getByText('Climb').closest('[inert]')).not.toBeNull();
+    });
+});
+
+describe('LedgerStone', () => {
+    const record = (checks: LedgerRecord['checks']): LedgerRecord => ({
+        battleId: 'b_1',
+        sequence: 12,
+        round: 4242,
+        rounds: 7,
+        checks,
+    });
+    const passing = [
+        { check: 'operator-signature', ok: true },
+        { check: 'beacon-signature', ok: true },
+        { check: 'combat-replay', ok: true },
+    ];
+
+    // Reduced motion lights every rune at once, so the reading needs no timers here.
+    beforeEach(() => vi.stubGlobal('matchMedia', () => ({ matches: true })));
+    afterEach(() => vi.unstubAllGlobals());
+
+    it('carves the receipt and lights every passed check when read', async () => {
+        render(withSound(<LedgerStone record={record(passing)} caption="Rex vs Blaze · won in 7 rounds" />));
+        await userEvent.click(screen.getByRole('button', { name: '📜 Ledger Stone' }));
+
+        const stone = screen.getByRole('dialog', { name: 'Ledger Stone #12' });
+        expect(stone).toHaveTextContent('drand round #4,242');
+        expect(stone).not.toHaveTextContent('passed');
+
+        await userEvent.click(screen.getByRole('button', { name: 'Read the stone' }));
+        expect(screen.getByText('The stone holds true')).toBeInTheDocument();
+        expect(screen.getAllByText(': passed')).toHaveLength(3);
+        expect(play).toHaveBeenCalledWith('success');
+        // One receipt cannot check its own link to the one before, so the stone says who does.
+        expect(stone).toHaveTextContent('links to #11 before it is checked across the whole ledger');
+    });
+
+    it('shows why a check failed, and says the stone is cracked', async () => {
+        const failing = [...passing, { check: 'progression', ok: false, detail: 'xp 40 should be 32' }];
+        render(withSound(<LedgerStone record={record(failing)} caption="Rex vs Blaze" />));
+        await userEvent.click(screen.getByRole('button', { name: '📜 Ledger Stone' }));
+        await userEvent.click(screen.getByRole('button', { name: 'Read the stone' }));
+
+        expect(screen.getByText('xp 40 should be 32')).toBeInTheDocument();
+        expect(screen.getByText('The stone is cracked')).toBeInTheDocument();
+        expect(play).toHaveBeenCalledWith('error');
+    });
+
+    it('closes on Escape', async () => {
+        render(withSound(<LedgerStone record={record(passing)} caption="Rex vs Blaze" />));
+        await userEvent.click(screen.getByRole('button', { name: '📜 Ledger Stone' }));
+        await userEvent.keyboard('{Escape}');
+        expect(screen.queryByRole('dialog')).toBeNull();
     });
 });
 

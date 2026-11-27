@@ -18,6 +18,7 @@ import type { MechanicalLogLine } from '../types';
 import styles from '../index.module.css';
 import vsClashImage from '@assets/images/background/vs.png';
 import PetArt from '@components/pet/pet-art';
+import LedgerStone, { type LedgerRecord } from '@components/game/ledger-stone';
 import PulseMoment from '@components/game/pulse-moment';
 import ResultStamp from '@components/game/result-stamp';
 import StrikePop, { type StrikeCue } from '@components/game/strike-pop';
@@ -73,6 +74,8 @@ export type BattleOverlayProps = {
     awaitingPulse?: boolean;
     /** The strike playing now, popped over whichever pet took it. Same fallback rule as liveLog. */
     liveStrike?: (StrikeCue & { victim: 'fighter' | 'enemy' }) | null;
+    /** The verified receipt's checks, shown as the Ledger Stone on the result screen. */
+    ledger?: LedgerRecord | null;
 };
 
 /** Pet banter panel — the fighters' conversation, shown in the right-hand rail. */
@@ -244,6 +247,7 @@ const BattleOverlay: React.FC<BattleOverlayProps> = ({
     onWatchReplay,
     awaitingPulse = false,
     liveStrike = null,
+    ledger = null,
 }) => {
     if (!open) return null;
 
@@ -385,6 +389,13 @@ const BattleOverlay: React.FC<BattleOverlayProps> = ({
                                     <button type="button" className={styles.resultReplay} onClick={onWatchReplay}>
                                         🔁 Watch Again
                                     </button>
+                                ) : null}
+                                {ledger ? (
+                                    <LedgerStone
+                                        record={ledger}
+                                        caption={`${fighterName} vs ${opponentName} · ${isVictory ? 'won' : 'lost'} in ${ledger.rounds} ${ledger.rounds === 1 ? 'round' : 'rounds'}`}
+                                        triggerClassName={styles.resultStone}
+                                    />
                                 ) : null}
                                 <button
                                     type="button"
