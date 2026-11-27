@@ -164,6 +164,60 @@
     color: var(--cp-violet);
 }
 
+.soonPill {
+    margin-left: 6px;
+    padding: 1px 8px;
+    border-radius: 999px;
+    vertical-align: middle;
+    font-size: 9px;
+    color: #2a1600;
+    background: linear-gradient(180deg, #ffe08a, #ffad3b);
+}
+
+.questNote {
+    margin: -4px 0 10px;
+    font-size: 12px;
+    color: var(--cp-text-muted-dark);
+}
+
+/* The streak row: a flame per day, unlit ones faded. */
+.week {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 12px;
+}
+
+.week > span {
+    display: grid;
+    place-items: center;
+    gap: 2px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--cp-text-light-dark);
+    opacity: 0.4;
+}
+
+.week > .lit {
+    color: #ffd0b8;
+    opacity: 1;
+}
+
+.chest {
+    width: 100%;
+    margin-top: 12px;
+    padding: 9px;
+    border-radius: 12px;
+    border: 1px dashed rgb(255 210 90 / 45%);
+    background: rgb(255 210 90 / 6%);
+    color: var(--cp-amber);
+    font-size: 13px;
+    font-weight: 600;
+
+    &:disabled {
+        cursor: not-allowed;
+    }
+}
+
 .questList {
     list-style: none;
     margin: 0;

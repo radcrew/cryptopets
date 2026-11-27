@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { OpponentPet, Pet, ReadyPet } from '@shared/core';
 
@@ -104,23 +104,21 @@ describe('BattleSetup (fighter-vs-rival showdown)', () => {
             />,
         );
 
-        // PetSelect is a button plus a portalled listbox, not a native <select>: the
-        // options exist only once it is open, so `selectOptions` does not apply.
-        await userEvent.click(screen.getByRole('combobox', { name: 'Choose your fighter' }));
-        expect(await screen.findByRole('option', { name: /Alpha/ })).toBeInTheDocument();
-        expect(screen.getByRole('option', { name: /Beta/ })).toBeInTheDocument();
+        // The fighters are a roster of portraits, every one on screen: a radio group, not a menu.
+        const roster = screen.getByRole('radiogroup', { name: 'Choose your fighter' });
+        expect(within(roster).getByRole('radio', { name: /Alpha/ })).toBeInTheDocument();
         // The level rides beside the name rather than being folded into one string.
-        expect(screen.getAllByText('Lv 3')).toHaveLength(2);
+        expect(within(roster).getAllByText('Lv 3')).toHaveLength(2);
 
-        await userEvent.click(screen.getByRole('option', { name: /Beta/ }));
+        await userEvent.click(within(roster).getByRole('radio', { name: /Beta/ }));
         expect(onSelectFighter).toHaveBeenCalledWith('2');
     });
 
     it('prompts for a fighter when none are ready', () => {
         render(<BattleSetup {...baseProps({ readyPets: [] })} />);
-        // Appears both as the control's placeholder and the empty card label.
+        // Appears both as the roster's hint and the empty card label, with nothing to pick.
         expect(screen.getAllByText('No ready fighters').length).toBeGreaterThan(0);
-        expect(screen.getByRole('combobox', { name: 'Choose your fighter' })).toBeDisabled();
+        expect(screen.queryByRole('radiogroup', { name: 'Choose your fighter' })).toBeNull();
     });
 
     it('says the pets are loading rather than that there are none, while they load', () => {
@@ -138,8 +136,9 @@ describe('BattleSetup (fighter-vs-rival showdown)', () => {
                 })}
             />,
         );
-        expect(screen.getByText('Alpha')).toBeInTheDocument();
-        expect(screen.getByText('Foe o1')).toBeInTheDocument();
+        // Each stands on the arena floor and in its roster below: the card is the second copy.
+        expect(screen.getAllByText('Alpha')).toHaveLength(2);
+        expect(screen.getAllByText('Foe o1')).toHaveLength(2);
     });
 
     it('wires the Random and Refresh opponent controls', async () => {
@@ -163,14 +162,14 @@ describe('BattleSetup (fighter-vs-rival showdown)', () => {
         const onSelectOpponent = vi.fn();
         render(<BattleSetup {...baseProps({ onSelectOpponent })} />);
 
-        await userEvent.click(screen.getByRole('combobox', { name: 'Select an opponent' }));
-        await userEvent.click(await screen.findByRole('option', { name: /Foe o1/ }));
+        const rivals = screen.getByRole('radiogroup', { name: 'Select an opponent' });
+        await userEvent.click(within(rivals).getByRole('radio', { name: /Foe o1/ }));
         expect(onSelectOpponent).toHaveBeenCalledWith(opponentKey('0xF00d', 'o1'));
     });
 
-    it('disables the opponent control when the roster is empty', () => {
+    it('offers no rival to pick when the roster is empty', () => {
         render(<BattleSetup {...baseProps({ sortedOpponents: [] })} />);
-        expect(screen.getByRole('combobox', { name: 'Select an opponent' })).toBeDisabled();
+        expect(screen.queryByRole('radiogroup', { name: 'Select an opponent' })).toBeNull();
     });
 
     it('shows finding / empty states for the opponent roster', () => {

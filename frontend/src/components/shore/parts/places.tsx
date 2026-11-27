@@ -8,13 +8,14 @@ import {
     INVENTORY_PATH,
     LEADERBOARD_PATH,
     TEAM_BATTLE_PATH,
+    TOWER_PATH,
     TRAIN_PATH,
 } from '@constants/interactionRoutes';
-import { ArenaArt, BagArt, HallArt, NestArt, TeamCampArt, TrainingArt } from './place-art';
+import { ArenaArt, BagArt, HallArt, NestArt, TeamCampArt, TowerArt, TrainingArt } from './place-art';
 import styles from './places.module.css';
 
 type Place = {
-    id: 'hall' | 'arena' | 'team' | 'nest' | 'training' | 'bag';
+    id: 'hall' | 'tower' | 'arena' | 'team' | 'nest' | 'training' | 'bag';
     label: string;
     /** What the place opens, for screen readers; the drawn art carries no text. */
     opens: string;
@@ -24,8 +25,10 @@ type Place = {
     requiresTeamBattles?: boolean;
 };
 
-/** Each place is a door to a page that already exists; nothing here is a new feature. */
+/** Each place is a door to a page that already exists. The Tower is listed first so it
+ *  stands behind the places on the sand; its page is a preview of a planned mode. */
 const PLACES: readonly Place[] = [
+    { id: 'tower', label: 'Tower · soon', opens: 'a preview of the Tower', path: TOWER_PATH, Art: TowerArt },
     { id: 'hall', label: 'Hall of Champions', opens: 'the leaderboard', path: LEADERBOARD_PATH, Art: HallArt },
     { id: 'nest', label: 'Nest', opens: 'the Breeding Lab', path: BREED_PATH, Art: NestArt },
     { id: 'training', label: 'Training', opens: 'the Training Ground', path: TRAIN_PATH, Art: TrainingArt },

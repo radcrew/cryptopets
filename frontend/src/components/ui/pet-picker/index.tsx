@@ -21,6 +21,8 @@ export type PetPickerProps = {
     label: string;
     /** Shown when the player has no eligible pets. */
     emptyHint?: string;
+    /** A wrapping grid of portraits, or one scrolling strip, the roster along a game screen. */
+    layout?: 'grid' | 'strip';
 };
 
 /**
@@ -43,6 +45,7 @@ const PetPicker: React.FC<PetPickerProps> = ({
     disabled = false,
     label,
     emptyHint = 'No pets available',
+    layout = 'grid',
 }) => {
     const groupRef = useRef<HTMLDivElement>(null);
 
@@ -76,7 +79,7 @@ const PetPicker: React.FC<PetPickerProps> = ({
     return (
         <div
             ref={groupRef}
-            className={clsx(styles.grid, disabled && styles.disabled)}
+            className={clsx(styles.grid, layout === 'strip' && styles.strip, disabled && styles.disabled)}
             role="radiogroup"
             aria-label={label}
         >
@@ -92,6 +95,9 @@ const PetPicker: React.FC<PetPickerProps> = ({
                         // arrows move within it.
                         tabIndex={isSelected || (!value && option === pets[0]) ? 0 : -1}
                         className={clsx(styles.tile, isSelected && styles.isSelected)}
+                        // The ring takes the pet's rarity colour, keyed in CSS so the picker needs
+                        // nothing from @shared/core beyond the pet itself.
+                        data-rarity={option.pet.rarity}
                         disabled={disabled}
                         onClick={() => onChange(option.id)}
                         onKeyDown={onKeyDown}

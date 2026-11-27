@@ -1,0 +1,209 @@
+/* CSS Module — class names are local; reference via `import styles from './index.module.css'`. */
+.layout {
+    display: grid;
+    grid-template-columns: minmax(0, 240px) minmax(0, 460px) minmax(0, 240px);
+    justify-content: center;
+    align-items: start;
+    gap: 24px;
+}
+
+.side {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.card {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 14px 16px;
+    border-radius: 18px;
+    background: linear-gradient(170deg, #141a40, #0a0d24 70%);
+    box-shadow: 0 0 0 2px rgb(125 214 255 / 35%);
+}
+
+.ring {
+    display: grid;
+    place-items: center;
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    font-family: var(--cp-display-font);
+    font-size: 13px;
+    background: radial-gradient(circle, #141a40 60%, transparent 62%),
+        conic-gradient(var(--cp-cyan) 0 4%, #1d2a5a 4% 100%);
+}
+
+.big {
+    font-family: var(--cp-title-font);
+    font-size: 30px;
+    font-weight: 800;
+}
+
+.big small {
+    font-size: 14px;
+    color: var(--cp-text-muted-dark);
+}
+
+.muted {
+    margin: 0;
+    font-size: 13px;
+    color: var(--cp-text-muted-dark);
+}
+
+.heading {
+    width: 100%;
+    margin: 0 0 4px;
+    font-family: var(--cp-display-font);
+    font-size: 14px;
+    letter-spacing: 0.06em;
+    color: var(--cp-cyan);
+}
+
+.climb {
+    padding: 14px 18px;
+    border: 0;
+    border-radius: 16px;
+    font-family: var(--cp-display-font);
+    font-size: 17px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #08203a;
+    background: linear-gradient(180deg, #a6e6ff, #4fb4f0);
+    box-shadow: inset 0 -4px 0 rgb(0 0 0 / 18%), 0 6px 0 #1b5d8a;
+}
+
+.column {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.summit {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding-bottom: 6px;
+    text-align: center;
+}
+
+.summit b {
+    font-family: var(--cp-lore-font);
+    font-size: 14px;
+    letter-spacing: 0.1em;
+    color: #e6f7ff;
+}
+
+.summit small {
+    font-size: 12px;
+    color: var(--cp-text-muted-dark);
+}
+
+.crystal {
+    width: 34px;
+    height: 50px;
+    clip-path: polygon(50% 0, 100% 45%, 50% 100%, 0 45%);
+    background: linear-gradient(135deg, #fff, #a6e6ff 45%, #3a7ad9);
+    filter: drop-shadow(0 0 14px rgb(125 214 255 / 70%));
+    animation: float 2.6s ease-in-out infinite;
+}
+
+.gap,
+.base {
+    padding: 8px 0;
+    font-family: var(--cp-title-font);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--cp-text-light-dark);
+}
+
+/* Stone tiers, narrowing toward the top. */
+.crenel {
+    width: calc(100% - var(--i) * 12px + 8px);
+    height: 10px;
+    background: repeating-linear-gradient(90deg, #2b3678 0 14px, transparent 14px 24px);
+}
+
+.floor {
+    position: relative;
+    box-sizing: border-box;
+    width: calc(100% - var(--i) * 12px);
+    min-height: 62px;
+    display: grid;
+    grid-template-columns: 34px 48px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    background: linear-gradient(90deg, #161b45, #283371 50%, #141a40);
+    box-shadow: inset 0 -3px 0 rgb(0 0 0 / 35%);
+    filter: brightness(0.62) saturate(0.6);
+}
+
+.next {
+    z-index: 1;
+    filter: none;
+    background: linear-gradient(90deg, #17305e, #2f6fb0 50%, #17305e);
+    box-shadow: 0 0 0 2px var(--cp-cyan), 0 0 30px rgb(125 214 255 / 45%);
+}
+
+.number {
+    font-family: var(--cp-title-font);
+    font-size: 18px;
+    font-weight: 800;
+    text-align: center;
+    color: var(--cp-gold);
+}
+
+.warden {
+    display: grid;
+    place-items: center;
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    font-family: var(--cp-display-font);
+    font-size: 20px;
+    color: rgb(125 214 255 / 60%);
+    background: #050816;
+    box-shadow: 0 0 0 2px rgb(255 255 255 / 20%);
+}
+
+.info b {
+    display: block;
+    font-size: 15px;
+}
+
+.info small {
+    font-size: 12px;
+    color: var(--cp-text-muted-dark);
+}
+
+.reward {
+    font-family: var(--cp-title-font);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--cp-emerald);
+}
+
+.base {
+    width: calc(100% + 20px);
+    text-align: center;
+    border-radius: 0 0 50% 50% / 0 0 100% 100%;
+    background: linear-gradient(#141a40, #070918);
+}
+
+@media (max-width: 980px) {
+    .layout {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+@keyframes float {
+    50% {
+        transform: translateY(-4px);
+    }
+}

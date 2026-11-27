@@ -45,6 +45,55 @@ export const HallArt: React.FC = () => (
     </svg>
 );
 
+/** Stone tiers, narrowing to a spire, each with its own flag. */
+const TOWER_TIERS: [number, number, number, number, string][] = [
+    [26, 94, 236, 320, '#7dd6ff'],
+    [32, 88, 162, 228, '#b58cff'],
+    [38, 82, 98, 154, '#ff7bcb'],
+];
+const TOWER_WINDOWS = [[40, 256], [74, 256], [57, 276], [44, 180], [70, 180], [57, 200], [50, 116], [64, 116], [57, 134]];
+
+/** The Tower on the horizon: a planned mode, so it stands in the distance. */
+export const TowerArt: React.FC = () => (
+    <svg viewBox="0 0 120 320" preserveAspectRatio="xMidYMax meet" aria-hidden>
+        <path d="M0 320 Q60 294 120 320 Z" fill="#141a3e" />
+        {TOWER_TIERS.map(([x1, x2, y1, y2, flag], i) => (
+            <g key={y1}>
+                <rect x={x1} y={y1} width={x2 - x1} height={y2 - y1} fill="#202a62" stroke="#2c3a7a" />
+                <rect x={x1 - 4} y={y1 - 4} width={x2 - x1 + 8} height="5" fill="#33408a" />
+                {Array.from({ length: Math.floor((x2 - x1 + 8) / 10) }, (_, k) => (
+                    <rect key={k} x={x1 - 4 + k * 10} y={y1 - 10} width="6" height="6" fill="#33408a" />
+                ))}
+                <path d={`M${x2 + 2} ${y1 - 10} v-16`} stroke="#cfd6ee" strokeWidth="1.2" />
+                <path
+                    className={styles.flag}
+                    style={{ animationDelay: `-${i * 0.5}s` }}
+                    d={`M${x2 + 2} ${y1 - 26} l12 3 -12 4z`}
+                    fill={flag}
+                />
+            </g>
+        ))}
+        {TOWER_WINDOWS.map(([x, y], i) => (
+            <rect
+                key={i}
+                className={styles.window}
+                style={{ animationDelay: `-${(i * 0.7).toFixed(1)}s`, fill: '#ffcf70' }}
+                x={x - 3}
+                y={y}
+                width="6"
+                height="8"
+                rx="3"
+            />
+        ))}
+        <path d="M52 320 V302 a8 8 0 0 1 16 0 V320 Z" fill="#ffcf70" />
+        <path d="M42 92 L60 50 L78 92 Z" fill="#202a62" stroke="#2c3a7a" />
+        <g className={styles.float}>
+            <circle cx="60" cy="26" r="17" fill="#7dd6ff" fillOpacity=".22" />
+            <path d="M60 9 L69 26 L60 43 L51 26 Z" fill="#a6e6ff" stroke="#e6f7ff" strokeWidth=".8" />
+        </g>
+    </svg>
+);
+
 const ARENA_FLAGS = ['#ff7bcb', '#b58cff', '#ffd25a', '#7dd6ff', '#0fffae'];
 
 export const ArenaArt: React.FC = () => (

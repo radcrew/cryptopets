@@ -64,6 +64,15 @@
     aspect-ratio: 160 / 220;
 }
 
+/* On the far horizon, behind the team camp: a mode still to come. */
+.tower {
+    --tag: var(--cp-cyan);
+    right: 13%;
+    bottom: 44%;
+    width: clamp(64px, 7cqw, 104px);
+    aspect-ratio: 120 / 320;
+}
+
 .nest {
     --tag: var(--cp-amber);
     left: 17%;

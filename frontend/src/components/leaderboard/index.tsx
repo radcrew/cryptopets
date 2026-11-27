@@ -17,6 +17,7 @@ import Icon, { TrophyIcon } from '@components/ui/icon';
 import TabSwitch from '@components/ui/tab-switch';
 import { DASHBOARD_HOME } from '@constants/interactionRoutes';
 import { Tones } from '@constants/tones';
+import SeasonLeagues from './season-leagues';
 import styles from './index.module.css';
 
 /** Which ranking is showing. Pets is the default: it is the one with a pet in it. */
@@ -386,6 +387,8 @@ const Leaderboard: React.FC = () => {
                         />
                     </div>
                 )}
+
+                <SeasonLeagues />
             </DashboardPanel>
         </SessionGate>
     );

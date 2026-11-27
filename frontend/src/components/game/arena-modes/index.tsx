@@ -13,17 +13,15 @@ const MODES = [
 
 /**
  * The arena's mode switch: a duel or a team battle. Each mode is its own page, so this only
- * moves between them; it draws nothing while the backend does not accept team battles, when
- * there is only one mode to be in.
+ * moves between them; it draws no switch while the backend does not accept team battles, when
+ * there is only one mode to be in. Anything passed as children sits on the same row.
  */
-const ArenaModes: React.FC = () => {
+const ArenaModes: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
     const navigate = useNavigate();
     const { pathname } = useLocation();
     const { data: config } = useBattleConfig();
 
-    if (!config?.team?.enabled) return null;
-
-    return (
+    const modes = config?.team?.enabled ? (
         <nav className={styles.modes} aria-label="Battle mode">
             {MODES.map(({ path, label }) => {
                 const here = pathname === path || pathname.startsWith(`${path}/`);
@@ -40,6 +38,14 @@ const ArenaModes: React.FC = () => {
                 );
             })}
         </nav>
+    ) : null;
+
+    // The page's own controls share the row, so the switch costs no height of its own.
+    return (
+        <div className={styles.row}>
+            {children}
+            {modes}
+        </div>
     );
 };
 

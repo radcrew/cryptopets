@@ -63,6 +63,16 @@ describe('Dock More sheet', () => {
         expect(screen.getByRole('button', { name: 'Team Battle' })).toBeInTheDocument();
     });
 
+    it('tags a planned mode Soon but still opens its preview', async () => {
+        renderDock();
+        await openSheet();
+        const tower = screen.getByRole('button', { name: /The Tower/ });
+        expect(tower).toHaveTextContent('Soon');
+        expect(tower).toBeEnabled();
+        await userEvent.click(tower);
+        expect(screen.getByText('at /tower')).toBeInTheDocument();
+    });
+
     it('closes on arrival and on Escape', async () => {
         renderDock();
         await openSheet();

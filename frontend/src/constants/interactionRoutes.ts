@@ -66,6 +66,9 @@ export const DASHBOARD_HOME = '/main';
 /** The player's pet collection (the gallery). */
 export const PETS_PATH = '/pets';
 
+/** A preview of the planned Tower mode. */
+export const TOWER_PATH = '/tower';
+
 /** Top-level interaction routes (e.g. /breed) — interaction UI only. */
 export const BREED_PATH = '/breed';
 export const BATTLE_PATH = '/battle';

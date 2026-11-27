@@ -86,7 +86,11 @@ describe('Hud controls', () => {
     it('opens the daily quests scroll and closes it on Escape', async () => {
         renderHud();
         await userEvent.click(screen.getByRole('button', { name: 'Daily quests' }));
-        expect(screen.getByRole('dialog', { name: 'Daily quests' })).toHaveTextContent('Breed a new pet');
+        const panel = screen.getByRole('dialog', { name: 'Daily quests' });
+        expect(panel).toHaveTextContent('Breed a new pet');
+        // A preview: it says so, and its chest cannot be opened.
+        expect(panel).toHaveTextContent('Coming soon');
+        expect(screen.getByRole('button', { name: /Daily chest/ })).toBeDisabled();
 
         await userEvent.keyboard('{Escape}');
         expect(screen.queryByRole('dialog', { name: 'Daily quests' })).toBeNull();

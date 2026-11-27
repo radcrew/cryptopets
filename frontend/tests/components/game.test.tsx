@@ -11,6 +11,7 @@ vi.mock('@shared/core', () => ({ usePulseRound: () => pulse }));
 
 import { SoundProvider } from '@contexts/sound';
 import Celebration from '@components/game/celebration';
+import ComingSoon from '@components/game/coming-soon';
 import PulseMoment from '@components/game/pulse-moment';
 import ResultStamp from '@components/game/result-stamp';
 import StrikePop, { type StrikeCue } from '@components/game/strike-pop';
@@ -99,6 +100,20 @@ describe('Celebration', () => {
         render(withSound(<Celebration intro="egg" title="It hatched!" sound="hatch" onClose={onClose} />));
         await userEvent.keyboard('{Escape}');
         expect(onClose).toHaveBeenCalled();
+    });
+});
+
+describe('ComingSoon', () => {
+    it('labels a preview and keeps its mock controls out of reach', () => {
+        render(
+            <ComingSoon note="Climb fifty floors.">
+                <button type="button">Climb</button>
+            </ComingSoon>,
+        );
+        expect(screen.getByRole('region', { name: 'Coming soon: Climb fifty floors.' })).toHaveTextContent('Coming soon');
+        // Inside an inert container: browsers make it unclickable and skip it for the keyboard and
+        // screen readers. jsdom does not implement inert, so the attribute is what is checked.
+        expect(screen.getByText('Climb').closest('[inert]')).not.toBeNull();
     });
 });
 

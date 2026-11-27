@@ -24,7 +24,7 @@ import Icon, { BattleIcon } from '@components/ui/icon';
 import styles from '../index.module.css';
 import PetArt from '@components/pet/pet-art';
 import EquippedBadges from '@components/pet/equipped-badges';
-import PetSelect from '@components/ui/pet-select';
+import PetPicker from '@components/ui/pet-picker';
 
 export type BattleSetupProps = {
     isStandaloneView: boolean;
@@ -173,7 +173,11 @@ const CombatantCard: React.FC<{
     );
 };
 
-/** The battle setup screen: a fighter-vs-rival showdown with selection controls. */
+/**
+ * The battle setup screen, laid out like the arena in the game-feel prototype: the two
+ * combatants face off on the floor with the win chance between them, and below them the
+ * two rosters to pick from, as portraits rather than dropdowns, then the fight key.
+ */
 const BattleSetup: React.FC<BattleSetupProps> = ({
     isStandaloneView,
     subtitle,
@@ -256,24 +260,6 @@ const BattleSetup: React.FC<BattleSetupProps> = ({
                 {/* Your fighter */}
                 <div className={clsx(styles.combatantCol, styles.combatantColFighter)}>
                     <div className={styles.combatantColLabel}>Your Fighter</div>
-                    <div className={styles.combatantSelect}>
-                        <div className={styles.combatantSelectField}>
-                            <PetSelect
-                                label="Choose your fighter"
-                                pets={readyPets}
-                                value={selectedPet1}
-                                onChange={onSelectFighter}
-                                placeholder={
-                                    petsLoading
-                                        ? 'Loading your pets…'
-                                        : readyPets.length === 0
-                                        ? 'No ready fighters'
-                                        : 'Choose your fighter…'
-                                }
-                                disabled={readyPets.length === 0}
-                            />
-                        </div>
-                    </div>
                     <CombatantCard
                         pet={selectedFighter}
                         side="fighter"
@@ -309,21 +295,37 @@ const BattleSetup: React.FC<BattleSetupProps> = ({
                 {/* On-chain rival */}
                 <div className={clsx(styles.combatantCol, styles.combatantColRival)}>
                     <div className={styles.combatantColLabel}>On-Chain Rival</div>
-                    <div className={styles.combatantSelect}>
-                        <div className={styles.combatantSelectField}>
-                            <PetSelect
-                                label="Select an opponent"
-                                pets={opponentOptions}
-                                value={selectedOpponentKey}
-                                onChange={onSelectOpponent}
-                                placeholder={opponentEmpty}
-                                disabled={sortedOpponents.length === 0}
-                                accent="var(--cp-magenta)"
-                            />
-                        </div>
+                    <CombatantCard
+                        pet={opponent ?? null}
+                        side="rival"
+                        emptyLabel={opponentEmpty}
+                        owner={opponent ? shortAddress(opponent.owner) : undefined}
+                        equipped={opponent ? equippedByPet.get(String(opponent.id)) : undefined}
+                    />
+                </div>
+            </div>
+
+            {/* The rosters: your ready pets, and the rivals open to a challenge. */}
+            <div className={styles.rosters}>
+                <section className={styles.roster} aria-label="Your fighters">
+                    <div className={styles.rosterHead}>
+                        <span>Pick your fighter</span>
+                    </div>
+                    <PetPicker
+                        layout="strip"
+                        label="Choose your fighter"
+                        pets={readyPets}
+                        value={selectedPet1}
+                        onChange={onSelectFighter}
+                        emptyHint={petsLoading ? 'Loading your pets…' : 'No ready fighters'}
+                    />
+                </section>
+                <section className={clsx(styles.roster, styles.rosterRival)} aria-label="Rivals">
+                    <div className={styles.rosterHead}>
+                        <span>Pick a rival</span>
                         <button
                             type="button"
-                            className={styles.combatantSelectBtn}
+                            className={styles.rosterKey}
                             onClick={onRandomMatch}
                             disabled={randomMatchDisabled}
                             title={
@@ -336,21 +338,22 @@ const BattleSetup: React.FC<BattleSetupProps> = ({
                         </button>
                         <button
                             type="button"
-                            className={styles.combatantSelectBtn}
+                            className={styles.rosterKey}
                             onClick={onRefreshOpponents}
                             disabled={opponentsLoading}
                         >
                             {opponentsLoading ? '…' : 'Refresh'}
                         </button>
                     </div>
-                    <CombatantCard
-                        pet={opponent ?? null}
-                        side="rival"
-                        emptyLabel={opponentEmpty}
-                        owner={opponent ? shortAddress(opponent.owner) : undefined}
-                        equipped={opponent ? equippedByPet.get(String(opponent.id)) : undefined}
+                    <PetPicker
+                        layout="strip"
+                        label="Select an opponent"
+                        pets={opponentOptions}
+                        value={selectedOpponentKey}
+                        onChange={onSelectOpponent}
+                        emptyHint={opponentEmpty}
                     />
-                </div>
+                </section>
             </div>
 
             <div className={styles.actions}>

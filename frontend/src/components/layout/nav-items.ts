@@ -8,6 +8,7 @@ import {
     MESSAGES_PATH,
     MARRIAGE_PATH,
     PETS_PATH,
+    TOWER_PATH,
     RENAME_PATH,
     TEAM_BATTLE_PATH,
     TRAIN_PATH,
@@ -23,6 +24,7 @@ import marriageIcon from '@assets/nav-icons/marriage.svg';
 import renameIcon from '@assets/nav-icons/rename.svg';
 import messagesIcon from '@assets/nav-icons/messages.svg';
 import leaderboardIcon from '@assets/nav-icons/leaderboard.svg';
+import towerIcon from '@assets/nav-icons/tower.svg';
 
 export type NavItem = {
     id: string;
@@ -41,6 +43,11 @@ export type NavItem = {
      * behind it (crates, marketplace, quests) and the More sheet already knows how to draw one.
      */
     deferred?: boolean;
+    /**
+     * A planned feature with a preview page: tagged "Soon" but still opens, so a player can
+     * see what is coming. Unlike `deferred`, which has nothing to open.
+     */
+    soon?: boolean;
     /** Shown only while the backend accepts team battles, so a switched-off feature has no door. */
     requiresTeamBattles?: boolean;
 };
@@ -82,4 +89,5 @@ export const NAV_ITEMS: readonly NavItem[] = [
         tone: 'amber',
         path: LEADERBOARD_PATH,
     },
+    { id: 'tower', label: 'The Tower', iconSrc: towerIcon, tone: 'cyan', path: TOWER_PATH, soon: true },
 ];

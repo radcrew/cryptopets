@@ -1,0 +1,52 @@
+/* CSS Module — class names are local; reference via `import styles from './season-leagues.module.css'`. */
+.leagues {
+    flex-shrink: 0;
+    margin-top: 16px;
+}
+
+.row {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.league {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 10px 4px;
+    border-radius: 14px;
+    background: rgb(255 255 255 / 4%);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--tone) 45%, transparent);
+    text-align: center;
+}
+
+.league svg {
+    width: 34px;
+    height: 34px;
+    filter: drop-shadow(0 0 8px var(--tone));
+}
+
+.league b {
+    font-size: 13px;
+}
+
+.league small {
+    font-family: var(--cp-title-font);
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--cp-text-light-dark);
+}
+
+.points {
+    margin: 10px 0 0;
+    font-size: 13px;
+    color: var(--cp-text-muted-dark);
+}
+
+@media (max-width: 560px) {
+    .row {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}

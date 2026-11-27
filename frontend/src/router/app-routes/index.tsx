@@ -8,6 +8,7 @@ import RouteLayout from '@components/layout/route-layout';
 // of everyone else's first-load bundle.
 const HomePage = lazy(() => import('@pages/home'));
 const PetsPage = lazy(() => import('@pages/pets'));
+const TowerPage = lazy(() => import('@pages/tower'));
 const BreedPage = lazy(() => import('@pages/breed'));
 const BattlePage = lazy(() => import('@pages/battle'));
 const TeamBattlePage = lazy(() => import('@pages/team-battle'));
@@ -36,6 +37,7 @@ const AppRoutes: React.FC = () => {
                 <Route element={<RouteLayout />}>
                     <Route path="/main" element={<HomePage />} />
                     <Route path="/pets" element={<PetsPage />} />
+                    <Route path="/tower" element={<TowerPage />} />
                     <Route path="/breed" element={<BreedPage />} />
                     {/* :roomId is optional — set once Start Battle mints a room id
                         (see useBattlePanel's handleBattle), same page either way. */}

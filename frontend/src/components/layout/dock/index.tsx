@@ -99,7 +99,7 @@ const Dock: React.FC = () => {
                                     <img src={item.iconSrc} alt="" width={26} height={26} />
                                 </span>
                                 <span>{item.label}</span>
-                                {item.deferred && <span className={styles.soon}>Soon</span>}
+                                {(item.deferred || item.soon) && <span className={styles.soon}>Soon</span>}
                             </button>
                         );
                     })}

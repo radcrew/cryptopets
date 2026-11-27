@@ -30,8 +30,9 @@ const BattlePage: React.FC = () => {
 
     return (
         <InteractionStandalone action="battle" minPets={1} showWhileLoading>
-            <ArenaModes />
-            <TabSwitch<TabId> options={TABS} value={tab} onChange={setTab} label="Battle arena" tone="magenta" />
+            <ArenaModes>
+                <TabSwitch<TabId> options={TABS} value={tab} onChange={setTab} label="Battle arena" tone="magenta" />
+            </ArenaModes>
 
             {/* Unmounted rather than hidden. The battle panel owns a multi-step state machine
                 and a live room socket; leaving it mounted behind the defence tab would keep

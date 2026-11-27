@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none">
+  <defs>
+    <linearGradient id="t-stone" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#3a4aa0"/>
+      <stop offset=".5" stop-color="#6b80e0"/>
+      <stop offset="1" stop-color="#2a3580"/>
+    </linearGradient>
+    <linearGradient id="t-crystal" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset=".45" stop-color="#a6e6ff"/>
+      <stop offset="1" stop-color="#3a7ad9"/>
+    </linearGradient>
+  </defs>
+  <circle cx="24" cy="8" r="7" fill="#a6e6ff" opacity=".3"/>
+  <path d="M24 1.5 L28 7.5 L24 13.5 L20 7.5 Z" fill="url(#t-crystal)" stroke="#fff" stroke-width=".7"/>
+  <path d="M14 18 V13 H18 V15 H22 V13 H26 V15 H30 V13 H34 V18 Z" fill="#7d90f0"/>
+  <rect x="16" y="18" width="16" height="25" fill="url(#t-stone)" stroke="#1c2350"/>
+  <path d="M16 26 H32 M16 34 H32" stroke="#000" stroke-opacity=".25"/>
+  <rect x="22" y="21" width="4" height="4" rx="1" fill="#ffcf70"/>
+  <rect x="22" y="29" width="4" height="4" rx="1" fill="#ffcf70"/>
+  <path d="M21 43 V39 a3 3 0 0 1 6 0 V43 Z" fill="#ffcf70"/>
+  <path d="M10 43 H38 L35 46 H13 Z" fill="#2a2f5a"/>
+</svg>

@@ -10,13 +10,18 @@ import styles from './index.module.css';
 
 /**
  * Placeholder daily quests, pending real quest data (they moved here from the old sidebar
- * unchanged). The numbers are illustrative, not the player's progress.
+ * unchanged). The numbers are illustrative, not the player's progress, and the panel says the
+ * feature is coming soon.
  */
 const QUESTS = [
     { label: '⚔ Win 3 battles', reward: '+50 XP', progress: 100 },
     { label: '💪 Train a pet', reward: '+25 XP', progress: 100 },
     { label: '🥚 Breed a new pet', reward: '+100 XP', progress: 0 },
 ] as const;
+
+/** The week, for the streak row; the lit days are illustrative, like the streak chip. */
+const WEEK = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+const SAMPLE_STREAK = 3;
 
 /**
  * The player's plate: who they are and where they stand on the leaderboard.
@@ -80,7 +85,12 @@ const Quests: React.FC = () => {
             </button>
             {open && (
                 <div className={styles.questPanel} role="dialog" aria-label="Daily quests">
-                    <div className={styles.questTitle}>Daily quests</div>
+                    <div className={styles.questTitle}>
+                        Daily quests <span className={styles.soonPill}>Coming soon</span>
+                    </div>
+                    <p className={styles.questNote}>
+                        Fresh quests every day, a streak to keep, and a chest for finishing all three.
+                    </p>
                     <ul className={styles.questList}>
                         {QUESTS.map((q) => (
                             <li key={q.label}>
@@ -94,6 +104,17 @@ const Quests: React.FC = () => {
                             </li>
                         ))}
                     </ul>
+                    <div className={styles.week} aria-label="Day streak, a preview">
+                        {WEEK.map((day, i) => (
+                            <span key={i} className={i < SAMPLE_STREAK ? styles.lit : undefined}>
+                                <span aria-hidden>🔥</span>
+                                {day}
+                            </span>
+                        ))}
+                    </div>
+                    <button type="button" className={styles.chest} disabled>
+                        🎁 Daily chest · finish all three
+                    </button>
                 </div>
             )}
         </div>
