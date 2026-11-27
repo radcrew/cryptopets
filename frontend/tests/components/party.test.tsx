@@ -67,9 +67,9 @@ const Harness = () => {
     );
 };
 
-const renderParty = () =>
+const renderParty = (path = '/main') =>
     render(
-        <MemoryRouter initialEntries={['/main']}>
+        <MemoryRouter initialEntries={[path]}>
             <PartyProvider>
                 <Routes>
                     <Route path="*" element={<Harness />} />
@@ -124,6 +124,17 @@ describe("A pet's sheet", () => {
 
     it('opens each action page with the pet already chosen, and closes on arrival', async () => {
         renderParty();
+        await userEvent.click(screen.getByRole('button', { name: 'open Sparring' }));
+        await userEvent.click(screen.getByRole('button', { name: /Train/ }));
+
+        expect(screen.getByText('at /train with 2')).toBeInTheDocument();
+        expect(screen.queryByRole('dialog')).toBeNull();
+    });
+
+    // Opened from the dock over the Training Ground itself, the path does not change, so the
+    // sheet cannot wait for a route change to close.
+    it('closes when its action leads to the page it was opened over', async () => {
+        renderParty('/train');
         await userEvent.click(screen.getByRole('button', { name: 'open Sparring' }));
         await userEvent.click(screen.getByRole('button', { name: /Train/ }));
 

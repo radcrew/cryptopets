@@ -92,7 +92,12 @@ const PetSheet: React.FC<{ petId: string; onClose: () => void; onBack?: () => vo
         return () => window.removeEventListener('keydown', onKey);
     }, [overlay]);
 
-    const go = (path: string) => navigate(path, { state: { petId } });
+    // Closes itself rather than waiting for the route to change: opened over the page it
+    // leads to, the path stays the same and only the handed-over pet changes.
+    const go = (path: string) => {
+        navigate(path, { state: { petId } });
+        onClose();
+    };
 
     const body = !pet ? (
         <div className={styles.gone}>

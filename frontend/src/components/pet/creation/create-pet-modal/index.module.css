@@ -18,21 +18,33 @@
         gap: var(--cp-spacing-lg);
     }
 
-    /* Square, because the generated art is square: a portrait frame of any other
-       ratio would crop the one image the player opened this dialog to see. */
+    /* The summoning circle: a round portal glowing violet, a ring of gold runes turning
+       inside it, and the new pet's art fading in over both once it is summoned. */
     .portrait {
         position: relative;
         align-self: center;
-        width: 168px;
+        width: 176px;
         aspect-ratio: 1;
         display: grid;
         place-items: center;
         overflow: hidden;
-        border: 1px solid rgb(125 214 255 / 24%);
-        border-radius: 10px;
-        background:
-            radial-gradient(circle at 30% 30%, rgb(181 140 255 / 16%), transparent 60%),
-            rgb(4 10 26 / 96%);
+        border-radius: 50%;
+        background: radial-gradient(circle, rgb(181 140 255 / 30%), rgb(10 13 36) 72%);
+        box-shadow: 0 0 0 3px rgb(181 140 255 / 70%), 0 0 40px rgb(181 140 255 / 45%),
+            inset 0 0 30px rgb(181 140 255 / 35%);
+    }
+
+    .portrait::before {
+        content: '';
+        position: absolute;
+        inset: 10px;
+        border-radius: 50%;
+        border: 2px dashed rgb(255 207 112 / 60%);
+        animation: summon-turn 18s linear infinite;
+    }
+
+    .portrait > * {
+        z-index: 1;
     }
 
     .portraitImg {
@@ -42,21 +54,24 @@
         height: 100%;
         object-fit: cover;
 
+        border-radius: 50%;
+
         /* Faded in rather than swapped: the art can arrive at any point across a
            two-minute wait, and a hard cut reads as a glitch. */
         transition: opacity 0.4s ease;
     }
 
     .portraitMark {
-        font-size: 56px;
-        font-weight: 700;
+        font: 400 56px var(--cp-display-font);
         line-height: 1;
-        color: rgb(125 214 255 / 32%);
+        color: rgb(255 233 179 / 70%);
+        text-shadow: 0 0 22px rgb(181 140 255 / 80%);
     }
 
     .portraitHint {
         position: absolute;
-        bottom: 9px;
+        /* Up from the bottom, where a circle is narrow enough to clip a line of text. */
+        bottom: 30px;
         font-size: 10px;
         font-weight: 600;
         letter-spacing: 0.6px;
@@ -110,5 +125,17 @@
                 font-size: var(--cp-font-size-sm);
             }
         }
+    }
+}
+
+@keyframes summon-turn {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .createPetBody .portrait::before {
+        animation: none;
     }
 }
