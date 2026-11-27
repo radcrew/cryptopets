@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 // jsdom has no Web Audio, so the synth is a spy: these tests are about which cue plays when.
@@ -16,6 +16,7 @@ import LedgerStone, { type LedgerRecord } from '@components/game/ledger-stone';
 import PulseMoment from '@components/game/pulse-moment';
 import ResultStamp from '@components/game/result-stamp';
 import StrikePop, { type StrikeCue } from '@components/game/strike-pop';
+import TitleScreen from '@components/game/title-screen';
 import { strikeLabel } from '@components/game/strike-pop/label';
 
 const withSound = (ui: React.ReactNode) => <SoundProvider>{ui}</SoundProvider>;
@@ -167,6 +168,38 @@ describe('LedgerStone', () => {
         render(withSound(<LedgerStone record={record(passing)} caption="Rex vs Blaze" />));
         await userEvent.click(screen.getByRole('button', { name: '📜 Ledger Stone' }));
         await userEvent.keyboard('{Escape}');
+        expect(screen.queryByRole('dialog')).toBeNull();
+    });
+});
+
+describe('TitleScreen', () => {
+    beforeEach(() => sessionStorage.clear());
+
+    it('greets the first visit, and the tap that enters starts the sound', async () => {
+        render(withSound(<TitleScreen />));
+        const title = screen.getByRole('dialog', { name: 'Crypto Pets' });
+        expect(title).toHaveTextContent('The Quiet Shore');
+
+        await userEvent.click(screen.getByRole('button', { name: 'Tap to enter the Quiet Shore' }));
+        expect(play).toHaveBeenCalledWith('levelUp');
+        await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    });
+
+    it('enters on Enter too, with no focus ring drawn on the logo first', async () => {
+        render(withSound(<TitleScreen />));
+        expect(screen.getByRole('dialog', { name: 'Crypto Pets' })).toHaveFocus();
+
+        await userEvent.keyboard('{Enter}');
+        expect(play).toHaveBeenCalledWith('levelUp');
+        await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    });
+
+    it('stays away for the rest of the session once entered', async () => {
+        const { unmount } = render(withSound(<TitleScreen />));
+        await userEvent.click(screen.getByRole('button', { name: 'Tap to enter the Quiet Shore' }));
+        unmount();
+
+        render(withSound(<TitleScreen />));
         expect(screen.queryByRole('dialog')).toBeNull();
     });
 });

@@ -1,0 +1,131 @@
+/* CSS Module — class names are local; reference via `import styles from './index.module.css'`.
+   The title screen: a violet glow over a night sky, the bobbing logo, and a blinking prompt. */
+.title {
+    position: fixed;
+    inset: 0;
+    z-index: var(--cp-z-modal);
+    display: grid;
+    grid-template-rows: 1fr auto;
+    place-items: center;
+    padding: 16px 16px calc(env(safe-area-inset-bottom, 0px) + 20px);
+    overflow: hidden;
+    text-align: center;
+    background: radial-gradient(circle at 50% 35%, rgb(181 140 255 / 35%), transparent 50%),
+        linear-gradient(180deg, #070a1f, #1d1145 60%, #2b1450);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+/* Focused on load only so keys reach it; the prompt already says what to do. */
+.title:focus {
+    outline: none;
+}
+
+.leaving {
+    opacity: 0;
+    transform: scale(1.06);
+    pointer-events: none;
+}
+
+.sky {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+.star {
+    position: absolute;
+    width: 2px;
+    height: 2px;
+    border-radius: 50%;
+    background: #fff;
+    opacity: 0.5;
+    animation: twinkle 3s ease-in-out infinite;
+}
+
+/* The whole middle of the screen is the key, so a tap anywhere near the name enters. */
+.enter {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 16px;
+    border: 0;
+    border-radius: 24px;
+    background: none;
+    color: inherit;
+    cursor: pointer;
+}
+
+.enter:focus-visible {
+    outline: 3px solid var(--cp-cyan);
+    outline-offset: 6px;
+}
+
+.logo {
+    font: 400 clamp(52px, 13vw, 128px) / 0.95 var(--cp-display-font);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    background: linear-gradient(180deg, #fff, #a6e6ff 40%, #b58cff 70%, #ff7bcb);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    filter: drop-shadow(0 6px 0 #2a1050) drop-shadow(0 0 30px rgb(181 140 255 / 60%));
+    animation: bob 3s ease-in-out infinite;
+}
+
+.tagline {
+    margin-top: 12px;
+    font: 700 clamp(15px, 2.4vw, 22px) var(--cp-lore-font);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: #e2d8ff;
+}
+
+.tap {
+    margin-top: clamp(28px, 6vh, 56px);
+    font: 400 clamp(13px, 1.8vw, 16px) var(--cp-display-font);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #fff;
+    text-shadow: 0 0 14px rgb(125 214 255 / 70%);
+    animation: blink 1.6s ease-in-out infinite;
+}
+
+.note {
+    position: relative;
+    max-width: 40ch;
+    margin: 0;
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: #9a93c0;
+}
+
+@keyframes bob {
+    50% {
+        transform: translateY(-8px) rotate(-1deg);
+    }
+}
+
+@keyframes blink {
+    50% {
+        opacity: 0.35;
+    }
+}
+
+@keyframes twinkle {
+    50% {
+        opacity: 1;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .title {
+        transition: none;
+    }
+
+    .logo,
+    .tap,
+    .star {
+        animation: none;
+    }
+}
