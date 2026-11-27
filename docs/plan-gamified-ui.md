@@ -31,4 +31,5 @@ while every existing feature keeps working. The reference is the clickable game-
 ## Status
 
 - Phase 1: done on `feat/gamified-ui`. Every route checked visually at desktop width.
-- Phases 2 to 5: not started.
+- Phase 2: done. The Shore sits above the gallery on `/main`. Its size follows the scene's own width through a container query, because a pinned sidebar makes the scene far narrower than the window. Below 820px of scene width only the Hall, Nest and Arena are drawn; the other doors stay in the sidebar. Only the Battle Arena accepts a preselected pet today, so a pet's card offers Battle and nothing else.
+- Phases 3 to 5: not started.

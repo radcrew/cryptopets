@@ -131,6 +131,8 @@ export {
 export { useCreateBattleRoom, type CreateRoomVars } from './battle/useCreateBattleRoom';
 // Backend-authoritative battles (docs/battle-protocol.md §D, §E, §J).
 export { BATTLE_CONFIG_QUERY_KEY, useBattleConfig, type BattleConfig } from './battle/useBattleConfig';
+// The drand beat battles are seeded from, for clients to display. Reads the clock, fetches nothing.
+export { usePulseRound, type PulseRound } from './battle/usePulseRound';
 export { useBattleMode, type BattleMode, type BattleModeState } from './battle/useBattleMode';
 export {
     type BattleSession,

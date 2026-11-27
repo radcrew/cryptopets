@@ -1,0 +1,174 @@
+/* CSS Module — class names are local; reference via `import styles from './pulse-orb.module.css'`. */
+.pulse {
+    position: absolute;
+    left: 50%;
+    top: 5%;
+    width: clamp(96px, 13cqw, 150px);
+    aspect-ratio: 1;
+    transform: translateX(-50%);
+    z-index: 2;
+}
+
+.halo {
+    position: absolute;
+    inset: -45%;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgb(181 140 255 / 38%), rgb(125 214 255 / 12%) 42%, transparent 68%);
+    animation: breathe 3s ease-in-out infinite;
+    pointer-events: none;
+}
+
+.rings {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+}
+
+.ringSlow {
+    transform-origin: 100px 100px;
+    animation: spin 70s linear infinite;
+}
+
+.ringFast {
+    transform-origin: 100px 100px;
+    animation: spin 26s linear infinite reverse;
+}
+
+.runes {
+    font-family: var(--cp-lore-font);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    fill: rgb(231 220 255 / 80%);
+}
+
+/* Drains over one beat; remounted each round, so it always shows time to the next beat. */
+.countdown {
+    stroke: #e7dcff;
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    stroke-dasharray: 100;
+    filter: drop-shadow(0 0 4px #b58cff);
+    animation: drain 3s linear forwards;
+}
+
+.core {
+    position: absolute;
+    inset: 22%;
+    border-radius: 50%;
+    overflow: hidden;
+    background: radial-gradient(circle at 36% 30%, #fff 0 6%, #efe6ff 14%, #c3a2ff 34%, #7c4fe0 62%, #2a1670 100%);
+    box-shadow: 0 0 40px 10px rgb(181 140 255 / 55%), 0 0 110px 34px rgb(125 214 255 / 16%),
+        inset -8px -10px 24px rgb(20 0 60 / 60%);
+    animation: beat 0.9s ease-out;
+}
+
+.swirl {
+    position: absolute;
+    inset: -35%;
+    background: conic-gradient(
+        from 0deg,
+        transparent 0 18%,
+        rgb(125 214 255 / 60%) 28%,
+        transparent 40% 58%,
+        rgb(255 123 203 / 50%) 70%,
+        transparent 84%
+    );
+    mix-blend-mode: screen;
+    filter: blur(5px);
+    animation: spin 7s linear infinite;
+}
+
+.shine {
+    position: absolute;
+    left: 16%;
+    top: 10%;
+    width: 36%;
+    height: 22%;
+    border-radius: 50%;
+    background: radial-gradient(ellipse, rgb(255 255 255 / 90%), transparent 70%);
+    transform: rotate(-24deg);
+}
+
+.wave {
+    position: absolute;
+    inset: 22%;
+    border-radius: 50%;
+    border: 2px solid rgb(220 200 255 / 90%);
+    opacity: 0;
+    pointer-events: none;
+    animation: shockwave 1.6s ease-out;
+}
+
+.plaque {
+    position: absolute;
+    left: 50%;
+    top: calc(100% + 4px);
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-family: var(--cp-title-font);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    color: #cdbdff;
+    text-shadow: 0 0 8px rgb(181 140 255 / 80%);
+    white-space: nowrap;
+}
+
+.plaque b {
+    font-size: 11px;
+    color: #fff;
+    letter-spacing: 0.08em;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes breathe {
+    50% {
+        transform: scale(1.08);
+        opacity: 0.75;
+    }
+}
+
+@keyframes drain {
+    from {
+        stroke-dashoffset: 0;
+    }
+    to {
+        stroke-dashoffset: 100;
+    }
+}
+
+@keyframes beat {
+    0% {
+        transform: scale(1);
+    }
+    12% {
+        transform: scale(1.18);
+    }
+    30% {
+        transform: scale(0.96);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+@keyframes shockwave {
+    0% {
+        transform: scale(0.8);
+        opacity: 0.9;
+    }
+    100% {
+        transform: scale(3.2);
+        opacity: 0;
+    }
+}

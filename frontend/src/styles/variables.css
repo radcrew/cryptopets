@@ -125,11 +125,13 @@
    Display (Bungee): headings, buttons and big moments.
    Title (Orbitron): HUD numbers and small technical labels, shared with `website/`.
    Content (Fredoka): body text, rounded and friendly. Inter stays as the fallback.
+   Lore (Cinzel): carved lettering for the world's own words, such as the Pulse.
    ============================================================================= */
 :root {
     --cp-display-font: 'Bungee', 'Arial Black', Impact, system-ui, sans-serif;
     --cp-title-font: 'Orbitron', 'Eurostile', 'Bank Gothic', system-ui, sans-serif;
     --cp-content-font: 'Fredoka', 'Inter', 'Segoe UI', system-ui, sans-serif;
+    --cp-lore-font: 'Cinzel', 'Trajan Pro', Georgia, serif;
 }
 
 /* =============================================================================

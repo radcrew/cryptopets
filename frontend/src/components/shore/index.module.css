@@ -1,0 +1,164 @@
+/* CSS Module — class names are local; reference via `import styles from './index.module.css'`.
+   Layers, back to front: sky, the Pulse, sea, sand, places, pets. The horizon sits at
+   56% from the top, which the places in parts/places.module.css are anchored to. */
+/* A size container, so the places and pets scale with the scene rather than the window:
+   with the sidebar pinned, the scene is far narrower than the viewport. */
+.shore {
+    container: shore / inline-size;
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    height: clamp(340px, 52vh, 500px);
+    margin-bottom: var(--cp-spacing-md);
+    border-radius: 24px;
+    box-shadow: 0 0 0 1px rgb(181 140 255 / 25%), 0 20px 50px rgb(0 0 0 / 45%);
+}
+
+.sky {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 50% 45% at 50% 14%, rgb(181 140 255 / 30%), transparent 70%),
+        linear-gradient(180deg, #070a1f 0%, #121040 38%, #2a1754 56%, #3b1d58 64%);
+}
+
+.star {
+    position: absolute;
+    width: 2px;
+    height: 2px;
+    border-radius: 50%;
+    background: #fff;
+    opacity: 0.5;
+    animation: twinkle 3s ease-in-out infinite;
+}
+
+.sea {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 56%;
+    height: 18%;
+    overflow: hidden;
+    background: linear-gradient(180deg, #1c2a6b 0%, #0c1640 100%);
+}
+
+/* The Pulse's light on the water, under the orb. */
+.reflection {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: clamp(48px, 7cqw, 76px);
+    height: 100%;
+    transform: translateX(-50%);
+    border-radius: 50% 50% 40% 40%;
+    background: linear-gradient(180deg, rgb(201 176 255 / 60%), rgb(125 214 255 / 15%) 60%, transparent);
+    -webkit-mask-image: repeating-linear-gradient(180deg, #000 0 3px, transparent 3px 7px);
+    mask-image: repeating-linear-gradient(180deg, #000 0 3px, transparent 3px 7px);
+    animation: shimmer 2.4s ease-in-out infinite;
+}
+
+.waveBack,
+.waveMid,
+.waveFront {
+    position: absolute;
+    left: 0;
+    width: 200%;
+    height: 100%;
+    animation: drift 14s linear infinite;
+}
+
+.waveBack path {
+    fill: #23357d;
+    opacity: 0.8;
+}
+
+.waveMid {
+    top: 18%;
+    animation-duration: 9s;
+}
+
+.waveMid path {
+    fill: #1a2a6a;
+}
+
+.waveFront {
+    top: 42%;
+    animation-duration: 6s;
+}
+
+.waveFront path {
+    fill: #132056;
+}
+
+.sand {
+    position: absolute;
+    left: -12%;
+    right: -12%;
+    bottom: -30%;
+    height: 64%;
+    border-radius: 50% 50% 0 0 / 26% 26% 0 0;
+    background: radial-gradient(ellipse 70% 55% at 50% 0%, #5a466e 0%, #3a2a4e 45%, #221833 80%);
+    box-shadow: 0 -10px 40px rgb(181 140 255 / 15%);
+}
+
+.lantern {
+    position: absolute;
+    bottom: 16%;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--cp-amber);
+    box-shadow: 0 0 14px 6px rgb(255 207 112 / 45%);
+    animation: flicker 2.4s ease-in-out infinite;
+}
+
+.sign {
+    position: absolute;
+    left: 50%;
+    bottom: 9%;
+    z-index: 3;
+    transform: translateX(-50%);
+    margin: 0;
+    padding: 8px 16px;
+    border-radius: 999px;
+    background: rgb(8 10 28 / 82%);
+    border: 1px solid rgb(181 140 255 / 40%);
+    font-size: 14px;
+    text-align: center;
+    color: var(--cp-text-body-dark);
+}
+
+@keyframes twinkle {
+    0%,
+    100% {
+        opacity: 0.15;
+    }
+    50% {
+        opacity: 1;
+    }
+}
+
+@keyframes shimmer {
+    50% {
+        transform: translateX(-50%) scaleX(0.8);
+        opacity: 0.7;
+    }
+}
+
+@keyframes drift {
+    to {
+        transform: translateX(-50%);
+    }
+}
+
+@keyframes flicker {
+    0%,
+    100% {
+        opacity: 0.8;
+    }
+    40% {
+        opacity: 1;
+    }
+    60% {
+        opacity: 0.65;
+    }
+}

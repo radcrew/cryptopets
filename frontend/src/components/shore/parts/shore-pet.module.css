@@ -1,0 +1,155 @@
+/* CSS Module — class names are local; reference via `import styles from './shore-pet.module.css'`.
+   The pet moves by transitioning left/top; the duration is set inline per stroll. */
+.pet {
+    position: absolute;
+    z-index: 3;
+    width: clamp(44px, 5.5cqw, 64px);
+    aspect-ratio: 1;
+    transform: translate(-50%, -50%);
+    transition-property: left, top;
+    transition-timing-function: ease-in-out;
+}
+
+.pet.open {
+    z-index: 5;
+}
+
+.token {
+    position: absolute;
+    inset: 0;
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: pointer;
+
+    &:hover {
+        border-color: transparent;
+        box-shadow: none;
+    }
+
+    &:focus-visible {
+        outline: 3px solid var(--cp-cyan);
+        outline-offset: 4px;
+        border-radius: 50%;
+    }
+}
+
+/* The art's frame. PetArt with `fill` covers its nearest positioned ancestor, which is
+   this element, so the bob animation lives here and the image moves with it. */
+.frame {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 3px solid var(--rc);
+    background: #0b0f24;
+    box-shadow: 0 0 16px -2px var(--rc), 0 8px 14px rgb(0 0 0 / 45%);
+    font-size: clamp(22px, 2.8cqw, 32px);
+    animation: bob 1.9s ease-in-out infinite;
+    transition: box-shadow 0.2s ease;
+}
+
+.token:hover .frame,
+.open .frame {
+    box-shadow: 0 0 28px 2px var(--rc), 0 8px 14px rgb(0 0 0 / 45%);
+}
+
+.frame img {
+    transition: transform 0.4s ease;
+}
+
+.facingLeft .frame img {
+    transform: scaleX(-1);
+}
+
+.walking .frame {
+    animation: hop 0.75s ease-in-out infinite;
+}
+
+.emoji {
+    line-height: 1;
+}
+
+/* A soft shadow on the sand under the pet. */
+.token::after {
+    content: '';
+    position: absolute;
+    left: 14%;
+    right: 14%;
+    bottom: -12px;
+    height: 9px;
+    border-radius: 50%;
+    background: rgb(0 0 0 / 45%);
+    filter: blur(3px);
+    z-index: -1;
+}
+
+.name {
+    position: absolute;
+    left: 50%;
+    top: calc(100% + 6px);
+    transform: translateX(-50%);
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    color: #fff;
+    text-shadow: 0 2px 4px #000, 0 0 10px var(--rc);
+}
+
+/* The pet's card, floating above it. */
+.card {
+    position: absolute;
+    left: 50%;
+    bottom: calc(100% + 12px);
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    min-width: 150px;
+    padding: 10px 14px 14px;
+    border-radius: 16px;
+    background: linear-gradient(170deg, #141a40, #0a0d24 70%);
+    box-shadow: 0 0 0 2px var(--rc), 0 0 24px color-mix(in srgb, var(--rc) 40%, transparent),
+        0 14px 30px rgb(0 0 0 / 55%);
+    animation: pop 0.35s var(--cp-ease-spring);
+    white-space: nowrap;
+}
+
+.cardName {
+    font-size: 15px;
+}
+
+.cardMeta {
+    font-size: 12px;
+    color: var(--cp-text-muted-dark);
+}
+
+@keyframes bob {
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-6px);
+    }
+}
+
+@keyframes hop {
+    0%,
+    100% {
+        transform: translateY(0) rotate(-3deg);
+    }
+    50% {
+        transform: translateY(-5px) rotate(3deg);
+    }
+}
+
+@keyframes pop {
+    from {
+        transform: translateX(-50%) scale(0.6);
+        opacity: 0;
+    }
+}
