@@ -109,6 +109,9 @@ export async function listReceiptsByPet(
     return paginate(rows, take);
 }
 
+/** Oldest first is the export order; newest first serves a player's own recent battles. */
+export type ReceiptOrder = 'asc' | 'desc';
+
 /**
  * A page of receipts where the given wallet was either side of the battle.
  *
@@ -116,8 +119,16 @@ export async function listReceiptsByPet(
  * on `battle_ledger`, joined through the relation. Matched case-insensitively
  * rather than assuming a stored casing convention, since the same wallet can
  * arrive here checksummed or lowercased depending on which path wrote it.
+ *
+ * `order` flips both sort keys together, so the order stays total and the cursor walks
+ * newest first as reliably as it walks oldest first.
  */
-export async function listReceiptsByWallet(wallet: string, cursor?: string, limit?: number): Promise<CursorPage> {
+export async function listReceiptsByWallet(
+    wallet: string,
+    cursor?: string,
+    limit?: number,
+    order: ReceiptOrder = 'asc',
+): Promise<CursorPage> {
     const normalized = normalizeAccount(wallet);
     const take = clampLimit(limit);
     const rows = await prisma.battleReceipt.findMany({
@@ -129,7 +140,7 @@ export async function listReceiptsByWallet(wallet: string, cursor?: string, limi
                 ],
             },
         },
-        orderBy: [{ createdAt: 'asc' }, { receiptHash: 'asc' }],
+        orderBy: [{ createdAt: order }, { receiptHash: order }],
         ...(cursor ? { cursor: { receiptHash: cursor }, skip: 1 } : {}),
         take,
     });

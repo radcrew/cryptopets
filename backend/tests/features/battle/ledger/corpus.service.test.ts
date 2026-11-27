@@ -133,6 +133,25 @@ describe('listReceiptsByWallet', () => {
         };
         expect(call.where.battle.OR[0]!.attackerOwner.equals).toBe(pubkey);
     });
+
+    it('walks oldest first by default, the order an export expects', async () => {
+        vi.mocked(prisma.battleReceipt.findMany).mockResolvedValue([]);
+        await listReceiptsByWallet('0xabc');
+        expect(vi.mocked(prisma.battleReceipt.findMany).mock.calls[0]![0]).toMatchObject({
+            orderBy: [{ createdAt: 'asc' }, { receiptHash: 'asc' }],
+        });
+    });
+
+    it('flips both sort keys for newest first, so the order stays total', async () => {
+        vi.mocked(prisma.battleReceipt.findMany).mockResolvedValue([]);
+        await listReceiptsByWallet('0xabc', 'cursor-hash', 24, 'desc');
+        expect(vi.mocked(prisma.battleReceipt.findMany).mock.calls[0]![0]).toMatchObject({
+            orderBy: [{ createdAt: 'desc' }, { receiptHash: 'desc' }],
+            cursor: { receiptHash: 'cursor-hash' },
+            skip: 1,
+            take: 24,
+        });
+    });
 });
 
 describe('listReceiptsBySequence', () => {

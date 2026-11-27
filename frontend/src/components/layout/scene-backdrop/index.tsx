@@ -6,6 +6,7 @@ import {
     BREED_PATH,
     INVENTORY_PATH,
     LEADERBOARD_PATH,
+    LEDGER_PATH,
     MARRIAGE_PATH,
     TEAM_BATTLE_PATH,
 } from '@constants/interactionRoutes';
@@ -19,6 +20,8 @@ const SCENE_BY_PATH: [string, Scene][] = [
     [BREED_PATH, 'nest'],
     [MARRIAGE_PATH, 'nest'],
     [LEADERBOARD_PATH, 'hall'],
+    // The stones stand on the Hall of Champions' floor: the record of every fight.
+    [LEDGER_PATH, 'hall'],
     [INVENTORY_PATH, 'market'],
 ];
 

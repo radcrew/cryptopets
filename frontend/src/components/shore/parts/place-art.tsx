@@ -205,6 +205,27 @@ export const TrainingArt: React.FC = () => (
     </svg>
 );
 
+/** Runes on the tall stone, top to bottom: a glyph, then its line of carving. */
+const RUNE_ROWS = [30, 46, 62, 78];
+
+/** The Ledger Stones: three standing stones, the tallest carved with runes that glow in turn. */
+export const StonesArt: React.FC = () => (
+    <svg viewBox="0 0 120 110" aria-hidden>
+        <ellipse cx="60" cy="104" rx="54" ry="5" fill="#000" fillOpacity=".3" />
+        <path d="M10 104 V60 C10 51 16 46 24 46 S38 51 38 60 V104 Z" fill="url(#shore-stone)" stroke="#2c3a7a" />
+        <path d="M82 104 V64 C82 56 88 52 95 52 S108 56 108 64 V104 Z" fill="url(#shore-stone)" stroke="#2c3a7a" />
+        <path d="M38 104 V26 C38 14 48 6 60 6 S82 14 82 26 V104 Z" fill="url(#shore-stone)" stroke="#6b5cb0" />
+        <path d="M43 26 C43 17 50 11 60 11" stroke="#fff" strokeOpacity=".2" strokeWidth="2" fill="none" strokeLinecap="round" />
+        {RUNE_ROWS.map((y, i) => (
+            <g key={y} className={styles.rune} style={{ animationDelay: `${i * 0.5}s` }}>
+                <circle cx="50" cy={y} r="3" fill="#b58cff" />
+                <path d={`M57 ${y} H${i % 2 ? 68 : 72}`} stroke="#d9c8ff" strokeWidth="2.4" strokeLinecap="round" />
+            </g>
+        ))}
+        <path d="M17 64 H31 M17 72 H28 M89 68 H101" stroke="#9aa0c0" strokeOpacity=".5" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+);
+
 const AWNING = ['#ff7bcb', '#ffd25a'];
 
 /** A market stall, with the player's satchel and a couple of tonics on the counter. */

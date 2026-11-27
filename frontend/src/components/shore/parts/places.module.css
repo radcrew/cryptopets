@@ -89,6 +89,15 @@
     aspect-ratio: 120 / 130;
 }
 
+/* Between the training ground and the market, left of the Pulse's light on the water. */
+.stones {
+    --tag: var(--cp-violet);
+    left: 42%;
+    bottom: var(--place-floor, 31%);
+    width: clamp(62px, 7cqw, 96px);
+    aspect-ratio: 120 / 110;
+}
+
 .bag {
     --tag: var(--cp-emerald);
     left: 57%;
@@ -113,9 +122,10 @@
     aspect-ratio: 220 / 150;
 }
 
-/* Too many doors for a narrow beach: these three stay one tap away in the dock's More sheet. */
+/* Too many doors for a narrow beach: these stay one tap away in the dock's More sheet. */
 @container shore (max-width: 820px) {
     .training,
+    .stones,
     .bag,
     .team {
         display: none;
@@ -155,6 +165,10 @@
 
 .sparkle {
     animation: glow 1.4s ease-in-out infinite;
+}
+
+.rune {
+    animation: glow 2.4s ease-in-out infinite;
 }
 
 .spotLeft,

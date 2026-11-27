@@ -7,7 +7,7 @@ import NeonButton from '@components/ui/neon-button';
 import { useSound } from '@contexts/sound';
 import styles from './index.module.css';
 
-/** One duel's signed receipt, and the checks this browser ran on it. */
+/** One signed receipt, and the checks this browser ran on it. */
 export type LedgerRecord = {
     battleId: string;
     /** The receipt's place in the operator's chain of receipts. */
@@ -69,12 +69,13 @@ const LedgerStone: React.FC<LedgerStoneProps> = ({ record, caption, triggerClass
             <button type="button" className={triggerClassName} onClick={() => setOpen(true)}>
                 📜 Ledger Stone
             </button>
-            {open && <Tablet record={record} caption={caption} onClose={() => setOpen(false)} />}
+            {open && <LedgerTablet record={record} caption={caption} onClose={() => setOpen(false)} />}
         </>
     );
 };
 
-const Tablet: React.FC<{ record: LedgerRecord; caption: string; onClose: () => void }> = ({
+/** The stone itself, over the page. The Ledger Stones page opens it for any past battle. */
+export const LedgerTablet: React.FC<{ record: LedgerRecord; caption: string; onClose: () => void }> = ({
     record,
     caption,
     onClose,

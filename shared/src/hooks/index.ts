@@ -178,10 +178,20 @@ export { type TeamOpponent, useTeamOpponents } from './battle/useTeamOpponents';
 export { type SubmitTeamChallengeVars, useSubmitTeamChallenge } from './battle/useSubmitTeamChallenge';
 export { type TeamBattleResult, useTeamBattleResult } from './battle/useTeamBattleResult';
 export {
+    fetchAndCheckReceipt,
     useVerifiedBattleReceipt,
     verifiedReceiptQueryKey,
+    type CheckedReceipt,
     type VerifiedBattleReceipt,
 } from './battle/useVerifiedBattleReceipt';
+export {
+    ledgerStonesQueryKey,
+    summarizeLedgerStone,
+    useLedgerStone,
+    useLedgerStones,
+    type LedgerStonePet,
+    type LedgerStoneSummary,
+} from './battle/useLedgerStones';
 export { usePetError, type PetError } from './tx/usePetError';
 export { useTxError, type TxError } from './tx/useTxError';
 

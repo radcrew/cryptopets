@@ -1,13 +1,16 @@
 import {
-    assertBattleReceipt,
+    anyReceiptFromWire,
+    assertAnyBattleReceipt,
+    isTeamBattleReceipt,
     loadRulesetBundle,
-    receiptFromWire,
     simulate,
+    type AnyBattleReceipt,
     type BattleReceipt,
     type Hex,
     type Ruleset,
     type SimOutcome,
     type WireBattleReceipt,
+    type WireTeamBattleReceipt,
 } from '@cryptopets/protocol';
 import {
     checkBeaconSignature,
@@ -67,7 +70,7 @@ interface SignedArtifactResponse {
     hash: string;
     signature: string;
     signingKeyId: string;
-    payload: WireBattleReceipt;
+    payload: WireBattleReceipt | WireTeamBattleReceipt;
 }
 
 interface SigningKeysResponse {
@@ -93,33 +96,58 @@ export function useVerifiedBattleReceipt(battleId: string | null | undefined) {
         // burn a BLS verification to reach the same answer.
         staleTime: Infinity,
         queryFn: async (): Promise<VerifiedBattleReceipt> => {
-            const [{ data: artifact }, { data: keys }] = await Promise.all([
-                apiClient.get<SignedArtifactResponse>(`/api/battle/${battleId}/receipt`),
-                apiClient.get<SigningKeysResponse>('/api/battle/signing-keys'),
-            ]);
-
-            const receipt = assertBattleReceipt(receiptFromWire(artifact.payload));
-            const envelope = {
-                receiptHash: artifact.hash,
-                signature: artifact.signature,
-                signingKeyId: artifact.signingKeyId,
-                payload: artifact.payload,
-            };
-
-            const ruleset = await fetchRuleset(apiClient, receipt.rulesetHash);
-
-            const checks = [
-                checkOperatorSignature(envelope, receipt, keys.keys),
-                checkBeaconSignature(receipt),
-                checkSeedDerivation(receipt),
-                checkCombatReplay(receipt, ruleset),
-                checkProgression(receipt, ruleset),
-            ];
-            const verified = checks.every((check) => check.ok);
-
+            const { receipt, ruleset, checks, verified } = await fetchAndCheckReceipt(apiClient, battleId as string);
+            if (isTeamBattleReceipt(receipt)) {
+                throw new Error(`battle ${battleId} is a team battle, not a duel`);
+            }
             return { receipt, checks, verified, outcome: verified ? replay(receipt, ruleset) : null };
         },
     });
+}
+
+/** A receipt of either kind, the bundle it names, and every check run on it. */
+export interface CheckedReceipt {
+    receipt: AnyBattleReceipt;
+    ruleset: Ruleset;
+    checks: CheckResult[];
+    /** True only when every check passed. */
+    verified: boolean;
+}
+
+/**
+ * Fetches a signed receipt, duel or team, and runs every check above on it.
+ *
+ * The one place this client checks a receipt. The duel result screen and the Ledger Stones
+ * page both come through here, so the two can never tell a player different things about
+ * the same battle.
+ */
+export async function fetchAndCheckReceipt(
+    apiClient: ReturnType<typeof useApiClient>,
+    battleId: string,
+): Promise<CheckedReceipt> {
+    const [{ data: artifact }, { data: keys }] = await Promise.all([
+        apiClient.get<SignedArtifactResponse>(`/api/battle/${battleId}/receipt`),
+        apiClient.get<SigningKeysResponse>('/api/battle/signing-keys'),
+    ]);
+
+    const receipt = assertAnyBattleReceipt(anyReceiptFromWire(artifact.payload));
+    const envelope = {
+        receiptHash: artifact.hash,
+        signature: artifact.signature,
+        signingKeyId: artifact.signingKeyId,
+        payload: artifact.payload,
+    };
+
+    const ruleset = await fetchRuleset(apiClient, receipt.rulesetHash);
+
+    const checks = [
+        checkOperatorSignature(envelope, receipt, keys.keys),
+        checkBeaconSignature(receipt),
+        checkSeedDerivation(receipt),
+        checkCombatReplay(receipt, ruleset),
+        checkProgression(receipt, ruleset),
+    ];
+    return { receipt, ruleset, checks, verified: checks.every((check) => check.ok) };
 }
 
 /**

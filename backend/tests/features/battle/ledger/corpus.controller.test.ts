@@ -51,8 +51,21 @@ describe('getReceiptsByWallet', () => {
         vi.mocked(listReceiptsByWallet).mockResolvedValue({ receipts: [], nextCursor: null });
         const res = mockRes();
         await getReceiptsByWallet({ params: { wallet: '0xabc' }, query: {} } as never, res as never);
-        expect(listReceiptsByWallet).toHaveBeenCalledWith('0xabc', undefined, undefined);
+        expect(listReceiptsByWallet).toHaveBeenCalledWith('0xabc', undefined, undefined, 'asc');
         expect(res.status).toHaveBeenCalledWith(200);
+    });
+
+    it('forwards newest-first order when asked', async () => {
+        vi.mocked(listReceiptsByWallet).mockResolvedValue({ receipts: [], nextCursor: null });
+        await getReceiptsByWallet({ params: { wallet: '0xabc' }, query: { order: 'desc', limit: '24' } } as never, mockRes() as never);
+        expect(listReceiptsByWallet).toHaveBeenCalledWith('0xabc', undefined, 24, 'desc');
+    });
+
+    it('refuses an order it does not know, rather than guessing one', async () => {
+        const res = mockRes();
+        await getReceiptsByWallet({ params: { wallet: '0xabc' }, query: { order: 'newest' } } as never, res as never);
+        expect(res.status).toHaveBeenCalledWith(422);
+        expect(listReceiptsByWallet).not.toHaveBeenCalled();
     });
 });
 

@@ -19,6 +19,11 @@ const ShoreDefs: React.FC = () => (
                 <stop offset="0" stopColor="#e0a83a" />
                 <stop offset="1" stopColor="#7a4a0c" />
             </linearGradient>
+            <linearGradient id="shore-stone" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stopColor="#5a6078" />
+                <stop offset=".55" stopColor="#3a3f52" />
+                <stop offset="1" stopColor="#1c1f2c" />
+            </linearGradient>
             <linearGradient id="shore-marble" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0" stopColor="#433a80" />
                 <stop offset="1" stopColor="#1c1844" />

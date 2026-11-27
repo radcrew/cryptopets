@@ -21,8 +21,13 @@ export async function getReceiptsByPet(req: Request, res: Response): Promise<voi
 
 export async function getReceiptsByWallet(req: Request, res: Response): Promise<void> {
     const { wallet } = req.params as { wallet: string };
-    const { cursor, limit } = req.query as PaginationQuery;
-    const page = await listReceiptsByWallet(wallet, cursor, limit ? Number(limit) : undefined);
+    const { cursor, limit, order } = req.query as PaginationQuery & { order?: string };
+    // Refused rather than guessed, which also catches a repeated parameter (an array).
+    if (order !== undefined && order !== 'asc' && order !== 'desc') {
+        res.status(422).json({ error: "order must be 'asc' or 'desc'" });
+        return;
+    }
+    const page = await listReceiptsByWallet(wallet, cursor, limit ? Number(limit) : undefined, order ?? 'asc');
     res.status(200).json(page);
 }
 

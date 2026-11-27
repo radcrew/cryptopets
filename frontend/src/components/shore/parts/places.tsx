@@ -7,15 +7,16 @@ import {
     BREED_PATH,
     INVENTORY_PATH,
     LEADERBOARD_PATH,
+    LEDGER_PATH,
     TEAM_BATTLE_PATH,
     TOWER_PATH,
     TRAIN_PATH,
 } from '@constants/interactionRoutes';
-import { ArenaArt, BagArt, HallArt, NestArt, TeamCampArt, TowerArt, TrainingArt } from './place-art';
+import { ArenaArt, BagArt, HallArt, NestArt, StonesArt, TeamCampArt, TowerArt, TrainingArt } from './place-art';
 import styles from './places.module.css';
 
 type Place = {
-    id: 'hall' | 'tower' | 'arena' | 'team' | 'nest' | 'training' | 'bag';
+    id: 'hall' | 'tower' | 'arena' | 'team' | 'nest' | 'training' | 'stones' | 'bag';
     label: string;
     /** What the place opens, for screen readers; the drawn art carries no text. */
     opens: string;
@@ -32,6 +33,7 @@ const PLACES: readonly Place[] = [
     { id: 'hall', label: 'Hall of Champions', opens: 'the leaderboard', path: LEADERBOARD_PATH, Art: HallArt },
     { id: 'nest', label: 'Nest', opens: 'the Breeding Lab', path: BREED_PATH, Art: NestArt },
     { id: 'training', label: 'Training', opens: 'the Training Ground', path: TRAIN_PATH, Art: TrainingArt },
+    { id: 'stones', label: 'Ledger Stones', opens: 'the stones of your battles', path: LEDGER_PATH, Art: StonesArt },
     { id: 'bag', label: 'Bag', opens: 'your inventory', path: INVENTORY_PATH, Art: BagArt },
     {
         id: 'team',

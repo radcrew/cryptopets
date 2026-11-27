@@ -69,6 +69,9 @@ export const PETS_PATH = '/pets';
 /** A preview of the planned Tower mode. */
 export const TOWER_PATH = '/tower';
 
+/** The player's recent battles as Ledger Stones, each checked in the browser. Read-only. */
+export const LEDGER_PATH = '/ledger';
+
 /** Top-level interaction routes (e.g. /breed) — interaction UI only. */
 export const BREED_PATH = '/breed';
 export const BATTLE_PATH = '/battle';

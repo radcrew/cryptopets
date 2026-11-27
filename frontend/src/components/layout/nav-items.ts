@@ -4,6 +4,7 @@ import {
     BREED_PATH,
     INVENTORY_PATH,
     LEADERBOARD_PATH,
+    LEDGER_PATH,
     LEVELUP_PATH,
     MESSAGES_PATH,
     MARRIAGE_PATH,
@@ -25,6 +26,7 @@ import renameIcon from '@assets/nav-icons/rename.svg';
 import messagesIcon from '@assets/nav-icons/messages.svg';
 import leaderboardIcon from '@assets/nav-icons/leaderboard.svg';
 import towerIcon from '@assets/nav-icons/tower.svg';
+import ledgerIcon from '@assets/nav-icons/ledger.svg';
 
 export type NavItem = {
     id: string;
@@ -89,5 +91,6 @@ export const NAV_ITEMS: readonly NavItem[] = [
         tone: 'amber',
         path: LEADERBOARD_PATH,
     },
+    { id: 'ledger', label: 'Ledger Stones', iconSrc: ledgerIcon, tone: 'violet', path: LEDGER_PATH },
     { id: 'tower', label: 'The Tower', iconSrc: towerIcon, tone: 'cyan', path: TOWER_PATH, soon: true },
 ];

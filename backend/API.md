@@ -558,7 +558,7 @@ empty extra request.
 | Method | Path | Purpose |
 | --- | --- | --- |
 | GET | `/api/receipts/by-pet/:chainId/:petId?cursor=&limit=` | Every receipt naming this pet as attacker or defender, oldest first. This is the export a per-pet chain walk (§G) starts from — proving a pet was really level 12 means replaying the receipts that got it there. |
-| GET | `/api/receipts/by-wallet/:wallet?cursor=&limit=` | Every receipt where this wallet owned either side, oldest first. Matched case-insensitively against the ledger's owner columns (the receipt table itself has no owner field, only pet ids). |
+| GET | `/api/receipts/by-wallet/:wallet?cursor=&limit=&order=` | Every receipt where this wallet owned either side, oldest first, or newest first with `order=desc` (the web app's Ledger Stones page uses that for a player's recent battles; any other `order` is a 422). Matched case-insensitively against the ledger's owner columns (the receipt table itself has no owner field, only pet ids). |
 | GET | `/api/receipts?signingKeyId=&after=&limit=` | Receipts under one signing key, strictly in `sequence` order — the order the *global* hash chain requires. `signingKeyId` is required; this is the endpoint for walking one key's whole chain end to end, not for a general receipt search. |
 | GET | `/api/receipts/:receiptHash/inclusion-proof` | The Merkle proof that this receipt is in its anchored batch (§I). Returns `{ receiptHash, batchNumber, merkleRoot, proof }`. **404 `not-batched`** when the receipt is unknown *or* exists but has not been batched yet — the latter is normal and temporary, while an unbatched receipt past the inclusion SLO is operator failure, so a client needs to be able to tell those apart from a receipt that never existed. |
 
